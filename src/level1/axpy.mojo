@@ -1,15 +1,20 @@
 from src import BLASPtr
 
+from algorithm.functional import vectorize
+from sys.info import simd_width_of
+
 
 fn daxpy[
     dtype: DType
 ](
-    n: Int32,
+    n: Int,
     alpha: Scalar[dtype],
     x: BLASPtr[Scalar[dtype]],
-    incx: Int32,
+    # x: UnsafePointer[Scalar[dtype], **_],
+    incx: Int,
     y: BLASPtr[Scalar[dtype]],
-    incy: Int32,
+    # mut y: UnsafePointer[Scalar[dtype], **_],
+    incy: Int,
 ) -> None:
     """
     Perform the AXPY operation: Y := alpha * X + Y.
@@ -25,10 +30,18 @@ fn daxpy[
     if n <= 0:
         return
 
-    var ix: Int32 = 0
-    var iy: Int32 = 0
+    var ix: Int = 0
+    var iy: Int = 0
 
-    # Handle negative increments
+    comptime simd_width: Int = simd_width_of[dtype]()
+
+    if incx == 1 and incy == 1:
+        @parameter
+        fn closure[width: Int](i: Int) unified {mut y, read x, read alpha}:
+            y.store[width=width](i, alpha * x.load[width=width](i) + y.load[width=width](i))
+        vectorize[simd_width](n, closure)
+        return
+
     if incx < 0:
         ix = (-n + 1) * incx
     if incy < 0:
