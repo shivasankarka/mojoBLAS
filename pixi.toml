@@ -1,0 +1,42 @@
+[workspace]
+authors = ["Shivasankar <shivasankar.ka@gmail.com>"]
+channels = [
+    "https://conda.modular.com/max-nightly/",
+    "conda-forge",
+    "https://conda.modular.com/max",
+    "https://repo.prefix.dev/modular-community",
+]
+name = "mojoBLAS"
+platforms = ["osx-arm64", "linux-64"]
+version = "0.1.0"
+preview = ["pixi-build"]
+license = "MIT"
+
+[package]
+name = "mojoBLAS"
+version = "0.8.0"
+
+[package.build]
+backend = { name = "pixi-build-mojo", version = "0.*", channels = [
+    "https://prefix.dev/pixi-build-backends",
+    "https://prefix.dev/conda-forge",
+] }
+
+[package.build.config.pkg]
+name = "mojoBLAS"
+
+[package.host-dependencies]
+mojo = ">=0.26.2.0.dev2026020505,<0.27"
+
+[package.build-dependencies]
+mojo = ">=0.26.2.0.dev2026020505,<0.27"
+
+[package.run-dependencies]
+mojo = ">=0.26.2.0.dev2026020505,<0.27"
+
+[tasks]
+format = "mojo format ./src/ && mojo format ./tests/"
+test_level1 = "mojo run -I ./ ./tests/test_level1.mojo"
+
+[dependencies]
+mojo = ">=0.26.2.0.dev2026020505,<0.27"
