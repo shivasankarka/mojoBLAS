@@ -39,4 +39,4 @@ format = "mojo format ./src/ && mojo format ./tests/"
 test_level1 = "mojo run -I ./ ./tests/test_level1.mojo"
 
 [dependencies]
-mojo = ">=0.26.2.0.dev2026020505,<0.27"
+modular = ">=26.2.0.dev2026020505,<27"

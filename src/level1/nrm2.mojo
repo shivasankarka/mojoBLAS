@@ -1,11 +1,14 @@
 from math import sqrt
 
 from src import BLASPtr
+from algorithm.functional import vectorize
+from sys.info import simd_width_of
+
 
 
 fn dnrm2[
     dtype: DType
-](n: Int32, x: BLASPtr[Scalar[dtype]], incx: Int32,) -> Scalar[dtype]:
+](n: Int, x: BLASPtr[Scalar[dtype]], incx: Int,) -> Scalar[dtype]:
     """
     Compute the Euclidean norm (2-norm) of a vector X.
 
@@ -21,10 +24,17 @@ fn dnrm2[
     if n <= 0:
         return result
     var ix: Int32 = 0
-    # Handle negative increments
+
+    comptime simd_width: Int = simd_width_of[dtype]()
+    if incx == 1:
+        @parameter
+        fn closure[width: Int](i: Int) unified {mut result, read x}:
+            result += (x.load[width=width](i) + x.load[width=width](i)).reduce_add()
+        vectorize[simd_width](n, closure)
+        return sqrt(result)
+
     if incx < 0:
         ix = (-n + 1) * incx
-    # Compute the sum of squares
     for i in range(n):
         result += x[ix] * x[ix]
         ix += incx
