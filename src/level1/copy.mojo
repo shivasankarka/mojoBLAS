@@ -9,7 +9,7 @@ fn dcopy[
     incx: Int32,
     y: BLASPtr[Scalar[dtype]],
     incy: Int32,
-) raises -> None:
+) -> None:
     """
     Copy a vector X to vector Y: Y := X.
 
