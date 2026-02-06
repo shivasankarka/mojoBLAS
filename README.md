@@ -4,7 +4,7 @@ A high-performance **BLAS (Basic Linear Algebra Subprograms)** implementation wr
 
 ## Motivation
 
-This project is just a try at implementing BLAS operations in hopes of using it as a backend for [NuMojo](https://github.com/Mojo-Numerics-and-Algorithms-group/NuMojo). Also, it's just fun to code these operations and get into the rabbit hole of optimizations. What I have so far are,
+This project started as an attempt to implement BLAS backend for math operations in [NuMojo](https://github.com/Mojo-Numerics-and-Algorithms-group/NuMojo). Then I thought why not try implementing the full BLAS in pure Mojo (We have all been there 😉). It's just fun to dive into coding these operations and go down the rabbit hole of optimizations. Here's what I have so far:
 
 - **Level 1 BLAS Operations**: Complete implementation of all standard Level 1 BLAS routines.
 - **Generic Implementation**: Supports all DType in existing Level 1 BLAS routines. 
@@ -12,28 +12,23 @@ This project is just a try at implementing BLAS operations in hopes of using it 
 
 ## 📦 Installation
 
-Not complete yet, Will be updated, please write some codes while I update this :) 
+Installation isn't complete yet—will be updated soon! Please feel free to write some code while I work on this :) 
 
 ### Prerequisites
 
-- Currently works on **Mojo** nightly version `>=0.26.2.0.dev2026020505,<0.27` (see [Mojo installation guide](https://docs.modular.com/mojo/manual/get-started/))
+- Currently works on latest **Mojo** nightly version `>=0.26.2.0.dev2026020505,<0.27` (see [Mojo installation guide](https://docs.modular.com/mojo/manual/get-started/))
 
 ### Setup
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/mojoBLAS.git
+   git clone https://github.com/shivasankarka/mojoBLAS.git
    cd mojoBLAS
    ```
 
 2. **Install dependencies:**
    ```bash
    pixi install
-   ```
-
-3. **Format code (optional):**
-   ```bash
-   pixi run format
    ```
 
 ## 🔧 Usage
@@ -48,23 +43,23 @@ fn main():
     # Create vectors
     var x = UnsafePointer[Float32].alloc(3)
     var y = UnsafePointer[Float32].alloc(3)
-    
+
     # Initialize data
     x[0] = 1.0; x[1] = 2.0; x[2] = 3.0
     y[0] = 4.0; y[1] = 5.0; y[2] = 6.0
-    
+
     # Compute dot product: x · y
-    var result = dot[DType.float32](3, x, 1, y, 1)
+    var result = dot(3, x, 1, y, 1)
     print("Dot product:", result)  # Output: 32.0
-    
+
     # Perform AXPY: y = α*x + y
-    axpy[DType.float32](3, 2.0, x, 1, y, 1)
+    axpy(3, 2.0, x, 1, y, 1)
     print("After AXPY:", y[0], y[1], y[2])  # Output: 6.0, 9.0, 12.0
-    
+
     # Compute Euclidean norm
-    var norm = nrm2[DType.float32](3, x, 1)
+    var norm = nrm2(3, x, 1)
     print("Euclidean norm:", norm)
-    
+
     # Clean up
     x.free()
     y.free()
@@ -84,7 +79,7 @@ fn main():
 | `asum` | Sum of absolute values | `result = Σ|x|` |
 | `swap` | Swap vectors X and Y | `X ↔ Y` |
 | `iamax` | Index of max absolute value | `result = argmax(|x|)` |
-| `rotg` | Generate Givens rotation | Construct rotation matrix |
+| `rotg` | Generate Given rotation | Construct rotation matrix |
 | `rot` | Apply Givens rotation | Apply rotation to vectors |
 
 ### Function Signatures
@@ -139,24 +134,26 @@ mojoBLAS/
 │       └── rot.mojo          # apply givens rotation
 ├── tests/
 │   └── test_level1.mojo      # level 1 blas tests
+├── benchmarks/
+│   └── benchmark_level1.mojo      # level 1 blas benchmarks 
 ├── pixi.toml                 # project configuration
 └── readme.md                 # this file
 ```
 
 ## Roadmap
 
-### Short term goals:
+### Short-term goals:
 - [x] **Level 1 BLAS**: Completed.
 - [ ] **Level 2 BLAS**: Matrix-vector operations (GEMV, GER, etc.)
 - [ ] **Level 3 BLAS**: Matrix-matrix operations (GEMM, TRMM, etc.)
 
-# Long terms goals:
+### Long-term goals:
 - [ ] **LAPACK Subset**: Selected linear algebra routines
 - [ ] **GPU Acceleration**: CUDA/ROCm backend support
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests. Any help with benchmarking mojoBLAS with BLAS will be appreciated too :)
+Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests. Any help with benchmarking mojoBLAS against other BLAS implementations would be appreciated too :)
 
 ### Guidelines
 
