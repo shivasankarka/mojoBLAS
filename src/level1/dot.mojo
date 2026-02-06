@@ -1,14 +1,16 @@
 from src import BLASPtr
 
+from algorithm.functional import vectorize
+from sys.info import simd_width_of
 
 fn ddot[
     dtype: DType
 ](
-    n: Int32,
+    n: Int,
     x: BLASPtr[Scalar[dtype]],
-    incx: Int32,
+    incx: Int,
     y: BLASPtr[Scalar[dtype]],
-    incy: Int32,
+    incy: Int,
 ) -> Scalar[dtype]:
     """
     Compute the dot product of two vectors X and Y.
@@ -23,21 +25,27 @@ fn ddot[
     Returns:
         The dot product as a scalar value.
     """
-    result: Scalar[dtype] = 0
+    var result: Scalar[dtype] = 0
 
     if n <= 0:
         return result
 
-    var ix: Int32 = 0
-    var iy: Int32 = 0
+    var ix: Int = 0
+    var iy: Int = 0
+    comptime simd_width: Int = simd_width_of[dtype]()
 
-    # Handle negative increments
+    if incx == 1 and incy == 1:
+        @parameter
+        fn closure[width: Int](i: Int) unified {mut result, read x, read y}:
+            result += (x.load[width=width](i) * y.load[width=width](i)).reduce_add()
+        vectorize[simd_width](n, closure)
+        return result
+
     if incx < 0:
         ix = (-n + 1) * incx
     if incy < 0:
         iy = (-n + 1) * incy
 
-    # Compute the dot product
     for i in range(n):
         result += x[ix] * y[iy]
         ix += incx

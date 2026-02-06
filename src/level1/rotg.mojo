@@ -45,7 +45,6 @@ fn drotg[
     var abs_a = abs(a_val)
     var abs_b = abs(b_val)
 
-    # Use the larger absolute value for numerical stability
     if abs_a > abs_b:
         var t = b_val / a_val
         var u = copysign(sqrt(1.0 + t * t), a_val)

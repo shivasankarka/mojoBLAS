@@ -3,6 +3,7 @@ Provides Level 1 BLAS (Basic Linear Algebra Subprograms) operations.
 """
 # TODO: Add vectorized/parallelized operations.
 # Add benchmark against BLAS operations.
+# Add support for Complex data types.
 
 from .copy import dcopy
 from .scal import dscal

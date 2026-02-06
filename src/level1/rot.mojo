@@ -1,14 +1,16 @@
 from src import BLASPtr
 
+from algorithm.functional import vectorize
+from sys.info import simd_width_of
 
 fn drot[
     dtype: DType
 ](
-    n: Int32,
+    n: Int,
     x: BLASPtr[Scalar[dtype]],
-    incx: Int32,
+    incx: Int,
     y: BLASPtr[Scalar[dtype]],
-    incy: Int32,
+    incy: Int,
     c: Scalar[dtype],
     s: Scalar[dtype],
 ) -> None:
@@ -33,14 +35,23 @@ fn drot[
 
     var ix: Int32 = 0
     var iy: Int32 = 0
+    comptime simd_width: Int = simd_width_of[dtype]()
 
-    # Handle negative increments
+    if incx == 1 and incy == 1:
+        @parameter
+        fn closure[width: Int](i: Int) unified {mut y, read x, read c, read s}:
+            var temp_x = c * x.load[width=width](i) + s * y.load[width=width](i)
+            var temp_y = -s * x.load[width=width](i) + c * y.load[width=width](i)
+            y.store[width=width](i, temp_y)
+            x.store[width=width](i, temp_x)
+        vectorize[simd_width](n, closure)
+        return
+
     if incx < 0:
         ix = (-n + 1) * incx
     if incy < 0:
         iy = (-n + 1) * incy
 
-    # Apply Givens rotation to each element pair
     for i in range(n):
         var temp_x = c * x[ix] + s * y[iy]
         var temp_y = -s * x[ix] + c * y[iy]

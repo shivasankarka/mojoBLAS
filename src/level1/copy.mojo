@@ -1,14 +1,16 @@
 from src import BLASPtr
 
+from algorithm.functional import vectorize
+from sys.info import simd_width_of
 
 fn dcopy[
     dtype: DType
 ](
-    n: Int32,
+    n: Int,
     x: BLASPtr[Scalar[dtype]],
-    incx: Int32,
+    incx: Int,
     y: BLASPtr[Scalar[dtype]],
-    incy: Int32,
+    incy: Int,
 ) -> None:
     """
     Copy a vector X to vector Y: Y := X.
@@ -23,16 +25,22 @@ fn dcopy[
     if n <= 0:
         return
 
-    var ix: Int32 = 0
-    var iy: Int32 = 0
+    var ix: Int = 0
+    var iy: Int = 0
+    comptime simd_width: Int = simd_width_of[dtype]()
 
-    # Handle negative increments
+    if incx == 1 and incy == 1:
+        @parameter
+        fn closure[width: Int](i: Int) unified {mut y, read x}:
+            y.store[width=width](i, x.load[width=width](i))
+        vectorize[simd_width](n, closure)
+        return
+
     if incx < 0:
         ix = (-n + 1) * incx
     if incy < 0:
         iy = (-n + 1) * incy
 
-    # Perform the copy operation: y[i] = x[i]
     for i in range(n):
         y[iy] = x[ix]
         ix += incx

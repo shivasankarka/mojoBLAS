@@ -1,9 +1,11 @@
 from src import BLASPtr
 
+from algorithm.functional import vectorize
+from sys.info import simd_width_of
 
 fn dasum[
     dtype: DType
-](n: Int32, x: BLASPtr[Scalar[dtype]], incx: Int32) -> Scalar[dtype]:
+](n: Int, x: BLASPtr[Scalar[dtype]], incx: Int) -> Scalar[dtype]:
     """
     Compute the sum of absolute values of elements in vector X.
 
@@ -19,13 +21,19 @@ fn dasum[
         return 0
 
     var sum: Scalar[dtype] = 0.0
-    var ix: Int32 = 0
+    var ix: Int = 0
+    comptime simd_width: Int = simd_width_of[dtype]()
 
-    # Handle negative increments
+    if incx == 1:
+        @parameter
+        fn closure[width: Int](i: Int) unified {mut sum, read x}:
+            sum += abs(x.load[width=width](i)).reduce_add()
+        vectorize[simd_width](n, closure)
+        return sum
+
     if incx < 0:
         ix = (-n + 1) * incx
 
-    # Compute the sum of absolute values
     for i in range(n):
         sum += abs(x[ix])
         ix += incx

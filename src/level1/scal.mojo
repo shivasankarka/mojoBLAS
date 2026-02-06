@@ -1,13 +1,15 @@
 from src import BLASPtr
 
+from algorithm.functional import vectorize
+from sys.info import simd_width_of
 
 fn dscal[
     dtype: DType
 ](
-    n: Int32,
+    n: Int,
     alpha: Scalar[dtype],
     x: BLASPtr[Scalar[dtype]],
-    incx: Int32,
+    incx: Int,
 ) -> None:
     """
     Scale a vector by a scalar: X := alpha * X.
@@ -21,13 +23,19 @@ fn dscal[
     if n <= 0:
         return
 
-    var ix: Int32 = 0
+    var ix: Int = 0
+    comptime simd_width: Int = simd_width_of[dtype]()
 
-    # Handle negative increments
+    if incx == 1:
+        @parameter
+        fn closure[width: Int](i: Int) unified {mut x, read alpha}:
+            x.store[width=width](i, alpha * x.load[width=width](i))
+        vectorize[simd_width](n, closure)
+        return
+
     if incx < 0:
         ix = (-n + 1) * incx
 
-    # Perform the scaling operation: x[i] = alpha * x[i]
     for i in range(n):
         x[ix] = alpha * x[ix]
         ix += incx

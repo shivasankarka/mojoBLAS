@@ -1,5 +1,7 @@
 from src import BLASPtr
 
+from algorithm.functional import vectorize
+from sys.info import simd_width_of
 
 fn di_amax[
     dtype: DType
@@ -26,17 +28,15 @@ fn di_amax[
     var imax: Int32 = 1
     var max_val: Scalar[dtype] = abs(x[0])
 
-    # Handle negative increments
     if incx < 0:
         ix = (-n + 1) * incx
 
-    # Start from the second element
     ix += incx
     for i in range(1, n):
         var current_abs = abs(x[ix])
         if current_abs > max_val:
             max_val = current_abs
-            imax = i + 1  # 1-based indexing
+            imax = i + 1
         ix += incx
 
     return imax

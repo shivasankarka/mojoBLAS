@@ -37,6 +37,7 @@ mojo = ">=0.26.2.0.dev2026020505,<0.27"
 [tasks]
 format = "mojo format ./src/ && mojo format ./tests/"
 test_level1 = "mojo run -I ./ ./tests/test_level1.mojo"
+benchmark_level1 = "mojo run -I ./ ./benchmarks/benchmark_level1.mojo"
 
 [dependencies]
 mojo = ">=0.26.2.0.dev2026020505,<0.27"
