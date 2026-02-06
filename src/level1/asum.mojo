@@ -3,6 +3,7 @@ from src import BLASPtr
 from algorithm.functional import vectorize
 from sys.info import simd_width_of
 
+# need to fix this for complex types. Currently only works for real types.
 fn dasum[
     dtype: DType
 ](n: Int, x: BLASPtr[Scalar[dtype]], incx: Int) -> Scalar[dtype]:
