@@ -1,6 +1,7 @@
 from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of
 
+
 def rot[
     dtype: DType
 ](
