@@ -1,9 +1,8 @@
-from src.level1 import *
-from memory import UnsafePointer
-from memory import memset_zero
-from time import sleep
-import benchmark
-from benchmark import keep
+from blas.level1 import *
+from std.memory import UnsafePointer, memset_zero
+from std.time import sleep
+import std.benchmark as benchmark
+from std.benchmark import keep
 
 def bench_daxpy[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[DType.float32]](current_size)
@@ -14,7 +13,7 @@ def bench_daxpy[current_size: Int]() raises -> Float64:
 
     @parameter
     def daxpy_only() -> None:
-        daxpy[DType.float32](current_size, Float32(2.0), x, 1, y, 1)
+        axpy[DType.float32](current_size, Float32(2.0), x, 1, y, 1)
         keep(x)
         keep(y)
 
@@ -34,7 +33,7 @@ def bench_dcopy[current_size: Int]() raises -> Float64:
 
     @parameter
     def dcopy_only() -> None:
-        dcopy[DType.float32](current_size, x, 1, y, 1)
+        copy[DType.float32](current_size, x, 1, y, 1)
         keep(x)
         keep(y)
 
@@ -54,7 +53,7 @@ def bench_dscal[current_size: Int]() raises -> Float64:
 
     @parameter
     def dscal_only() -> None:
-        dscal[DType.float32](current_size, Float32(2.5), x, 1)
+        scal[DType.float32](current_size, Float32(2.5), x, 1)
         keep(x)
 
     var report = benchmark.run[dscal_only](max_runtime_secs=1)
@@ -74,7 +73,7 @@ def bench_ddot[current_size: Int]() raises -> Float64:
 
     @parameter
     def ddot_only() -> None:
-        var result = ddot[DType.float32](current_size, x, 1, y, 1)
+        var result = dot[DType.float32](current_size, x, 1, y, 1)
         keep(result)
         keep(x)
         keep(y)
@@ -95,7 +94,7 @@ def bench_dasum[current_size: Int]() raises -> Float64:
 
     @parameter
     def dasum_only() -> None:
-        var result = dasum[DType.float32](current_size, x, 1)
+        var result = asum[DType.float32](current_size, x, 1)
         keep(result)
         keep(x)
 
@@ -114,7 +113,7 @@ def bench_dnrm2[current_size: Int]() raises -> Float64:
 
     @parameter
     def dnrm2_only() -> None:
-        var result = dnrm2[DType.float32](current_size, x, 1)
+        var result = nrm2[DType.float32](current_size, x, 1)
         keep(result)
         keep(x)
 
@@ -135,7 +134,7 @@ def bench_dswap[current_size: Int]() raises -> Float64:
 
     @parameter
     def dswap_only() -> None:
-        dswap[DType.float32](current_size, x, 1, y, 1)
+        vswap[DType.float32](current_size, x, 1, y, 1)
         keep(x)
         keep(y)
 
@@ -155,7 +154,7 @@ def bench_diamax[current_size: Int]() raises -> Float64:
 
     @parameter
     def diamax_only() -> None:
-        var result = di_amax[DType.float32](current_size, x, 1)
+        var result = iamax[DType.float32](current_size, x, 1)
         keep(result)
         keep(x)
 
@@ -176,7 +175,7 @@ def bench_drot[current_size: Int]() raises -> Float64:
 
     @parameter
     def drot_only() -> None:
-        drot[DType.float32](current_size, x, 1, y, 1, Float32(0.6), Float32(0.8))
+        rot[DType.float32](current_size, x, 1, y, 1, Float32(0.6), Float32(0.8))
         keep(x)
         keep(y)
 
@@ -200,7 +199,7 @@ def bench_drotg[current_size: Int]() raises -> Float64:
 
     @parameter
     def drotg_only() -> None:
-        drotg[DType.float32](a, b, c, s)
+        rotg[DType.float32](a, b, c, s)
         keep(a)
         keep(b)
         keep(c)
@@ -221,79 +220,69 @@ comptime sizes: List[Int] = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 655
 
 def benchmark_axpy() raises -> List[Float64]:
     var times: List[Float64] = []
-    @parameter
-    for size in materialize[sizes]():
+    comptime for size in materialize[sizes]():
         times.append(bench_daxpy[size]())
     return times^
 
 def benchmark_copy() raises -> List[Float64]:
     var times: List[Float64] = []
-    @parameter
-    for size in materialize[sizes]():
+    comptime for size in materialize[sizes]():
         times.append(bench_dcopy[size]())
     return times^
 
 
 def benchmark_scal() raises -> List[Float64]:
     var times: List[Float64] = []
-    @parameter
-    for size in materialize[sizes]():
+    comptime for size in materialize[sizes]():
         times.append(bench_dscal[size]())
     return times^
 
 
 def benchmark_dot() raises -> List[Float64]:
     var times: List[Float64] = []
-    @parameter
-    for size in materialize[sizes]():
+    comptime for size in materialize[sizes]():
         times.append(bench_ddot[size]())
     return times^
 
 
 def benchmark_asum() raises -> List[Float64]:
     var times: List[Float64] = []
-    @parameter
-    for size in materialize[sizes]():
+    comptime for size in materialize[sizes]():
         times.append(bench_dasum[size]())
     return times^
 
 
 def benchmark_nrm2() raises -> List[Float64]:
     var times: List[Float64] = []
-    @parameter
-    for size in materialize[sizes]():
+    comptime for size in materialize[sizes]():
         times.append(bench_dnrm2[size]())
     return times^
 
 
 def benchmark_swap() raises -> List[Float64]:
     var times: List[Float64] = []
-    @parameter
-    for size in materialize[sizes]():
+    comptime for size in materialize[sizes]():
         times.append(bench_dswap[size]())
     return times^
 
 
 def benchmark_iamax() raises -> List[Float64]:
     var times: List[Float64] = []
-    @parameter
-    for size in materialize[sizes]():
+    comptime for size in materialize[sizes]():
         times.append(bench_diamax[size]())
     return times^
 
 
 def benchmark_rot() raises -> List[Float64]:
     var times: List[Float64] = []
-    @parameter
-    for size in materialize[sizes]():
+    comptime for size in materialize[sizes]():
         times.append(bench_drot[size]())
     return times^
 
 
 def benchmark_rotg() raises -> List[Float64]:
     var times: List[Float64] = []
-    @parameter
-    for size in materialize[sizes]():
+    comptime for size in materialize[sizes]():
         times.append(bench_drotg[size]())
     return times^
 
@@ -319,8 +308,7 @@ def main() raises:
     print("  },")
     print("  \"results\": [")
 
-    @parameter
-    for size in materialize[sizes]():
+    comptime for size in materialize[sizes]():
         var axpy_ns_value = axpy_ns[idx]
         var scal_ns_value = scal_ns[idx]
         var dot_ns_value = dot_ns[idx]
