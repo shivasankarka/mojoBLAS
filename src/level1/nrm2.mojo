@@ -1,11 +1,9 @@
-from math import sqrt
-
-from src import BLASPtr
-from algorithm.functional import vectorize
-from sys.info import simd_width_of
+from std.math import sqrt
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
 
 
-fn dnrm2[
+def nrm2[
     dtype: DType
 ](n: Int, x: BLASPtr[Scalar[dtype]], incx: Int,) -> Scalar[dtype]:
     """
@@ -23,13 +21,17 @@ fn dnrm2[
     if n <= 0:
         return result
 
-    var ix: Int32 = 0
+    var ix: Int = 0
     comptime simd_width: Int = simd_width_of[dtype]()
 
     if incx == 1:
+
         @parameter
-        fn closure[width: Int](i: Int) unified {mut result, read x}:
-            result += (x.load[width=width](i) * x.load[width=width](i)).reduce_add()
+        def closure[width: Int](i: Int) unified {mut result, read x}:
+            result += (
+                x.load[width=width](i) * x.load[width=width](i)
+            ).reduce_add()
+
         vectorize[simd_width](n, closure)
         return sqrt(result)
 

@@ -1,8 +1,7 @@
-from src import BLASPtr
-from math import sqrt, copysign
+from std.math import sqrt, copysign
 
 
-fn drotg[
+def rotg[
     dtype: DType
 ](
     a: BLASPtr[Scalar[dtype]],

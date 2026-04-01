@@ -1,51 +1,76 @@
-from src import BLASPtr
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
 
-from algorithm.functional import vectorize
-from sys.info import simd_width_of
 
-fn dswap[
+# Named `vwap` to avoid conflict with `swap` in std library.
+def vswap[
     dtype: DType
 ](
     n: Int,
-    x: BLASPtr[Scalar[dtype]],
+    dx: BLASPtr[Scalar[dtype]],
     incx: Int,
-    y: BLASPtr[Scalar[dtype]],
+    dy: BLASPtr[Scalar[dtype]],
     incy: Int,
-) -> None:
+):
     """
     Swap the elements of two vectors X and Y: X <-> Y.
 
+    Parameters:
+        dtype: Data type of the elements in vectors X and Y.
+
     Args:
         n: Number of elements in vectors X and Y.
-        x: Pointer to the first element of vector X.
+        dx: Pointer to the first element of vector X.
         incx: Increment for the elements of X.
-        y: Pointer to the first element of vector Y.
+        dy: Pointer to the first element of vector Y.
         incy: Increment for the elements of Y.
     """
     if n <= 0:
         return
 
-    var ix: Int = 0
-    var iy: Int = 0
     comptime simd_width: Int = simd_width_of[dtype]()
-
     if incx == 1 and incy == 1:
+
         @parameter
-        fn closure[width: Int](i: Int) unified {mut x, mut y}:
-            var temp = x.load[width=width](i)
-            x.store[width=width](i, y.load[width=width](i))
-            y.store[width=width](i, temp)
+        def closure[width: Int](i: Int) unified {mut dx, mut dy}:
+            var temp = dx.load[width=width](i)
+            dx.store[width=width](i, dy.load[width=width](i))
+            dy.store[width=width](i, temp)
+
         vectorize[simd_width](n, closure)
         return
 
+    var ix: Int = 0
+    var iy: Int = 0
     if incx < 0:
         ix = (-n + 1) * incx
     if incy < 0:
         iy = (-n + 1) * incy
-
     for i in range(n):
-        temp: Scalar[dtype] = x[ix]
-        x[ix] = y[iy]
-        y[iy] = temp
+        temp = dx[ix]
+        dx[ix] = dy[iy]
+        dy[iy] = temp
         ix += incx
         iy += incy
+
+
+def vswap[
+    dtype: DType,
+    n: Int,
+    incx: Int,
+    incy: Int,
+](dx: BLASPtr[Scalar[dtype]], dy: BLASPtr[Scalar[dtype]],):
+    """
+    Swap the elements of two vectors X and Y: X <-> Y.
+
+    Parameters:
+        dtype: Data type of the elements in vectors X and Y.
+        n: Number of elements in vectors X and Y.
+        incx: Increment for the elements of X.
+        incy: Increment for the elements of Y.
+
+    Args:
+        dx: Pointer to the first element of vector X.
+        dy: Pointer to the first element of vector Y.
+    """
+    vswap[dtype](n, dx, incx, dy, incy)

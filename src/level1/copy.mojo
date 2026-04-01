@@ -1,47 +1,70 @@
-from src import BLASPtr
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
+from std.memory import memcpy
 
-from algorithm.functional import vectorize
-from sys.info import simd_width_of
 
-fn dcopy[
+def copy[
     dtype: DType
 ](
     n: Int,
-    x: BLASPtr[Scalar[dtype]],
+    dx: BLASPtr[Scalar[dtype]],
     incx: Int,
-    y: BLASPtr[Scalar[dtype]],
+    dy: BLASPtr[Scalar[dtype]],
     incy: Int,
-) -> None:
+):
     """
     Copy a vector X to vector Y: Y := X.
 
+    Parameters:
+        dtype: Data type of the elements in vectors X and Y.
+
     Args:
         n: Number of elements in vectors X and Y.
-        x: Pointer to the first element of vector X.
+        dx: Pointer to the first element of vector X. dimension should be at least (1 + (n - 1) * abs(incx)).
         incx: Increment for the elements of X.
-        y: Pointer to the first element of vector Y.
+        dy: Pointer to the first element of vector Y. dimension should be at least (1 + (n - 1) * abs(incy)).
         incy: Increment for the elements of Y.
     """
     if n <= 0:
         return
 
+    comptime simd_width: Int = simd_width_of[dtype]()
+    if incx == 1 and incy == 1:
+        memcpy(dest=dy, src=dx, count=n)
+        # @parameter
+        # def closure[width: Int](i: Int) unified {mut y, read x}:
+        #     y.store[width=width](i, x.load[width=width](i))
+
+        # vectorize[simd_width](n, closure)
+        # return
+
     var ix: Int = 0
     var iy: Int = 0
-    comptime simd_width: Int = simd_width_of[dtype]()
-
-    if incx == 1 and incy == 1:
-        @parameter
-        fn closure[width: Int](i: Int) unified {mut y, read x}:
-            y.store[width=width](i, x.load[width=width](i))
-        vectorize[simd_width](n, closure)
-        return
-
     if incx < 0:
         ix = (-n + 1) * incx
     if incy < 0:
         iy = (-n + 1) * incy
 
     for i in range(n):
-        y[iy] = x[ix]
+        dy[iy] = dx[ix]
         ix += incx
         iy += incy
+
+
+def copy[
+    dtype: DType, n: Int, incx: Int, incy: Int
+](dx: BLASPtr[Scalar[dtype]], dy: BLASPtr[Scalar[dtype]],):
+    """
+    Copy a vector X to vector Y: Y := X.
+
+    Parameters:
+        dtype: Data type of the elements in vectors X and Y.
+        n: Number of elements in vectors X and Y.
+        incx: Increment for the elements of X.
+        incy: Increment for the elements of Y.
+
+    Args:
+        dx: Pointer to the first element of vector X. dimension should be at least (1 + (n - 1) * abs(incx)).
+        dy: Pointer to the first element of vector Y. dimension should be at least (1 + (n - 1) * abs(incy)).
+    """
+    copy[dtype](n, dx, incx, dy, incy)

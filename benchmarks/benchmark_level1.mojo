@@ -5,7 +5,7 @@ from time import sleep
 import benchmark
 from benchmark import keep
 
-fn bench_daxpy[current_size: Int]() raises -> Float64:
+def bench_daxpy[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[DType.float32]](current_size)
     var y = alloc[Scalar[DType.float32]](current_size)
     for i in range(current_size):
@@ -13,7 +13,7 @@ fn bench_daxpy[current_size: Int]() raises -> Float64:
         y[i] = Float32((i + 1) * 10)
 
     @parameter
-    fn daxpy_only() -> None:
+    def daxpy_only() -> None:
         daxpy[DType.float32](current_size, Float32(2.0), x, 1, y, 1)
         keep(x)
         keep(y)
@@ -26,14 +26,14 @@ fn bench_daxpy[current_size: Int]() raises -> Float64:
 
     return report.mean("ns")
 
-fn bench_dcopy[current_size: Int]() raises -> Float64:
+def bench_dcopy[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[DType.float32]](current_size)
     var y = alloc[Scalar[DType.float32]](current_size)
     for i in range(current_size):
         x[i] = Float32(i + 1)
 
     @parameter
-    fn dcopy_only() -> None:
+    def dcopy_only() -> None:
         dcopy[DType.float32](current_size, x, 1, y, 1)
         keep(x)
         keep(y)
@@ -47,13 +47,13 @@ fn bench_dcopy[current_size: Int]() raises -> Float64:
     return report.mean("ns")
 
 
-fn bench_dscal[current_size: Int]() raises -> Float64:
+def bench_dscal[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[DType.float32]](current_size)
     for i in range(current_size):
         x[i] = Float32(i + 1)
 
     @parameter
-    fn dscal_only() -> None:
+    def dscal_only() -> None:
         dscal[DType.float32](current_size, Float32(2.5), x, 1)
         keep(x)
 
@@ -65,7 +65,7 @@ fn bench_dscal[current_size: Int]() raises -> Float64:
     return report.mean("ns")
 
 
-fn bench_ddot[current_size: Int]() raises -> Float64:
+def bench_ddot[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[DType.float32]](current_size)
     var y = alloc[Scalar[DType.float32]](current_size)
     for i in range(current_size):
@@ -73,7 +73,7 @@ fn bench_ddot[current_size: Int]() raises -> Float64:
         y[i] = Float32(i + 2)
 
     @parameter
-    fn ddot_only() -> None:
+    def ddot_only() -> None:
         var result = ddot[DType.float32](current_size, x, 1, y, 1)
         keep(result)
         keep(x)
@@ -88,13 +88,13 @@ fn bench_ddot[current_size: Int]() raises -> Float64:
     return report.mean("ns")
 
 
-fn bench_dasum[current_size: Int]() raises -> Float64:
+def bench_dasum[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[DType.float32]](current_size)
     for i in range(current_size):
         x[i] = Float32(i + 1) if i % 2 == 0 else Float32(-(i + 1))
 
     @parameter
-    fn dasum_only() -> None:
+    def dasum_only() -> None:
         var result = dasum[DType.float32](current_size, x, 1)
         keep(result)
         keep(x)
@@ -107,13 +107,13 @@ fn bench_dasum[current_size: Int]() raises -> Float64:
     return report.mean("ns")
 
 
-fn bench_dnrm2[current_size: Int]() raises -> Float64:
+def bench_dnrm2[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[DType.float32]](current_size)
     for i in range(current_size):
         x[i] = Float32(i + 1)
 
     @parameter
-    fn dnrm2_only() -> None:
+    def dnrm2_only() -> None:
         var result = dnrm2[DType.float32](current_size, x, 1)
         keep(result)
         keep(x)
@@ -126,7 +126,7 @@ fn bench_dnrm2[current_size: Int]() raises -> Float64:
     return report.mean("ns")
 
 
-fn bench_dswap[current_size: Int]() raises -> Float64:
+def bench_dswap[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[DType.float32]](current_size)
     var y = alloc[Scalar[DType.float32]](current_size)
     for i in range(current_size):
@@ -134,7 +134,7 @@ fn bench_dswap[current_size: Int]() raises -> Float64:
         y[i] = Float32((i + 1) * 10)
 
     @parameter
-    fn dswap_only() -> None:
+    def dswap_only() -> None:
         dswap[DType.float32](current_size, x, 1, y, 1)
         keep(x)
         keep(y)
@@ -148,13 +148,13 @@ fn bench_dswap[current_size: Int]() raises -> Float64:
     return report.mean("ns")
 
 
-fn bench_diamax[current_size: Int]() raises -> Float64:
+def bench_diamax[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[DType.float32]](current_size)
     for i in range(current_size):
         x[i] = Float32(i + 1) if i != current_size // 2 else Float32(current_size * 2)
 
     @parameter
-    fn diamax_only() -> None:
+    def diamax_only() -> None:
         var result = di_amax[DType.float32](current_size, x, 1)
         keep(result)
         keep(x)
@@ -167,7 +167,7 @@ fn bench_diamax[current_size: Int]() raises -> Float64:
     return report.mean("ns")
 
 
-fn bench_drot[current_size: Int]() raises -> Float64:
+def bench_drot[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[DType.float32]](current_size)
     var y = alloc[Scalar[DType.float32]](current_size)
     for i in range(current_size):
@@ -175,7 +175,7 @@ fn bench_drot[current_size: Int]() raises -> Float64:
         y[i] = Float32((i + 1) * 2)
 
     @parameter
-    fn drot_only() -> None:
+    def drot_only() -> None:
         drot[DType.float32](current_size, x, 1, y, 1, Float32(0.6), Float32(0.8))
         keep(x)
         keep(y)
@@ -189,7 +189,7 @@ fn bench_drot[current_size: Int]() raises -> Float64:
     return report.mean("ns")
 
 
-fn bench_drotg[current_size: Int]() raises -> Float64:
+def bench_drotg[current_size: Int]() raises -> Float64:
     var a = alloc[Scalar[DType.float32]](1)
     var b = alloc[Scalar[DType.float32]](1)
     var c = alloc[Scalar[DType.float32]](1)
@@ -199,7 +199,7 @@ fn bench_drotg[current_size: Int]() raises -> Float64:
     b[0] = Float32(4.0)
 
     @parameter
-    fn drotg_only() -> None:
+    def drotg_only() -> None:
         drotg[DType.float32](a, b, c, s)
         keep(a)
         keep(b)
@@ -219,14 +219,14 @@ fn bench_drotg[current_size: Int]() raises -> Float64:
 
 comptime sizes: List[Int] = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144]
 
-fn benchmark_axpy() raises -> List[Float64]:
+def benchmark_axpy() raises -> List[Float64]:
     var times: List[Float64] = []
     @parameter
     for size in materialize[sizes]():
         times.append(bench_daxpy[size]())
     return times^
 
-fn benchmark_copy() raises -> List[Float64]:
+def benchmark_copy() raises -> List[Float64]:
     var times: List[Float64] = []
     @parameter
     for size in materialize[sizes]():
@@ -234,7 +234,7 @@ fn benchmark_copy() raises -> List[Float64]:
     return times^
 
 
-fn benchmark_scal() raises -> List[Float64]:
+def benchmark_scal() raises -> List[Float64]:
     var times: List[Float64] = []
     @parameter
     for size in materialize[sizes]():
@@ -242,7 +242,7 @@ fn benchmark_scal() raises -> List[Float64]:
     return times^
 
 
-fn benchmark_dot() raises -> List[Float64]:
+def benchmark_dot() raises -> List[Float64]:
     var times: List[Float64] = []
     @parameter
     for size in materialize[sizes]():
@@ -250,7 +250,7 @@ fn benchmark_dot() raises -> List[Float64]:
     return times^
 
 
-fn benchmark_asum() raises -> List[Float64]:
+def benchmark_asum() raises -> List[Float64]:
     var times: List[Float64] = []
     @parameter
     for size in materialize[sizes]():
@@ -258,7 +258,7 @@ fn benchmark_asum() raises -> List[Float64]:
     return times^
 
 
-fn benchmark_nrm2() raises -> List[Float64]:
+def benchmark_nrm2() raises -> List[Float64]:
     var times: List[Float64] = []
     @parameter
     for size in materialize[sizes]():
@@ -266,7 +266,7 @@ fn benchmark_nrm2() raises -> List[Float64]:
     return times^
 
 
-fn benchmark_swap() raises -> List[Float64]:
+def benchmark_swap() raises -> List[Float64]:
     var times: List[Float64] = []
     @parameter
     for size in materialize[sizes]():
@@ -274,7 +274,7 @@ fn benchmark_swap() raises -> List[Float64]:
     return times^
 
 
-fn benchmark_iamax() raises -> List[Float64]:
+def benchmark_iamax() raises -> List[Float64]:
     var times: List[Float64] = []
     @parameter
     for size in materialize[sizes]():
@@ -282,7 +282,7 @@ fn benchmark_iamax() raises -> List[Float64]:
     return times^
 
 
-fn benchmark_rot() raises -> List[Float64]:
+def benchmark_rot() raises -> List[Float64]:
     var times: List[Float64] = []
     @parameter
     for size in materialize[sizes]():
@@ -290,7 +290,7 @@ fn benchmark_rot() raises -> List[Float64]:
     return times^
 
 
-fn benchmark_rotg() raises -> List[Float64]:
+def benchmark_rotg() raises -> List[Float64]:
     var times: List[Float64] = []
     @parameter
     for size in materialize[sizes]():
@@ -298,7 +298,7 @@ fn benchmark_rotg() raises -> List[Float64]:
     return times^
 
 
-fn main() raises:
+def main() raises:
     var min_n: Int = 256
     var max_n: Int = 262144
     var step: Int = 2

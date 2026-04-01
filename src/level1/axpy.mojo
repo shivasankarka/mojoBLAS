@@ -1,13 +1,9 @@
-from src import BLASPtr
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
+from std.memory import memcpy
 
-from algorithm.functional import vectorize
-from sys.info import simd_width_of
-from memory import memcpy
-# from gpu.host import DeviceContext, DeviceBuffer
-# from gpu import thread_idx, block_idx, block_dim
-# from gpu.host import DeviceContext
 
-fn daxpy[
+def axpy[
     dtype: DType
 ](
     n: Int,
@@ -19,6 +15,9 @@ fn daxpy[
 ):
     """
     Perform the AXPY operation: Y := alpha * X + Y.
+
+    Parameters:
+        dtype: Data type of the elements in vectors X and Y.
 
     Args:
         n: Number of elements in vectors X and Y.
@@ -33,11 +32,13 @@ fn daxpy[
 
     comptime simd_width: Int = simd_width_of[dtype]()
     if incx == 1 and incy == 1:
+
         @parameter
-        fn closure[width: Int](i: Int) unified {mut dy, read dx, read da}:
+        def closure[width: Int](i: Int) unified {mut dy, read dx, read da}:
             dy.store[width=width](
                 i, da * dx.load[width=width](i) + dy.load[width=width](i)
             )
+
         vectorize[simd_width](n, closure)
         return
 
@@ -55,8 +56,7 @@ fn daxpy[
         iy += incy
 
 
-
-fn daxpy[
+def axpy[
     dtype: DType, n: Int, da: Scalar[dtype], incx: Int, incy: Int
 ](
     dx: BLASPtr[Scalar[dtype]],
@@ -76,40 +76,12 @@ fn daxpy[
         dx: Pointer to the first element of vector X.
         dy: Pointer to the first element of vector Y.
     """
-    @parameter
-    if n <= 0 or da == 0:
-        return
-
-    comptime simd_width: Int = simd_width_of[dtype]()
-    @parameter
-    if incx == 1 and incy == 1:
-        @parameter
-        fn closure[width: Int](i: Int) unified {mut dy, read dx}:
-            dy.store[width=width](
-                i, da * dx.load[width=width](i) + dy.load[width=width](i)
-            )
-
-        vectorize[simd_width](n, closure)
-        return
-
-    var ix: Int = 0
-    var iy: Int = 0
-    @parameter
-    if incx < 0:
-        ix = (-n + 1) * incx
-    @parameter
-    if incy < 0:
-        iy = (-n + 1) * incy
-    @parameter
-    for i in range(n):
-        dy[iy] = da * dx[ix] + dy[iy]
-        ix += incx
-        iy += incy
+    axpy[dtype](n, da, dx, incx, dy, incy)
 
 
 # NOTE: GPU implementation are commented out for now. Undergoing development :)
 
-# fn gdaxpy_backend[
+# def gdaxpy_backend[
 #     dtype: DType, SIMD_WIDTH: Int
 # ](
 #     n: Int,
@@ -122,7 +94,7 @@ fn daxpy[
 #         dy[tid] = da * dx[tid] + dy[tid]
 
 
-# fn gdaxpy[dtype: DType](
+# def gdaxpy[dtype: DType](
 #     n: Int,
 #     da: Scalar[dtype],
 #     dx: BLASPtr[Scalar[dtype]],
@@ -158,7 +130,7 @@ fn daxpy[
 #         with y.map_to_host() as b_host:
 #             memcpy(dest=dy, src=b_host.unsafe_ptr(), count=n)
 
-# fn gdaxpy[
+# def gdaxpy[
 #     dtype: DType
 # ](
 #     ctx: DeviceContext,
@@ -214,7 +186,7 @@ fn daxpy[
 
 #     ctx.synchronize()
 
-# fn zaxpy[
+# def zaxpy[
 #     dtype: DType
 # ](
 #     n: Int,

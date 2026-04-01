@@ -1,1 +1,1 @@
-from .type_aliases import *
+from .type_aliases import BLASPtr

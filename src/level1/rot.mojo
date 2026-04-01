@@ -1,9 +1,7 @@
-from src import BLASPtr
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
 
-from algorithm.functional import vectorize
-from sys.info import simd_width_of
-
-fn drot[
+def rot[
     dtype: DType
 ](
     n: Int,
@@ -33,17 +31,21 @@ fn drot[
     if n <= 0:
         return
 
-    var ix: Int32 = 0
-    var iy: Int32 = 0
+    var ix: Int = 0
+    var iy: Int = 0
     comptime simd_width: Int = simd_width_of[dtype]()
 
     if incx == 1 and incy == 1:
+
         @parameter
-        fn closure[width: Int](i: Int) unified {mut y, read x, read c, read s}:
+        def closure[width: Int](i: Int) unified {mut y, read x, read c, read s}:
             var temp_x = c * x.load[width=width](i) + s * y.load[width=width](i)
-            var temp_y = -s * x.load[width=width](i) + c * y.load[width=width](i)
+            var temp_y = -s * x.load[width=width](i) + c * y.load[width=width](
+                i
+            )
             y.store[width=width](i, temp_y)
             x.store[width=width](i, temp_x)
+
         vectorize[simd_width](n, closure)
         return
 

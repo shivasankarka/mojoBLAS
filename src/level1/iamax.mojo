@@ -1,13 +1,13 @@
-from src import BLASPtr
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
 
-from algorithm.functional import vectorize
-from sys.info import simd_width_of
 
-fn di_amax[
-    dtype: DType
-](n: Int32, x: BLASPtr[Scalar[dtype]], incx: Int32) -> Int32:
+def iamax[dtype: DType](n: Int, x: BLASPtr[Scalar[dtype]], incx: Int) -> Int:
     """
     Find the index of the element with maximum absolute value in vector X.
+
+    Parameters:
+        dtype: Data type of the elements in vectors X and Y.
 
     Args:
         n: Number of elements in vector X.
@@ -24,8 +24,8 @@ fn di_amax[
     if n == 1:
         return 1
 
-    var ix: Int32 = 0
-    var imax: Int32 = 1
+    var ix: Int = 0
+    var imax: Int = 1
     var max_val: Scalar[dtype] = abs(x[0])
 
     if incx < 0:

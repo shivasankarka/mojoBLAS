@@ -1,14 +1,15 @@
-from src import BLASPtr
-
-from algorithm.functional import vectorize
-from sys.info import simd_width_of
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
 
 
-fn dasum[
+def asum[
     dtype: DType
-](out dasum: Scalar[dtype], n: Int, dx: BLASPtr[Scalar[dtype]], incx: Int):
+](n: Int, dx: BLASPtr[Scalar[dtype]], incx: Int) -> Scalar[dtype]:
     """
     Compute the sum of absolute values of elements in vector X.
+
+    Parameters:
+        dtype: Data type of the elements in vector X.
 
     Args:
         n: Number of elements in vector X.
@@ -18,29 +19,29 @@ fn dasum[
     Returns:
         The sum of absolute values as a scalar value.
     """
-    comptime simd_width: Int = simd_width_of[dtype]()
-    dasum: Scalar[dtype] = 0.0
+    var result: Scalar[dtype] = 0.0
 
     if n <= 0 or incx <= 0:
-        return
+        return result
 
     if incx == 1:
+        comptime simd_width: Int = simd_width_of[dtype]()
 
         @parameter
-        fn closure[width: Int](i: Int) unified {mut dasum, read dx}:
-            dasum += abs(dx.load[width=width](i)).reduce_add()
+        def closure[width: Int](i: Int) unified {mut result, read dx}:
+            result += abs(dx.load[width=width](i)).reduce_add()
 
         vectorize[simd_width](n, closure)
-        return
+        return result
 
     var nincx: Int = n * incx
     for i in range(0, nincx, incx):
-        dasum += abs(dx[i])
-    return
+        result += abs(dx[i])
+    return result
 
 
 # NOTE: Using internal complex scalar type. not sure if this is the best way because we can't do vectorization on this UnsafePointer[ComplexScalar[dtype]].
-# fn cdasum[dtype: DType](
+# def cdasum[dtype: DType](
 #     out dasum: Scalar[dtype],
 #     n: Int,
 #     dx: BLASPtr[ComplexScalar[dtype]],

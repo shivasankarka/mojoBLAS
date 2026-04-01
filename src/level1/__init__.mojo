@@ -5,13 +5,13 @@ Provides Level 1 BLAS (Basic Linear Algebra Subprograms) operations.
 # Add benchmark against BLAS operations.
 # Add support for Complex data types.
 
-from .copy import dcopy
-from .scal import dscal
-from .axpy import daxpy
-from .asum import dasum
-from .dot import ddot
-from .nrm2 import dnrm2
-from .swap import dswap
-from .iamax import di_amax
-from .rotg import drotg
-from .rot import drot
+from .copy import copy
+from .scal import scal
+from .axpy import axpy
+from .asum import asum
+from .dot import dot
+from .nrm2 import nrm2
+from .swap import vswap
+from .iamax import iamax
+from .rotg import rotg
+from .rot import rot

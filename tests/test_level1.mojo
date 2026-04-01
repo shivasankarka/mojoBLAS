@@ -1,10 +1,21 @@
-from src.level1 import *
-from memory import UnsafePointer
+from std.memory import UnsafePointer
+from std.testing import TestSuite
 
-from testing import TestSuite
+from src.level1 import (
+    axpy,
+    copy,
+    scal,
+    dot,
+    nrm2,
+    asum,
+    vswap,
+    iamax,
+    rotg,
+    rot,
+)
 
 
-def test_copy():
+def test_copy() raises:
     print("Testing copy...")
     var x = alloc[Scalar[DType.float32]](3)
     var y = alloc[Scalar[DType.float32]](3)
@@ -17,10 +28,7 @@ def test_copy():
     y[1] = 0.0
     y[2] = 0.0
 
-    try:
-        dcopy(3, x, 1, y, 1)
-    except:
-        print("Error in copy")
+    copy(3, x, 1, y, 1)
 
     print("x:", x[0], x[1], x[2])
     print("y:", y[0], y[1], y[2])
@@ -29,7 +37,7 @@ def test_copy():
     y.free()
 
 
-def test_scal():
+def test_scal() raises:
     print("\nTesting scal...")
     var x = alloc[Scalar[DType.float32]](3)
 
@@ -38,13 +46,13 @@ def test_scal():
     x[2] = 3.0
 
     print("Before scaling:", x[0], x[1], x[2])
-    dscal(3, Float32(2.0), x, 1)
+    scal(3, Float32(2.0), x, 1)
     print("After scaling by 2:", x[0], x[1], x[2])
 
     x.free()
 
 
-def test_axpy():
+def test_axpy() raises:
     print("\nTesting axpy...")
     var x = alloc[Scalar[DType.float32]](3)
     var y = alloc[Scalar[DType.float32]](3)
@@ -60,7 +68,7 @@ def test_axpy():
     print("Before axpy - x:", x[0], x[1], x[2])
     print("Before axpy - y:", y[0], y[1], y[2])
 
-    daxpy(3, Float32(2.0), x, 1, y, 1)
+    axpy(3, Float32(2.0), x, 1, y, 1)
 
     print("After y := 2*x + y - y:", y[0], y[1], y[2])
 
@@ -68,7 +76,7 @@ def test_axpy():
     y.free()
 
 
-def test_dot():
+def test_dot() raises:
     print("\nTesting dot...")
     var x = alloc[Scalar[DType.float32]](3)
     var y = alloc[Scalar[DType.float32]](3)
@@ -81,14 +89,14 @@ def test_dot():
     y[1] = 5.0
     y[2] = 6.0
 
-    var result = ddot(3, x, 1, y, 1)
+    var result = dot(3, x, 1, y, 1)
     print("Dot product:", result, "(expected: 32)")
 
     x.free()
     y.free()
 
 
-def test_nrm2():
+def test_nrm2() raises:
     print("\nTesting nrm2...")
     var x = alloc[Scalar[DType.float32]](3)
 
@@ -96,13 +104,13 @@ def test_nrm2():
     x[1] = 4.0
     x[2] = 0.0
 
-    var result = dnrm2(3, x, 1)
+    var result = nrm2(3, x, 1)
     print("Euclidean norm:", result, "(expected: 5)")
 
     x.free()
 
 
-def test_asum():
+def test_asum() raises:
     print("\nTesting asum...")
     var x = alloc[Scalar[DType.float32]](4)
 
@@ -111,13 +119,13 @@ def test_asum():
     x[2] = 3.0
     x[3] = -4.0
 
-    var result = dasum(4, x, 1)
+    var result = asum(4, x, 1)
     print("Sum of absolute values:", result, "(expected: 10)")
 
     x.free()
 
 
-def test_swap():
+def test_swap() raises:
     print("\nTesting swap...")
     var x = alloc[Scalar[DType.float32]](3)
     var y = alloc[Scalar[DType.float32]](3)
@@ -133,7 +141,7 @@ def test_swap():
     print("Before swap - x:", x[0], x[1], x[2])
     print("Before swap - y:", y[0], y[1], y[2])
 
-    dswap(3, x, 1, y, 1)
+    vswap(3, x, 1, y, 1)
 
     print("After swap - x:", x[0], x[1], x[2])
     print("After swap - y:", y[0], y[1], y[2])
@@ -142,7 +150,7 @@ def test_swap():
     y.free()
 
 
-def test_iamax():
+def test_iamax() raises:
     print("\nTesting iamax...")
     var x = alloc[Scalar[DType.float32]](5)
 
@@ -152,7 +160,7 @@ def test_iamax():
     x[3] = 2.0
     x[4] = -4.0
 
-    var result = di_amax(5, x, 1)
+    var result = iamax(5, x, 1)
     print(
         "Index of max absolute value:", result, "(expected: 2 for value -5.0)"
     )
@@ -160,7 +168,7 @@ def test_iamax():
     x.free()
 
 
-def test_rotg():
+def test_rotg() raises:
     print("\nTesting rotg...")
     var a = alloc[Scalar[DType.float32]](1)
     var b = alloc[Scalar[DType.float32]](1)
@@ -172,7 +180,7 @@ def test_rotg():
 
     print("Before rotg - a:", a[0], "b:", b[0])
 
-    drotg(a, b, c, s)
+    rotg(a, b, c, s)
 
     print("After rotg - r:", a[0], "z:", b[0])
     print("cos:", c[0], "sin:", s[0])
@@ -183,7 +191,7 @@ def test_rotg():
     s.free()
 
 
-def test_rot():
+def test_rot() raises:
     print("\nTesting rot...")
     var x = alloc[Scalar[DType.float32]](2)
     var y = alloc[Scalar[DType.float32]](2)
@@ -198,7 +206,7 @@ def test_rot():
     print("Before rotation - y:", y[0], y[1])
 
     # Apply 90 degree rotation (c=0, s=1)
-    drot(2, x, 1, y, 1, Float32(0.0), Float32(1.0))
+    rot(2, x, 1, y, 1, Float32(0.0), Float32(1.0))
 
     print("After 90° rotation - x:", x[0], x[1])
     print("After 90° rotation - y:", y[0], y[1])
@@ -207,5 +215,5 @@ def test_rot():
     y.free()
 
 
-def main():
+def main() raises:
     TestSuite.discover_tests[__functions_in_module()]().run()

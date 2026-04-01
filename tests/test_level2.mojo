@@ -1,9 +1,9 @@
-from src.level2 import *
-from testing import assert_almost_equal, assert_equal, TestSuite
+from std.testing import assert_almost_equal, assert_equal, TestSuite
 
-# TODO: Improve the testing framework to better handle memory allocation and deallocation.
+from src.level2 import gemv
 
-def test_gemv_no_transpose():
+
+def test_gemv_no_transpose() raises:
     print("Testing gemv (no transpose)...")
     var m = 2
     var n = 3
@@ -27,7 +27,7 @@ def test_gemv_no_transpose():
     y[0] = 0.0
     y[1] = 0.0
 
-    dgemv("N", m, n, Float32(1.0), a, lda, x, 1, Float32(0.0), y, 1)
+    gemv("N", m, n, Float32(1.0), a, lda, x, 1, Float32(0.0), y, 1)
 
     assert_almost_equal(y[0], Float32(6.0))
     assert_almost_equal(y[1], Float32(15.0))
@@ -37,7 +37,7 @@ def test_gemv_no_transpose():
     y.free()
 
 
-def test_gemv_transpose():
+def test_gemv_transpose() raises:
     print("Testing gemv (transpose)...")
     var m = 2
     var n = 3
@@ -61,7 +61,7 @@ def test_gemv_transpose():
     y[1] = 0.0
     y[2] = 0.0
 
-    dgemv("T", m, n, Float32(1.0), a, lda, x, 1, Float32(0.0), y, 1)
+    gemv("T", m, n, Float32(1.0), a, lda, x, 1, Float32(0.0), y, 1)
 
     assert_almost_equal(y[0], Float32(9.0))
     assert_almost_equal(y[1], Float32(12.0))
@@ -72,7 +72,7 @@ def test_gemv_transpose():
     y.free()
 
 
-def test_gemv_with_beta():
+def test_gemv_with_beta() raises:
     print("Testing gemv (beta accumulation)...")
     var m = 2
     var n = 2
@@ -93,7 +93,7 @@ def test_gemv_with_beta():
     y[0] = 1.0
     y[1] = 1.0
 
-    dgemv("N", m, n, Float32(1.0), a, lda, x, 1, Float32(1.0), y, 1)
+    gemv("N", m, n, Float32(1.0), a, lda, x, 1, Float32(1.0), y, 1)
 
     assert_almost_equal(y[0], Float32(4.0))
     assert_almost_equal(y[1], Float32(8.0))
@@ -103,5 +103,5 @@ def test_gemv_with_beta():
     y.free()
 
 
-def main():
+def main() raises:
     TestSuite.discover_tests[__functions_in_module()]().run()

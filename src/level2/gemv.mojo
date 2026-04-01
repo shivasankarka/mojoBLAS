@@ -1,9 +1,13 @@
-from src.type_aliases import BLASPtr
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
 
 # NOTE: I think we could so much optimization here if we promote a lot of these arguments into
 # compile time params. Especially will help with all these if branches.
 
-fn dgemv[dtype: DType](
+
+def gemv[
+    dtype: DType
+](
     trans: String,
     m: Int,
     n: Int,
@@ -14,7 +18,7 @@ fn dgemv[dtype: DType](
     incx: Int,
     beta: Scalar[dtype],
     y: BLASPtr[Scalar[dtype]],
-    incy: Int
+    incy: Int,
 ):
     """
     Performs the matrix-vector operation y := alpha*A*x + beta*y,
@@ -50,7 +54,6 @@ fn dgemv[dtype: DType](
     elif incy == 0:
         info = 11
     if info != 0:
-        print("dgemv: Info", info)
         return
 
     if m == 0 or n == 0 or (alpha == 0 and beta == 1):
@@ -73,14 +76,19 @@ fn dgemv[dtype: DType](
     if incy < 0:
         ky = 1 - (leny - 1) * incy
 
+    comptime simd_width: Int = simd_width_of[dtype]()
     if beta != 1:
         if incy == 1:
             if beta == 0:
                 for i in range(leny):
                     y[i] = 0
             else:
-                for i in range(leny):
-                    y[i] = beta * y[i]
+
+                @parameter
+                def closure[width: Int](i: Int) unified {mut y, read beta}:
+                    y.store[width=width](i, beta * y.load[width=width](i))
+
+                vectorize[simd_width](leny, closure)
         else:
             var iy: Int = ky
             if beta == 0:
@@ -93,6 +101,8 @@ fn dgemv[dtype: DType](
                     iy += incy
     if alpha == 0:
         return
+
+    # NOTE: might be parallizable
     if trans == "N":
         var jx: Int = kx
         if incy == 1:
