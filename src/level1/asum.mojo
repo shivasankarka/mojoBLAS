@@ -1,6 +1,45 @@
 from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of
 
+def origin_asum[mut: Bool, //,
+    dtype: DType, *, origin: Origin[mut=mut],
+](n: Int, dx: UnsafePointer[Scalar[dtype], origin], incx: Int) -> Scalar[dtype]:
+    """
+    Compute the sum of absolute values of elements in vector X.
+
+    Parameters:
+        mut: Indicates whether the pointer dx is mutable.
+        dtype: Data type of the elements in vector X.
+        origin: Memory origin of the pointer dx (mut or const).
+
+    Args:
+        n: Number of elements in vector X.
+        dx: Pointer to the first element of vector X. Dimension should be at least (1 + (n - 1) * abs(incx)).
+        incx: Increment for the elements of X.
+
+    Returns:
+        The sum of absolute values as a scalar value.
+    """
+    var result: Scalar[dtype] = 0.0
+
+    if n <= 0 or incx <= 0:
+        return result
+
+    if incx == 1:
+        comptime simd_width: Int = simd_width_of[dtype]()
+
+        @parameter
+        def closure[width: Int](i: Int) unified {mut result, read dx}:
+            result += abs(dx.load[width=width](i)).reduce_add()
+
+        vectorize[simd_width](n, closure)
+        return result
+
+    var nincx: Int = n * incx
+    for i in range(0, nincx, incx):
+        result += abs(dx[i])
+    return result
+
 
 def asum[
     dtype: DType
