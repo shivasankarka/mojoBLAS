@@ -1,0 +1,122 @@
+def syrk[
+    dtype: DType
+](
+    uplo: String,
+    trans: String,
+    n: Int,
+    k: Int,
+    alpha: Scalar[dtype],
+    a: BLASPtr[Scalar[dtype]],
+    lda: Int,
+    beta: Scalar[dtype],
+    c: BLASPtr[Scalar[dtype]],
+    ldc: Int,
+):
+    """
+    Performs the symmetric rank k operation C := alpha*A*A^T + beta*C
+    or C := alpha*A^T*A + beta*C.
+
+    Parameters:
+        dtype: The data type of the elements (e.g., Float32, Float64).
+
+    Args:
+        uplo: Specifies whether C is upper ('U') or lower ('L') triangular.
+        trans: Specifies the operation: 'N' for C := alpha*A*A^T + beta*C, 'T' or 'C' for C := alpha*A^T*A + beta*C.
+        n: The order of the matrix C.
+        k: The number of columns of A if not transposed, or rows if transposed.
+        alpha: The scalar multiplier for the matrix product.
+        a: A pointer to the first element of the matrix A.
+        lda: The leading dimension of the matrix A.
+        beta: The scalar multiplier for the matrix C.
+        c: A pointer to the first element of the matrix C (input/output).
+        ldc: The leading dimension of the matrix C.
+    """
+    var info: Int = 0
+    if uplo != "U" and uplo != "u" and uplo != "L" and uplo != "l":
+        info = 1
+    elif (
+        trans != "N"
+        and trans != "n"
+        and trans != "T"
+        and trans != "t"
+        and trans != "C"
+        and trans != "c"
+    ):
+        info = 2
+    elif n < 0:
+        info = 3
+    elif k < 0:
+        info = 4
+    elif lda < max(1, n if (trans == "N" or trans == "n") else k):
+        info = 7
+    elif ldc < max(1, n):
+        info = 10
+
+    if info != 0:
+        print("syrk: Info", info)
+        return
+
+    if n == 0 or (alpha == 0 and beta == 1):
+        return
+
+    var upper = uplo == "U" or uplo == "u"
+    var no_trans = trans == "N" or trans == "n"
+
+    if beta == 0:
+        if upper:
+            for j in range(n):
+                for i in range(j + 1):
+                    c[i + j * ldc] = 0
+        else:
+            for j in range(n):
+                for i in range(j, n):
+                    c[i + j * ldc] = 0
+    elif beta != 1:
+        if upper:
+            for j in range(n):
+                for i in range(j + 1):
+                    c[i + j * ldc] = beta * c[i + j * ldc]
+        else:
+            for j in range(n):
+                for i in range(j, n):
+                    c[i + j * ldc] = beta * c[i + j * ldc]
+
+    if alpha == 0:
+        return
+
+    if no_trans:
+        if upper:
+            for j in range(n):
+                for l in range(k):
+                    if a[j + l * lda] != 0:
+                        var temp: Scalar[dtype] = alpha * a[j + l * lda]
+                        for i in range(j + 1):
+                            c[i + j * ldc] = (
+                                c[i + j * ldc] + temp * a[i + l * lda]
+                            )
+        else:
+            for j in range(n):
+                for l in range(k):
+                    if a[j + l * lda] != 0:
+                        var temp: Scalar[dtype] = alpha * a[j + l * lda]
+                        for i in range(j, n):
+                            c[i + j * ldc] = (
+                                c[i + j * ldc] + temp * a[i + l * lda]
+                            )
+    else:
+        if upper:
+            for j in range(n):
+                for i in range(j + 1):
+                    var temp: Scalar[dtype] = 0
+                    for l in range(k):
+                        temp = temp + a[l + i * lda] * a[l + j * lda]
+                    c[i + j * ldc] = c[i + j * ldc] + alpha * temp
+        else:
+            for j in range(n):
+                for i in range(j, n):
+                    var temp: Scalar[dtype] = 0
+                    for l in range(k):
+                        temp = temp + a[l + i * lda] * a[l + j * lda]
+                    c[i + j * ldc] = c[i + j * ldc] + alpha * temp
+
+    return
