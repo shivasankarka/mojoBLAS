@@ -3,9 +3,7 @@ from std.sys.info import simd_width_of
 
 
 def scal[
-    origin: MutOrigin,
-    //,
-    dtype: DType
+    origin: MutOrigin, //, dtype: DType
 ](n: Int, alpha: Scalar[dtype], dx: BLASPtr[dtype, origin], incx: Int,):
     """
     Scale a vector by a scalar: X := alpha * X.

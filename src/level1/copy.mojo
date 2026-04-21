@@ -4,11 +4,7 @@ from std.memory import memcpy
 
 
 def copy[
-    mut: Bool,
-    origin_x: Origin[mut=mut],
-    origin_y: MutOrigin,
-    //,
-    dtype: DType
+    mut: Bool, origin_x: Origin[mut=mut], origin_y: MutOrigin, //, dtype: DType
 ](
     n: Int,
     dx: BLASPtr[dtype, origin_x],

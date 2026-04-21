@@ -8,7 +8,7 @@ def dot[
     origin_x: Origin[mut=mut_x],
     origin_y: Origin[mut=mut_y],
     //,
-    dtype: DType
+    dtype: DType,
 ](
     n: Int,
     dx: BLASPtr[dtype, origin_x],

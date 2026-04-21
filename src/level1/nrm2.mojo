@@ -4,10 +4,7 @@ from std.sys.info import simd_width_of
 
 
 def nrm2[
-    mut: Bool,
-    origin: Origin[mut=mut],
-    //,
-    dtype: DType
+    mut: Bool, origin: Origin[mut=mut], //, dtype: DType
 ](n: Int, x: BLASPtr[dtype, origin], incx: Int,) -> Scalar[dtype]:
     """
     Compute the Euclidean norm (2-norm) of a vector X.

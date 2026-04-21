@@ -44,6 +44,7 @@ def asum[
         result += abs(dx[i])
     return result
 
+
 # NOTE: Using internal complex scalar type. not sure if this is the best way because we can't do vectorization on this UnsafePointer[ComplexScalar[dtype]].
 # def cdasum[dtype: DType](
 #     out dasum: Scalar[dtype],

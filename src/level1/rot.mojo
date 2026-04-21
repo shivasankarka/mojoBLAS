@@ -3,10 +3,7 @@ from std.sys.info import simd_width_of
 
 
 def rot[
-    origin_x: MutOrigin,
-    origin_y: MutOrigin,
-    //,
-    dtype: DType
+    origin_x: MutOrigin, origin_y: MutOrigin, //, dtype: DType
 ](
     n: Int,
     x: BLASPtr[dtype, origin_x],

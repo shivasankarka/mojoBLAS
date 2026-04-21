@@ -3,10 +3,7 @@ from std.sys.info import simd_width_of
 
 
 def iamax[
-    mut: Bool,
-    origin: Origin[mut=mut],
-    //,
-    dtype: DType
+    mut: Bool, origin: Origin[mut=mut], //, dtype: DType
 ](n: Int, x: BLASPtr[dtype, origin], incx: Int) -> Int:
     """
     Find the index of the element with maximum absolute value in vector X.

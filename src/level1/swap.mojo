@@ -4,10 +4,7 @@ from std.sys.info import simd_width_of
 
 # Named `vwap` to avoid conflict with `swap` in std library.
 def vswap[
-    origin_x: MutOrigin,
-    origin_y: MutOrigin,
-    //,
-    dtype: DType
+    origin_x: MutOrigin, origin_y: MutOrigin, //, dtype: DType
 ](
     n: Int,
     dx: BLASPtr[dtype, origin_x],
@@ -51,7 +48,7 @@ def vswap[
         ix = (-n + 1) * incx
     if incy < 0:
         iy = (-n + 1) * incy
-        
+
     for _ in range(n):
         temp = dx[ix]
         dx[ix] = dy[iy]

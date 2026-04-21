@@ -7,7 +7,7 @@ def rotg[
     origin_c: MutOrigin,
     origin_s: MutOrigin,
     //,
-    dtype: DType
+    dtype: DType,
 ](
     a: BLASPtr[dtype, origin_a],
     b: BLASPtr[dtype, origin_b],
