@@ -57,7 +57,7 @@ def axpy[
     if incy < 0:
         iy = (-n + 1) * incy
 
-    for i in range(n):
+    for _ in range(n):
         dy[iy] = da * dx[ix] + dy[iy]
         ix += incx
         iy += incy

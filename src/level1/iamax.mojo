@@ -43,7 +43,7 @@ def iamax[
         var current_abs = abs(x[ix])
         if current_abs > max_val:
             max_val = current_abs
-            imax = i + 1
+            imax = i
         ix += incx
 
     return imax

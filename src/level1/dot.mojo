@@ -60,34 +60,9 @@ def dot[
     if incy < 0:
         iy = (-n + 1) * incy
 
-    for i in range(n):
+    for _ in range(n):
         result += dx[ix] * dy[iy]
         ix += incx
         iy += incy
 
     return result
-
-
-def dot[
-    dtype: DType,
-    n: Int,
-    incx: Int,
-    incy: Int,
-](dx: BLASPtr[Scalar[dtype]], dy: BLASPtr[Scalar[dtype]],) -> Scalar[dtype]:
-    """
-    Compute the dot product of two vectors X and Y.
-
-    Parameters:
-        dtype: Data type of the elements in vectors X and Y.
-        n: Number of elements in vectors X and Y.
-        incx: Increment for the elements of X.
-        incy: Increment for the elements of Y.
-
-    Args:
-        dx: Pointer to the first element of vector X.
-        dy: Pointer to the first element of vector Y.
-
-    Returns:
-        The dot product as a scalar value.
-    """
-    return dot[dtype](n, dx, incx, dy, incy)

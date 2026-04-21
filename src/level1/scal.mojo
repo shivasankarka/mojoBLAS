@@ -37,24 +37,6 @@ def scal[
     if incx < 0:
         ix = (-n + 1) * incx
 
-    for i in range(n):
+    for _ in range(n):
         dx[ix] = alpha * dx[ix]
         ix += incx
-
-
-def scal[
-    dtype: DType, n: Int, alpha: Scalar[dtype], incx: Int
-](dx: BLASPtr[Scalar[dtype]]):
-    """
-    Scale a vector by a scalar: X := alpha * X.
-
-    Parameters:
-        dtype: Data type of the elements in vector X.
-        n: Number of elements in vector X.
-        alpha: Scalar multiplier.
-        incx: Increment for the elements of X.
-
-    Args:
-        dx: Pointer to the first element of vector X.
-    """
-    scal[dtype](n, alpha, dx, incx)

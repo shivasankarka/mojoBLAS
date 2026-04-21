@@ -45,7 +45,7 @@ def nrm2[
 
     if incx < 0:
         ix = (-n + 1) * incx
-    for i in range(n):
+    for _ in range(n):
         result += x[ix] * x[ix]
         ix += incx
     return sqrt(result)

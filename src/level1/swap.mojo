@@ -51,7 +51,8 @@ def vswap[
         ix = (-n + 1) * incx
     if incy < 0:
         iy = (-n + 1) * incy
-    for i in range(n):
+        
+    for _ in range(n):
         temp = dx[ix]
         dx[ix] = dy[iy]
         dy[iy] = temp

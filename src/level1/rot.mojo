@@ -63,7 +63,7 @@ def rot[
     if incy < 0:
         iy = (-n + 1) * incy
 
-    for i in range(n):
+    for _ in range(n):
         var temp_x = c * x[ix] + s * y[iy]
         var temp_y = -s * x[ix] + c * y[iy]
         x[ix] = temp_x

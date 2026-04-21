@@ -52,7 +52,7 @@ def copy[
     if incy < 0:
         iy = (-n + 1) * incy
 
-    for i in range(n):
+    for _ in range(n):
         dy[iy] = dx[ix]
         ix += incx
         iy += incy
