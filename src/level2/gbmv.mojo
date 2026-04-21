@@ -1,5 +1,11 @@
 def gbmv[
-    dtype: DType
+    mut_a: Bool,
+    mut_x: Bool,
+    origin_a: Origin[mut=mut_a],
+    origin_x: Origin[mut=mut_x],
+    origin_y: MutOrigin,
+    //,
+    dtype: DType,
 ](
     trans: String,
     m: Int,
@@ -7,12 +13,12 @@ def gbmv[
     kl: Int,
     ku: Int,
     alpha: Scalar[dtype],
-    a: BLASPtr[Scalar[dtype]],
+    a: BLASPtr[dtype, origin_a],
     lda: Int,
-    x: BLASPtr[Scalar[dtype]],
+    x: BLASPtr[dtype, origin_x],
     incx: Int,
     beta: Scalar[dtype],
-    y: BLASPtr[Scalar[dtype]],
+    y: BLASPtr[dtype, origin_y],
     incy: Int,
 ):
     """
@@ -20,6 +26,11 @@ def gbmv[
     where A is an m by n band matrix.
 
     Parameters:
+        mut_a: Indicates whether the pointer a is mutable (True) or immutable (False).
+        mut_x: Indicates whether the pointer x is mutable (True) or immutable (False).
+        origin_a: Memory origin of the pointer a.
+        origin_x: Memory origin of the pointer x.
+        origin_y: Memory origin of the pointer y.
         dtype: The data type of the elements (e.g., Float32, Float64).
 
     Args:

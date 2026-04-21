@@ -1,19 +1,28 @@
 def tpmv[
-    dtype: DType
+    mut_ap: Bool,
+    origin_ap: Origin[mut=mut_ap],
+    origin_x: MutOrigin,
+    //,
+    dtype: DType,
 ](
     uplo: String,
     trans: String,
     diag: String,
     n: Int,
-    ap: BLASPtr[Scalar[dtype]],
-    x: BLASPtr[Scalar[dtype]],
+    ap: BLASPtr[dtype, origin_ap],
+    x: BLASPtr[dtype, origin_x],
     incx: Int,
 ):
     """
     Performs the matrix-vector operation x := A*x or x := A^T*x,
     where A is an n by n triangular matrix stored in packed format.
 
+    Optimized with SIMD vectorization and parallelization.
+
     Parameters:
+        mut_ap: Indicates whether the pointer ap is mutable (True) or immutable (False).
+        origin_ap: Memory origin of the pointer ap.
+        origin_x: Memory origin of the pointer x (mutable, input/output).
         dtype: The data type of the elements (e.g., Float32, Float64).
 
     Args:

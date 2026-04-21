@@ -1,14 +1,18 @@
 def tbsv[
-    dtype: DType
+    mut_a: Bool,
+    origin_a: Origin[mut=mut_a],
+    origin_x: MutOrigin,
+    //,
+    dtype: DType,
 ](
     uplo: String,
     trans: String,
     diag: String,
     n: Int,
     k: Int,
-    a: BLASPtr[Scalar[dtype]],
+    a: BLASPtr[dtype, origin_a],
     lda: Int,
-    x: BLASPtr[Scalar[dtype]],
+    x: BLASPtr[dtype, origin_x],
     incx: Int,
 ):
     """
@@ -16,6 +20,9 @@ def tbsv[
     where A is an n by n triangular band matrix.
 
     Parameters:
+        mut_a: Indicates whether the pointer a is mutable (True) or immutable (False).
+        origin_a: Memory origin of the pointer a.
+        origin_x: Memory origin of the pointer x (mutable, input/output).
         dtype: The data type of the elements (e.g., Float32, Float64).
 
     Args:
