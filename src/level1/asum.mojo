@@ -1,9 +1,12 @@
 from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of
 
-def origin_asum[mut: Bool, //,
-    dtype: DType, *, origin: Origin[mut=mut],
-](n: Int, dx: UnsafePointer[Scalar[dtype], origin], incx: Int) -> Scalar[dtype]:
+
+def asum[
+    origin: ImmutOrigin,
+    //,
+    dtype: DType,
+](n: Int, dx: BLASPtr[dtype, origin], incx: Int) -> Scalar[dtype]:
     """
     Compute the sum of absolute values of elements in vector X.
 
@@ -43,7 +46,7 @@ def origin_asum[mut: Bool, //,
 
 def asum[
     dtype: DType
-](n: Int, dx: BLASPtr[Scalar[dtype]], incx: Int) -> Scalar[dtype]:
+](n: Int, dx: BLASPtr[dtype, MutExternalOrigin], incx: Int) -> Scalar[dtype]:
     """
     Compute the sum of absolute values of elements in vector X.
 
