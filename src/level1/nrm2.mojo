@@ -4,10 +4,18 @@ from std.sys.info import simd_width_of
 
 
 def nrm2[
+    mut: Bool,
+    origin: Origin[mut=mut],
+    //,
     dtype: DType
-](n: Int, x: BLASPtr[Scalar[dtype]], incx: Int,) -> Scalar[dtype]:
+](n: Int, x: BLASPtr[dtype, origin], incx: Int,) -> Scalar[dtype]:
     """
     Compute the Euclidean norm (2-norm) of a vector X.
+
+    Parameters:
+        mut: Indicates whether the pointer is mutable (True) or immutable (False).
+        origin: Memory origin of the pointer x.
+        dtype: Data type of the elements in vectors X and Y.
 
     Args:
         n: Number of elements in vector X.

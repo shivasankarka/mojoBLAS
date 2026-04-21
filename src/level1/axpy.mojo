@@ -4,19 +4,26 @@ from std.memory import memcpy
 
 
 def axpy[
+    mut: Bool,
+    origin_x: Origin[mut=mut],
+    origin_y: MutOrigin,
+    //,
     dtype: DType
 ](
     n: Int,
     da: Scalar[dtype],
-    dx: BLASPtr[Scalar[dtype]],
+    dx: BLASPtr[dtype, origin_x],
     incx: Int,
-    dy: BLASPtr[Scalar[dtype]],
+    dy: BLASPtr[dtype, origin_y],
     incy: Int,
 ):
     """
     Perform the AXPY operation: Y := alpha * X + Y.
 
     Parameters:
+        mut: Indicates whether the pointer to vector X is mutable (True) or immutable (False).
+        origin_x: Memory origin of the pointer to vector X.
+        origin_y: Memory origin of the pointer to vector Y.
         dtype: Data type of the elements in vectors X and Y.
 
     Args:
@@ -54,29 +61,6 @@ def axpy[
         dy[iy] = da * dx[ix] + dy[iy]
         ix += incx
         iy += incy
-
-
-def axpy[
-    dtype: DType, n: Int, da: Scalar[dtype], incx: Int, incy: Int
-](
-    dx: BLASPtr[Scalar[dtype]],
-    dy: BLASPtr[Scalar[dtype]],
-) where dtype.is_floating_point():
-    """
-    AXPY operation for compile-time known parameters.
-
-    Parameters:
-        dtype: Data type of the elements in vectors X and Y.
-        n: Number of elements in vectors X and Y.
-        da: Scalar multiplier for vector X.
-        incx: Increment for the elements of X.
-        incy: Increment for the elements of Y.
-
-    Args:
-        dx: Pointer to the first element of vector X.
-        dy: Pointer to the first element of vector Y.
-    """
-    axpy[dtype](n, da, dx, incx, dy, incy)
 
 
 # NOTE: GPU implementation are commented out for now. Undergoing development :)

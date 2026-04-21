@@ -2,12 +2,17 @@ from std.math import sqrt, copysign
 
 
 def rotg[
+    origin_a: MutOrigin,
+    origin_b: MutOrigin,
+    origin_c: MutOrigin,
+    origin_s: MutOrigin,
+    //,
     dtype: DType
 ](
-    a: BLASPtr[Scalar[dtype]],
-    b: BLASPtr[Scalar[dtype]],
-    c: BLASPtr[Scalar[dtype]],
-    s: BLASPtr[Scalar[dtype]],
+    a: BLASPtr[dtype, origin_a],
+    b: BLASPtr[dtype, origin_b],
+    c: BLASPtr[dtype, origin_c],
+    s: BLASPtr[dtype, origin_s],
 ) -> None:
     """
     Construct Givens rotation that eliminates the second component of a 2-vector.
@@ -17,6 +22,13 @@ def rotg[
     [ -s  c ] [ b ] = [ 0 ]
 
     Where r = sqrt(a² + b²)
+
+    Parameters:
+        origin_a: Memory origin of the pointer a.
+        origin_b: Memory origin of the pointer b.
+        origin_c: Memory origin of the pointer c.
+        origin_s: Memory origin of the pointer s.
+        dtype: Data type of the scalars a, b, c, and s.
 
     Args:
         a: Pointer to first scalar (input/output - becomes r on output).

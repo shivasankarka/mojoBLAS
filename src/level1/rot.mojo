@@ -3,12 +3,15 @@ from std.sys.info import simd_width_of
 
 
 def rot[
+    origin_x: MutOrigin,
+    origin_y: MutOrigin,
+    //,
     dtype: DType
 ](
     n: Int,
-    x: BLASPtr[Scalar[dtype]],
+    x: BLASPtr[dtype, origin_x],
     incx: Int,
-    y: BLASPtr[Scalar[dtype]],
+    y: BLASPtr[dtype, origin_y],
     incy: Int,
     c: Scalar[dtype],
     s: Scalar[dtype],
@@ -19,6 +22,11 @@ def rot[
     Performs the transformation:
     [ x[i] ]   [  c  s ] [ x[i] ]
     [ y[i] ] = [ -s  c ] [ y[i] ]
+
+    Parameters:
+        origin_x: Memory origin of the pointer x.
+        origin_y: Memory origin of the pointer y.
+        dtype: Data type of the elements in vectors X and Y.
 
     Args:
         n: Number of elements in vectors X and Y.

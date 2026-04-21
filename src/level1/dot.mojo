@@ -3,18 +3,27 @@ from std.sys.info import simd_width_of
 
 
 def dot[
+    mut_x: Bool,
+    mut_y: Bool,
+    origin_x: Origin[mut=mut_x],
+    origin_y: Origin[mut=mut_y],
+    //,
     dtype: DType
 ](
     n: Int,
-    dx: BLASPtr[Scalar[dtype]],
+    dx: BLASPtr[dtype, origin_x],
     incx: Int,
-    dy: BLASPtr[Scalar[dtype]],
+    dy: BLASPtr[dtype, origin_y],
     incy: Int,
 ) -> Scalar[dtype]:
     """
     Compute the dot product of two vectors X and Y.
 
     Parameters:
+        mut_x: Indicates whether the pointer to vector X is mutable (True) or immutable (False).
+        mut_y: Indicates whether the pointer to vector Y is mutable (True) or immutable (False).
+        origin_x: Memory origin of the pointer to vector X.
+        origin_y: Memory origin of the pointer to vector Y.
         dtype: Data type of the elements in vectors X and Y.
 
     Args:

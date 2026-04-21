@@ -4,18 +4,25 @@ from std.memory import memcpy
 
 
 def copy[
+    mut: Bool,
+    origin_x: Origin[mut=mut],
+    origin_y: MutOrigin,
+    //,
     dtype: DType
 ](
     n: Int,
-    dx: BLASPtr[Scalar[dtype]],
+    dx: BLASPtr[dtype, origin_x],
     incx: Int,
-    dy: BLASPtr[Scalar[dtype]],
+    dy: BLASPtr[dtype, origin_y],
     incy: Int,
 ):
     """
     Copy a vector X to vector Y: Y := X.
 
     Parameters:
+        mut: Indicates whether the pointer to vector X is mutable (True) or immutable (False).
+        origin_x: Memory origin of the pointer to vector X.
+        origin_y: Memory origin of the pointer to vector Y.
         dtype: Data type of the elements in vectors X and Y.
 
     Args:
@@ -49,22 +56,3 @@ def copy[
         dy[iy] = dx[ix]
         ix += incx
         iy += incy
-
-
-def copy[
-    dtype: DType, n: Int, incx: Int, incy: Int
-](dx: BLASPtr[Scalar[dtype]], dy: BLASPtr[Scalar[dtype]],):
-    """
-    Copy a vector X to vector Y: Y := X.
-
-    Parameters:
-        dtype: Data type of the elements in vectors X and Y.
-        n: Number of elements in vectors X and Y.
-        incx: Increment for the elements of X.
-        incy: Increment for the elements of Y.
-
-    Args:
-        dx: Pointer to the first element of vector X. dimension should be at least (1 + (n - 1) * abs(incx)).
-        dy: Pointer to the first element of vector Y. dimension should be at least (1 + (n - 1) * abs(incy)).
-    """
-    copy[dtype](n, dx, incx, dy, incy)

@@ -4,18 +4,23 @@ from std.sys.info import simd_width_of
 
 # Named `vwap` to avoid conflict with `swap` in std library.
 def vswap[
+    origin_x: MutOrigin,
+    origin_y: MutOrigin,
+    //,
     dtype: DType
 ](
     n: Int,
-    dx: BLASPtr[Scalar[dtype]],
+    dx: BLASPtr[dtype, origin_x],
     incx: Int,
-    dy: BLASPtr[Scalar[dtype]],
+    dy: BLASPtr[dtype, origin_y],
     incy: Int,
 ):
     """
     Swap the elements of two vectors X and Y: X <-> Y.
 
     Parameters:
+        origin_x: Memory origin of the pointer dx.
+        origin_y: Memory origin of the pointer dy.
         dtype: Data type of the elements in vectors X and Y.
 
     Args:
@@ -52,25 +57,3 @@ def vswap[
         dy[iy] = temp
         ix += incx
         iy += incy
-
-
-def vswap[
-    dtype: DType,
-    n: Int,
-    incx: Int,
-    incy: Int,
-](dx: BLASPtr[Scalar[dtype]], dy: BLASPtr[Scalar[dtype]],):
-    """
-    Swap the elements of two vectors X and Y: X <-> Y.
-
-    Parameters:
-        dtype: Data type of the elements in vectors X and Y.
-        n: Number of elements in vectors X and Y.
-        incx: Increment for the elements of X.
-        incy: Increment for the elements of Y.
-
-    Args:
-        dx: Pointer to the first element of vector X.
-        dy: Pointer to the first element of vector Y.
-    """
-    vswap[dtype](n, dx, incx, dy, incy)

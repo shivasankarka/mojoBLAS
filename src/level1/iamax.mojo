@@ -2,11 +2,18 @@ from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of
 
 
-def iamax[dtype: DType](n: Int, x: BLASPtr[Scalar[dtype]], incx: Int) -> Int:
+def iamax[
+    mut: Bool,
+    origin: Origin[mut=mut],
+    //,
+    dtype: DType
+](n: Int, x: BLASPtr[dtype, origin], incx: Int) -> Int:
     """
     Find the index of the element with maximum absolute value in vector X.
 
     Parameters:
+        mut: Indicates whether the pointer is mutable (True) or immutable (False).
+        origin: Memory origin of the pointer x.
         dtype: Data type of the elements in vectors X and Y.
 
     Args:
