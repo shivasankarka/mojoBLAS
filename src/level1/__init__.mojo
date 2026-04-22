@@ -29,3 +29,5 @@ from .swap import vswap
 from .iamax import iamax
 from .rotg import rotg
 from .rot import rot
+from .rotm import rotm
+from .rotmg import rotmg

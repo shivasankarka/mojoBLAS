@@ -18,7 +18,7 @@ from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of
 
 
-# Named `vwap` to avoid conflict with `swap` in std library.
+# Named `vswap` to avoid conflict with `swap` in std library.
 def vswap[
     origin_x: MutOrigin, origin_y: MutOrigin, //, dtype: DType
 ](
