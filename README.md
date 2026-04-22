@@ -8,7 +8,7 @@ This project started as an attempt to implement BLAS backend for math operations
 
 - **Complete Real BLAS Implementation**: All 34 standard real BLAS routines (Level 1/2/3) implemented.
 - **Generic Implementation**: Supports all real datatypes (through DType) in existing BLAS routines.
-- **Comprehensive Testing**: Full test coverage for all three BLAS levels.
+- **Comprehensive Testing**: Almost full test coverage for all three BLAS levels (with openblas reference values).
 
 ## 📦 Installation
 
@@ -124,18 +124,9 @@ pixi run -e bench bench_plot
 pixi run -e bench bench_all
 ```
 
-### Benchmark Output
-
+**Benchmark outputs:**
 - **JSON results**: `benchmarks/mojo_l{1,2,3}_results.json` and `benchmarks/c_bench_results.json`
 - **Comparison plots**: `benchmarks/bench_plot_level{1,2,3}.png`
-
-### Benchmark Sizes
-
-| Level | Sizes | Rationale |
-|-------|-------|-----------|
-| Level 1 | 256 – 262,144 | Vector operations scale linearly |
-| Level 2 | 32, 64, 128, 256, 512 | O(n²) matrix-vector operations |
-| Level 3 | 32, 64, 128, 256, 512 | O(n³) matrix-matrix operations |
 
 ## Project Structure
 
@@ -185,6 +176,7 @@ mojoBLAS/
 │       ├── trmm.mojo
 │       └── trsm.mojo
 ├── tests/
+│   ├── reference.c
 │   ├── test_level1.mojo
 │   ├── test_level2.mojo
 │   ├── test_level2_extended.mojo
@@ -203,26 +195,19 @@ mojoBLAS/
 ## Roadmap
 
 ### Completed:
-- [x] **Level 1 BLAS**: All 12 real operations implemented and tested.
-- [x] **Level 2 BLAS**: All 16 real operations implemented and tested.
-- [x] **Level 3 BLAS**: All 6 operations implemented and tested.
-- [x] **Benchmarking Suite**: Automated comparison against Accelerate and OpenBLAS.
+- [x] **Level 1 BLAS**
+- [x] **Level 2 BLAS**
+- [x] **Level 3 BLAS**
+- [x] **Benchmarking Suite**: Comparison against Accelerate and OpenBLAS.
 
-### Future goals:
-- [ ] **Performance Optimizations**: SIMD vectorization, cache-aware blocking, parallel execution
-- [ ] **GPU Acceleration**: CUDA/ROCm backend support
+### Future goals (In the order):
+- [ ] **Performance Optimizations**: SIMD vectorization, parallel execution.
 - [ ] **Complex Number Support**: Complex BLAS operations
+- [ ] **GPU Acceleration**: CUDA/ROCm backend support
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests. Any help would be appreciated :)
-
-### Guidelines
-
-- Follow existing code style and patterns
-- Add tests for new functionality
-- Update documentation as needed
-- Ensure all tests pass before submitting
+Contributions are welcome! Any help would be appreciated :)
 
 ## License
 
@@ -245,7 +230,5 @@ This is an independent reimplementation. Any errors or differences are our own.
 
 - [BLAS (Basic Linear Algebra Subprograms)](https://netlib.org/blas/)
 - [Mojo Programming Language](https://docs.modular.com/mojo/)
-- [Linear Algebra PACKage (LAPACK)](https://netlib.org/lapack/)
-- [Reference LAPACK BLAS Source](https://github.com/Reference-LAPACK/lapack/tree/master/BLAS/SRC)
 
 ---
