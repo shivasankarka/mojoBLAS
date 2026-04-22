@@ -1,24 +1,27 @@
-from blas.level1 import *
 from std.memory import UnsafePointer, memset_zero
 from std.time import sleep
 import std.benchmark as benchmark
 from std.benchmark import keep
 
+from mojoblas.level1 import *
+
+comptime f64 = DType.float64
+
 def bench_daxpy[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[DType.float32]](current_size)
-    var y = alloc[Scalar[DType.float32]](current_size)
+    var x = alloc[Scalar[f64]](current_size)
+    var y = alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float32(i + 1)
-        y[i] = Float32((i + 1) * 10)
+        x[i] = Float64(i + 1)
+        y[i] = Float64((i + 1) * 10)
 
     @parameter
     def daxpy_only() -> None:
-        axpy[DType.float32](current_size, Float32(2.0), x, 1, y, 1)
-        keep(x)
-        keep(y)
+        axpy[f64](current_size, Float64(2.0), x, 1, y, 1)
+
+    keep(x)
+    keep(y)
 
     var report = benchmark.run[daxpy_only](max_runtime_secs=1)
-
 
     x.free()
     y.free()
@@ -26,19 +29,19 @@ def bench_daxpy[current_size: Int]() raises -> Float64:
     return report.mean("ns")
 
 def bench_dcopy[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[DType.float32]](current_size)
-    var y = alloc[Scalar[DType.float32]](current_size)
+    var x = alloc[Scalar[f64]](current_size)
+    var y = alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float32(i + 1)
+        x[i] = Float64(i + 1)
 
     @parameter
     def dcopy_only() -> None:
-        copy[DType.float32](current_size, x, 1, y, 1)
-        keep(x)
-        keep(y)
+        copy[f64](current_size, x, 1, y, 1)
+
+    keep(x)
+    keep(y)
 
     var report = benchmark.run[dcopy_only](max_runtime_secs=1)
-
 
     x.free()
     y.free()
@@ -47,17 +50,17 @@ def bench_dcopy[current_size: Int]() raises -> Float64:
 
 
 def bench_dscal[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[DType.float32]](current_size)
+    var x = alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float32(i + 1)
+        x[i] = Float64(i + 1)
 
     @parameter
     def dscal_only() -> None:
-        scal[DType.float32](current_size, Float32(2.5), x, 1)
-        keep(x)
+        scal[f64](current_size, Float64(2.5), x, 1)
+
+    keep(x)
 
     var report = benchmark.run[dscal_only](max_runtime_secs=1)
-
 
     x.free()
 
@@ -65,21 +68,21 @@ def bench_dscal[current_size: Int]() raises -> Float64:
 
 
 def bench_ddot[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[DType.float32]](current_size)
-    var y = alloc[Scalar[DType.float32]](current_size)
+    var x = alloc[Scalar[f64]](current_size)
+    var y = alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float32(i + 1)
-        y[i] = Float32(i + 2)
+        x[i] = Float64(i + 1)
+        y[i] = Float64(i + 2)
 
     @parameter
     def ddot_only() -> None:
-        var result = dot[DType.float32](current_size, x, 1, y, 1)
+        var result = dot[f64](current_size, x, 1, y, 1)
         keep(result)
-        keep(x)
-        keep(y)
+
+    keep(x)
+    keep(y)
 
     var report = benchmark.run[ddot_only](max_runtime_secs=1)
-
 
     x.free()
     y.free()
@@ -88,18 +91,18 @@ def bench_ddot[current_size: Int]() raises -> Float64:
 
 
 def bench_dasum[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[DType.float32]](current_size)
+    var x = alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float32(i + 1) if i % 2 == 0 else Float32(-(i + 1))
+        x[i] = Float64(i + 1) if i % 2 == 0 else Float64(-(i + 1))
 
     @parameter
     def dasum_only() -> None:
-        var result = asum[DType.float32](current_size, x, 1)
+        var result = asum[f64](current_size, x, 1)
         keep(result)
-        keep(x)
+
+    keep(x)
 
     var report = benchmark.run[dasum_only](max_runtime_secs=1)
-
 
     x.free()
 
@@ -107,18 +110,18 @@ def bench_dasum[current_size: Int]() raises -> Float64:
 
 
 def bench_dnrm2[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[DType.float32]](current_size)
+    var x = alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float32(i + 1)
+        x[i] = Float64(i + 1)
 
     @parameter
     def dnrm2_only() -> None:
-        var result = nrm2[DType.float32](current_size, x, 1)
+        var result = nrm2[f64](current_size, x, 1)
         keep(result)
-        keep(x)
+
+    keep(x)
 
     var report = benchmark.run[dnrm2_only](max_runtime_secs=1)
-
 
     x.free()
 
@@ -126,20 +129,20 @@ def bench_dnrm2[current_size: Int]() raises -> Float64:
 
 
 def bench_dswap[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[DType.float32]](current_size)
-    var y = alloc[Scalar[DType.float32]](current_size)
+    var x = alloc[Scalar[f64]](current_size)
+    var y = alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float32(i + 1)
-        y[i] = Float32((i + 1) * 10)
+        x[i] = Float64(i + 1)
+        y[i] = Float64((i + 1) * 10)
 
     @parameter
     def dswap_only() -> None:
-        vswap[DType.float32](current_size, x, 1, y, 1)
-        keep(x)
-        keep(y)
+        vswap[f64](current_size, x, 1, y, 1)
+
+    keep(x)
+    keep(y)
 
     var report = benchmark.run[dswap_only](max_runtime_secs=1)
-
 
     x.free()
     y.free()
@@ -148,18 +151,18 @@ def bench_dswap[current_size: Int]() raises -> Float64:
 
 
 def bench_diamax[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[DType.float32]](current_size)
+    var x = alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float32(i + 1) if i != current_size // 2 else Float32(current_size * 2)
+        x[i] = Float64(i + 1) if i != current_size // 2 else Float64(current_size * 2)
 
     @parameter
     def diamax_only() -> None:
-        var result = iamax[DType.float32](current_size, x, 1)
+        var result = iamax[f64](current_size, x, 1)
         keep(result)
-        keep(x)
+
+    keep(x)
 
     var report = benchmark.run[diamax_only](max_runtime_secs=1)
-
 
     x.free()
 
@@ -167,20 +170,20 @@ def bench_diamax[current_size: Int]() raises -> Float64:
 
 
 def bench_drot[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[DType.float32]](current_size)
-    var y = alloc[Scalar[DType.float32]](current_size)
+    var x = alloc[Scalar[f64]](current_size)
+    var y = alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float32(i + 1)
-        y[i] = Float32((i + 1) * 2)
+        x[i] = Float64(i + 1)
+        y[i] = Float64((i + 1) * 2)
 
     @parameter
     def drot_only() -> None:
-        rot[DType.float32](current_size, x, 1, y, 1, Float32(0.6), Float32(0.8))
-        keep(x)
-        keep(y)
+        rot[f64](current_size, x, 1, y, 1, Float64(0.6), Float64(0.8))
+
+    keep(x)
+    keep(y)
 
     var report = benchmark.run[drot_only](max_runtime_secs=1)
-
 
     x.free()
     y.free()
@@ -189,24 +192,24 @@ def bench_drot[current_size: Int]() raises -> Float64:
 
 
 def bench_drotg[current_size: Int]() raises -> Float64:
-    var a = alloc[Scalar[DType.float32]](1)
-    var b = alloc[Scalar[DType.float32]](1)
-    var c = alloc[Scalar[DType.float32]](1)
-    var s = alloc[Scalar[DType.float32]](1)
+    var a = alloc[Scalar[f64]](1)
+    var b = alloc[Scalar[f64]](1)
+    var c = alloc[Scalar[f64]](1)
+    var s = alloc[Scalar[f64]](1)
 
-    a[0] = Float32(3.0)
-    b[0] = Float32(4.0)
+    a[0] = Float64(3.0)
+    b[0] = Float64(4.0)
 
     @parameter
     def drotg_only() -> None:
-        rotg[DType.float32](a, b, c, s)
-        keep(a)
-        keep(b)
-        keep(c)
-        keep(s)
+        rotg[f64](a, b, c, s)
+
+    keep(a)
+    keep(b)
+    keep(c)
+    keep(s)
 
     var report = benchmark.run[drotg_only](max_runtime_secs=1)
-
 
     a.free()
     b.free()

@@ -1,8 +1,11 @@
-from blas.level3 import *
 from std.memory import UnsafePointer, memset_zero
 from std.time import sleep
 import std.benchmark as benchmark
 from std.benchmark import keep
+
+from mojoblas.level3 import *
+
+comptime f64 = DType.float64
 
 def bench_dgemm[current_size: Int]() raises -> Float64:
     var m = current_size
@@ -11,19 +14,19 @@ def bench_dgemm[current_size: Int]() raises -> Float64:
     var lda = m
     var ldb = k
     var ldc = m
-    var a = alloc[Scalar[DType.float32]](lda * k)
-    var b = alloc[Scalar[DType.float32]](ldb * n)
-    var c = alloc[Scalar[DType.float32]](ldc * n)
+    var a = alloc[Scalar[f64]](lda * k)
+    var b = alloc[Scalar[f64]](ldb * n)
+    var c = alloc[Scalar[f64]](ldc * n)
     for i in range(lda * k):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(ldb * n):
-        b[i] = Float32(i + 1)
+        b[i] = Float64(i + 1)
     for i in range(ldc * n):
-        c[i] = Float32(i + 1)
+        c[i] = Float64(i + 1)
 
     @parameter
     def dgemm_only() -> None:
-        gemm[DType.float32]("N", "N", m, n, k, Float32(1.0), a, lda, b, ldb, Float32(1.0), c, ldc)
+        gemm[f64]("N", "N", m, n, k, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc)
         keep(a)
         keep(b)
         keep(c)
@@ -41,16 +44,16 @@ def bench_dsyrk[current_size: Int]() raises -> Float64:
     var k = current_size
     var lda = n
     var ldc = n
-    var a = alloc[Scalar[DType.float32]](lda * k)
-    var c = alloc[Scalar[DType.float32]](ldc * n)
+    var a = alloc[Scalar[f64]](lda * k)
+    var c = alloc[Scalar[f64]](ldc * n)
     for i in range(lda * k):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(ldc * n):
-        c[i] = Float32(i + 1)
+        c[i] = Float64(i + 1)
 
     @parameter
     def dsyrk_only() -> None:
-        syrk[DType.float32]("U", "N", n, k, Float32(1.0), a, lda, Float32(1.0), c, ldc)
+        syrk[f64]("U", "N", n, k, Float64(1.0), a, lda, Float64(1.0), c, ldc)
         keep(a)
         keep(c)
 
@@ -67,19 +70,19 @@ def bench_dsyr2k[current_size: Int]() raises -> Float64:
     var lda = n
     var ldb = n
     var ldc = n
-    var a = alloc[Scalar[DType.float32]](lda * k)
-    var b = alloc[Scalar[DType.float32]](ldb * k)
-    var c = alloc[Scalar[DType.float32]](ldc * n)
+    var a = alloc[Scalar[f64]](lda * k)
+    var b = alloc[Scalar[f64]](ldb * k)
+    var c = alloc[Scalar[f64]](ldc * n)
     for i in range(lda * k):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(ldb * k):
-        b[i] = Float32(i + 1)
+        b[i] = Float64(i + 1)
     for i in range(ldc * n):
-        c[i] = Float32(i + 1)
+        c[i] = Float64(i + 1)
 
     @parameter
     def dsyr2k_only() -> None:
-        syr2k[DType.float32]("U", "N", n, k, Float32(1.0), a, lda, b, ldb, Float32(1.0), c, ldc)
+        syr2k[f64]("U", "N", n, k, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc)
         keep(a)
         keep(b)
         keep(c)
@@ -98,19 +101,19 @@ def bench_dsymm[current_size: Int]() raises -> Float64:
     var lda = m
     var ldb = m
     var ldc = m
-    var a = alloc[Scalar[DType.float32]](lda * m)
-    var b = alloc[Scalar[DType.float32]](ldb * n)
-    var c = alloc[Scalar[DType.float32]](ldc * n)
+    var a = alloc[Scalar[f64]](lda * m)
+    var b = alloc[Scalar[f64]](ldb * n)
+    var c = alloc[Scalar[f64]](ldc * n)
     for i in range(lda * m):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(ldb * n):
-        b[i] = Float32(i + 1)
+        b[i] = Float64(i + 1)
     for i in range(ldc * n):
-        c[i] = Float32(i + 1)
+        c[i] = Float64(i + 1)
 
     @parameter
     def dsymm_only() -> None:
-        symm[DType.float32]("L", "U", m, n, Float32(1.0), a, lda, b, ldb, Float32(1.0), c, ldc)
+        symm[f64]("L", "U", m, n, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc)
         keep(a)
         keep(b)
         keep(c)
@@ -128,16 +131,16 @@ def bench_dtrmm[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = m
     var ldb = m
-    var a = alloc[Scalar[DType.float32]](lda * m)
-    var b = alloc[Scalar[DType.float32]](ldb * n)
+    var a = alloc[Scalar[f64]](lda * m)
+    var b = alloc[Scalar[f64]](ldb * n)
     for i in range(lda * m):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(ldb * n):
-        b[i] = Float32(i + 1)
+        b[i] = Float64(i + 1)
 
     @parameter
     def dtrmm_only() -> None:
-        trmm[DType.float32]("L", "U", "N", "N", m, n, Float32(1.0), a, lda, b, ldb)
+        trmm[f64]("L", "U", "N", "N", m, n, Float64(1.0), a, lda, b, ldb)
         keep(a)
         keep(b)
 
@@ -153,16 +156,16 @@ def bench_dtrsm[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = m
     var ldb = m
-    var a = alloc[Scalar[DType.float32]](lda * m)
-    var b = alloc[Scalar[DType.float32]](ldb * n)
+    var a = alloc[Scalar[f64]](lda * m)
+    var b = alloc[Scalar[f64]](ldb * n)
     for i in range(lda * m):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(ldb * n):
-        b[i] = Float32(i + 1)
+        b[i] = Float64(i + 1)
 
     @parameter
     def dtrsm_only() -> None:
-        trsm[DType.float32]("L", "U", "N", "N", m, n, Float32(1.0), a, lda, b, ldb)
+        trsm[f64]("L", "U", "N", "N", m, n, Float64(1.0), a, lda, b, ldb)
         keep(a)
         keep(b)
 

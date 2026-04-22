@@ -1,29 +1,33 @@
-from blas.level2 import *
 from std.memory import UnsafePointer, memset_zero
 from std.time import sleep
 import std.benchmark as benchmark
 from std.benchmark import keep
 
+from mojoblas.level2 import *
+
+comptime f64 = DType.float64
+
 def bench_dgemv[current_size: Int]() raises -> Float64:
     var m = current_size
     var n = current_size
     var lda = m
-    var x = alloc[Scalar[DType.float32]](n)
-    var y = alloc[Scalar[DType.float32]](m)
-    var a = alloc[Scalar[DType.float32]](lda * n)
+    var x = alloc[Scalar[f64]](n)
+    var y = alloc[Scalar[f64]](m)
+    var a = alloc[Scalar[f64]](lda * n)
     for i in range(m * n):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(n):
-        x[i] = Float32(i + 1)
+        x[i] = Float64(i + 1)
     for i in range(m):
-        y[i] = Float32(i + 1)
+        y[i] = Float64(i + 1)
 
     @parameter
     def dgemv_only() -> None:
-        gemv[DType.float32]("N", m, n, Float32(1.0), a, lda, x, 1, Float32(0.0), y, 1)
-        keep(a)
-        keep(x)
-        keep(y)
+        gemv[f64]("N", m, n, Float64(1.0), a, lda, x, 1, Float64(0.0), y, 1)
+
+    keep(a)
+    keep(x)
+    keep(y)
 
     var report = benchmark.run[dgemv_only](max_runtime_secs=1)
 
@@ -37,22 +41,22 @@ def bench_dgemv_trans[current_size: Int]() raises -> Float64:
     var m = current_size
     var n = current_size
     var lda = m
-    var x = alloc[Scalar[DType.float32]](m)
-    var y = alloc[Scalar[DType.float32]](n)
-    var a = alloc[Scalar[DType.float32]](lda * n)
+    var x = alloc[Scalar[f64]](m)
+    var y = alloc[Scalar[f64]](n)
+    var a = alloc[Scalar[f64]](lda * n)
     for i in range(m * n):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(m):
-        x[i] = Float32(i + 1)
+        x[i] = Float64(i + 1)
     for i in range(n):
-        y[i] = Float32(i + 1)
+        y[i] = Float64(i + 1)
 
     @parameter
     def dgemv_trans_only() -> None:
-        gemv[DType.float32]("T", m, n, Float32(1.0), a, lda, x, 1, Float32(0.0), y, 1)
-        keep(a)
-        keep(x)
-        keep(y)
+        gemv[f64]("T", m, n, Float64(1.0), a, lda, x, 1, Float64(0.0), y, 1)
+    keep(a)
+    keep(x)
+    keep(y)
 
     var report = benchmark.run[dgemv_trans_only](max_runtime_secs=1)
 
@@ -65,18 +69,18 @@ def bench_dgemv_trans[current_size: Int]() raises -> Float64:
 def bench_dtrmv[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = n
-    var x = alloc[Scalar[DType.float32]](n)
-    var a = alloc[Scalar[DType.float32]](lda * n)
+    var x = alloc[Scalar[f64]](n)
+    var a = alloc[Scalar[f64]](lda * n)
     for i in range(n * n):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(n):
-        x[i] = Float32(i + 1)
+        x[i] = Float64(i + 1)
 
     @parameter
     def dtrmv_only() -> None:
-        trmv[DType.float32]("U", "N", "N", n, a, lda, x, 1)
-        keep(a)
-        keep(x)
+        trmv[f64]("U", "N", "N", n, a, lda, x, 1)
+    keep(a)
+    keep(x)
 
     var report = benchmark.run[dtrmv_only](max_runtime_secs=1)
 
@@ -88,18 +92,18 @@ def bench_dtrmv[current_size: Int]() raises -> Float64:
 def bench_dtrsv[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = n
-    var x = alloc[Scalar[DType.float32]](n)
-    var a = alloc[Scalar[DType.float32]](lda * n)
+    var x = alloc[Scalar[f64]](n)
+    var a = alloc[Scalar[f64]](lda * n)
     for i in range(n * n):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(n):
-        x[i] = Float32(i + 1)
+        x[i] = Float64(i + 1)
 
     @parameter
     def dtrsv_only() -> None:
-        trsv[DType.float32]("U", "N", "N", n, a, lda, x, 1)
-        keep(a)
-        keep(x)
+        trsv[f64]("U", "N", "N", n, a, lda, x, 1)
+    keep(a)
+    keep(x)
 
     var report = benchmark.run[dtrsv_only](max_runtime_secs=1)
 
@@ -111,21 +115,21 @@ def bench_dtrsv[current_size: Int]() raises -> Float64:
 def bench_dsymv[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = n
-    var x = alloc[Scalar[DType.float32]](n)
-    var y = alloc[Scalar[DType.float32]](n)
-    var a = alloc[Scalar[DType.float32]](lda * n)
+    var x = alloc[Scalar[f64]](n)
+    var y = alloc[Scalar[f64]](n)
+    var a = alloc[Scalar[f64]](lda * n)
     for i in range(n * n):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(n):
-        x[i] = Float32(i + 1)
-        y[i] = Float32(i + 1)
+        x[i] = Float64(i + 1)
+        y[i] = Float64(i + 1)
 
     @parameter
     def dsymv_only() -> None:
-        symv[DType.float32]("U", n, Float32(1.0), a, lda, x, 1, Float32(0.0), y, 1)
-        keep(a)
-        keep(x)
-        keep(y)
+        symv[f64]("U", n, Float64(1.0), a, lda, x, 1, Float64(0.0), y, 1)
+    keep(a)
+    keep(x)
+    keep(y)
 
     var report = benchmark.run[dsymv_only](max_runtime_secs=1)
 
@@ -138,18 +142,18 @@ def bench_dsymv[current_size: Int]() raises -> Float64:
 def bench_dsyr[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = n
-    var x = alloc[Scalar[DType.float32]](n)
-    var a = alloc[Scalar[DType.float32]](lda * n)
+    var x = alloc[Scalar[f64]](n)
+    var a = alloc[Scalar[f64]](lda * n)
     for i in range(n * n):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(n):
-        x[i] = Float32(i + 1)
+        x[i] = Float64(i + 1)
 
     @parameter
     def dsyr_only() -> None:
-        syr[DType.float32]("U", n, Float32(1.0), x, 1, a, lda)
-        keep(a)
-        keep(x)
+        syr[f64]("U", n, Float64(1.0), x, 1, a, lda)
+    keep(a)
+    keep(x)
 
     var report = benchmark.run[dsyr_only](max_runtime_secs=1)
 
@@ -161,21 +165,21 @@ def bench_dsyr[current_size: Int]() raises -> Float64:
 def bench_dsyr2[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = n
-    var x = alloc[Scalar[DType.float32]](n)
-    var y = alloc[Scalar[DType.float32]](n)
-    var a = alloc[Scalar[DType.float32]](lda * n)
+    var x = alloc[Scalar[f64]](n)
+    var y = alloc[Scalar[f64]](n)
+    var a = alloc[Scalar[f64]](lda * n)
     for i in range(n * n):
-        a[i] = Float32(i + 1)
+        a[i] = Float64(i + 1)
     for i in range(n):
-        x[i] = Float32(i + 1)
-        y[i] = Float32(i + 1)
+        x[i] = Float64(i + 1)
+        y[i] = Float64(i + 1)
 
     @parameter
     def dsyr2_only() -> None:
-        syr2[DType.float32]("U", n, Float32(1.0), x, 1, y, 1, a, lda)
-        keep(a)
-        keep(x)
-        keep(y)
+        syr2[f64]("U", n, Float64(1.0), x, 1, y, 1, a, lda)
+    keep(a)
+    keep(x)
+    keep(y)
 
     var report = benchmark.run[dsyr2_only](max_runtime_secs=1)
 
