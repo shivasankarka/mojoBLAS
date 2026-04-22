@@ -136,35 +136,27 @@ def symm[
                 for i in range(m):
                     c[i + j * ldc] = beta * c[i + j * ldc]
 
+            var temp_diag: Scalar[dtype] = alpha * a[j + j * lda]
+            for i in range(m):
+                c[i + j * ldc] = c[i + j * ldc] + temp_diag * b[i + j * ldb]
+
             if upper:
-                for l in range(n - 1, -1, -1):
-                    if b[l + j * ldb] != 0:
-                        var temp1: Scalar[dtype] = alpha * b[l + j * ldb]
-                        var temp2: Scalar[dtype] = 0
-                        for i in range(l):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp1 * a[i + l * lda]
-                            )
-                            temp2 = temp2 + a[i + l * lda] * b[i + j * ldb]
-                        c[l + j * ldc] = (
-                            c[l + j * ldc]
-                            + temp1 * a[l + l * lda]
-                            + alpha * temp2
-                        )
+                for k in range(j):
+                    var temp_k: Scalar[dtype] = alpha * a[k + j * lda]
+                    for i in range(m):
+                        c[i + j * ldc] = c[i + j * ldc] + temp_k * b[i + k * ldb]
+                for k in range(j + 1, n):
+                    var temp_k: Scalar[dtype] = alpha * a[j + k * lda]
+                    for i in range(m):
+                        c[i + j * ldc] = c[i + j * ldc] + temp_k * b[i + k * ldb]
             else:
-                for l in range(n):
-                    if b[l + j * ldb] != 0:
-                        var temp1: Scalar[dtype] = alpha * b[l + j * ldb]
-                        var temp2: Scalar[dtype] = 0
-                        for i in range(l + 1, n):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp1 * a[i + l * lda]
-                            )
-                            temp2 = temp2 + a[i + l * lda] * b[i + j * ldb]
-                        c[l + j * ldc] = (
-                            c[l + j * ldc]
-                            + temp1 * a[l + l * lda]
-                            + alpha * temp2
-                        )
+                for k in range(j):
+                    var temp_k: Scalar[dtype] = alpha * a[j + k * lda]
+                    for i in range(m):
+                        c[i + j * ldc] = c[i + j * ldc] + temp_k * b[i + k * ldb]
+                for k in range(j + 1, n):
+                    var temp_k: Scalar[dtype] = alpha * a[k + j * lda]
+                    for i in range(m):
+                        c[i + j * ldc] = c[i + j * ldc] + temp_k * b[i + k * ldb]
 
     return

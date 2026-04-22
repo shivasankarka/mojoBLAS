@@ -77,116 +77,65 @@ def tpsv[
     var no_unit = diag == "N" or diag == "n"
     var upper = uplo == "U" or uplo == "u"
     var no_trans = trans == "N" or trans == "n"
+    var xbuf = alloc[Scalar[dtype]](n)
+    var kx: Int = 0 if incx > 0 else (1 - n) * incx
+    var ix: Int = kx
+    for i in range(n):
+        xbuf[i] = x[ix]
+        ix += incx
 
-    var kx: Int = 1
-    if incx < 0:
-        kx = 1 - (n - 1) * incx
+    @parameter
+    def a_at(i: Int, j: Int) -> Scalar[dtype]:
+        if i == j and not no_unit:
+            return 1
+        if upper:
+            if i > j:
+                return 0
+            var idx = (j * (j + 1)) // 2 + i
+            return ap[idx]
+        if i < j:
+            return 0
+        var start = j * n - (j * (j - 1)) // 2
+        return ap[start + (i - j)]
 
     if no_trans:
         if upper:
-            var kk: Int = (n * (n + 1)) // 2
-            if incx == 1:
-                for j in range(n - 1, -1, -1):
-                    kk -= n - j
-                    if x[j] != 0:
-                        if no_unit:
-                            x[j] = x[j] / ap[kk + j]
-                        var temp: Scalar[dtype] = x[j]
-                        var k: Int = kk
-                        for i in range(j - 1, -1, -1):
-                            k += 1
-                            x[i] = x[i] - temp * ap[k]
-            else:
-                var kx_plus: Int = kx + (n - 1) * incx
-                var jx: Int = kx_plus
-                for j in range(n - 1, -1, -1):
-                    kk -= n - j
-                    jx -= incx
-                    if x[jx - 1] != 0:
-                        if no_unit:
-                            x[jx - 1] = x[jx - 1] / ap[kk + j]
-                        var temp: Scalar[dtype] = x[jx - 1]
-                        var ix: Int = jx
-                        for k in range(kk + n - j - 1, kk, -1):
-                            ix -= incx
-                            x[ix - 1] = x[ix - 1] - temp * ap[k]
+            for i in range(n - 1, -1, -1):
+                var sum: Scalar[dtype] = xbuf[i]
+                for j in range(i + 1, n):
+                    sum = sum - a_at(i, j) * xbuf[j]
+                if no_unit:
+                    sum = sum / a_at(i, i)
+                xbuf[i] = sum
         else:
-            var kk: Int = 1
-            if incx == 1:
-                for j in range(n):
-                    if x[j] != 0:
-                        if no_unit:
-                            x[j] = x[j] / ap[kk]
-                        var temp: Scalar[dtype] = x[j]
-                        for k in range(kk + n - j - 1, kk, -1):
-                            x[k - kk] = x[k - kk] - temp * ap[k]
-                    kk += n - j
-            else:
-                var jx: Int = kx
-                for j in range(n):
-                    if x[jx - 1] != 0:
-                        if no_unit:
-                            x[jx - 1] = x[jx - 1] / ap[kk]
-                        var temp: Scalar[dtype] = x[jx - 1]
-                        var ix: Int = jx
-                        for k in range(kk + n - j - 1, kk, -1):
-                            ix += incx
-                            x[ix - 1] = x[ix - 1] - temp * ap[k]
-                    jx += incx
-                    kk += n - j
+            for i in range(n):
+                var sum: Scalar[dtype] = xbuf[i]
+                for j in range(i):
+                    sum = sum - a_at(i, j) * xbuf[j]
+                if no_unit:
+                    sum = sum / a_at(i, i)
+                xbuf[i] = sum
     else:
         if upper:
-            var kk: Int = 1
-            if incx == 1:
-                for j in range(n):
-                    var temp: Scalar[dtype] = x[j]
-                    var k: Int = kk
-                    for i in range(j):
-                        k += 1
-                        temp = temp - ap[k] * x[i]
-                    if no_unit:
-                        temp = temp / ap[kk + j]
-                    x[j] = temp
-                    kk += n - j
-            else:
-                var jx: Int = kx
-                for j in range(n):
-                    var ix: Int = kx
-                    var temp: Scalar[dtype] = x[jx - 1]
-                    for k in range(kk, kk + j):
-                        temp = temp - ap[k] * x[ix - 1]
-                        ix += incx
-                    if no_unit:
-                        temp = temp / ap[kk + j]
-                    x[jx - 1] = temp
-                    jx += incx
-                    kk += n - j
+            for i in range(n):
+                var sum: Scalar[dtype] = xbuf[i]
+                for j in range(i):
+                    sum = sum - a_at(j, i) * xbuf[j]
+                if no_unit:
+                    sum = sum / a_at(i, i)
+                xbuf[i] = sum
         else:
-            var kk: Int = (n * (n + 1)) // 2
-            if incx == 1:
-                for j in range(n - 1, -1, -1):
-                    var temp: Scalar[dtype] = x[j]
-                    var k: Int = kk
-                    for i in range(j + 1, n):
-                        k -= 1
-                        temp = temp - ap[k] * x[i]
-                    if no_unit:
-                        temp = temp / ap[kk]
-                    x[j] = temp
-                    kk -= n - j
-            else:
-                var kx_plus: Int = kx + (n - 1) * incx
-                var jx: Int = kx_plus
-                for j in range(n - 1, -1, -1):
-                    var ix: Int = kx_plus
-                    var temp: Scalar[dtype] = x[jx - 1]
-                    for k in range(kk + n - j - 1, kk, -1):
-                        temp = temp - ap[k] * x[ix - 1]
-                        ix -= incx
-                    if no_unit:
-                        temp = temp / ap[kk]
-                    x[jx - 1] = temp
-                    jx -= incx
-                    kk -= n - j
+            for i in range(n - 1, -1, -1):
+                var sum: Scalar[dtype] = xbuf[i]
+                for j in range(i + 1, n):
+                    sum = sum - a_at(j, i) * xbuf[j]
+                if no_unit:
+                    sum = sum / a_at(i, i)
+                xbuf[i] = sum
 
-    return
+    ix = kx
+    for i in range(n):
+        x[ix] = xbuf[i]
+        ix += incx
+
+    xbuf.free()

@@ -72,95 +72,45 @@ def spmv[
 
     if n == 0 or (alpha == 0 and beta == 1):
         return
+    var xbuf = alloc[Scalar[dtype]](n)
+    var ybuf = alloc[Scalar[dtype]](n)
 
-    var leny: Int = n
-    var ky: Int = 1
-    if incy < 0:
-        ky = 1 - (leny - 1) * incy
+    var kx: Int = 0 if incx > 0 else (1 - n) * incx
+    var ky: Int = 0 if incy > 0 else (1 - n) * incy
 
-    if beta != 1:
-        if incy == 1:
-            if beta == 0:
-                for i in range(leny):
-                    y[i] = 0
-            else:
-                for i in range(leny):
-                    y[i] = beta * y[i]
-        else:
-            var iy: Int = ky
-            if beta == 0:
-                for _ in range(leny):
-                    y[iy - 1] = 0
-                    iy += incy
-            else:
-                for _ in range(leny):
-                    y[iy - 1] = beta * y[iy - 1]
-                    iy += incy
-
-    if alpha == 0:
-        return
-
-    var kx: Int = 1
-    if incx < 0:
-        kx = 1 - (n - 1) * incx
+    var ix: Int = kx
+    var iy: Int = ky
+    for i in range(n):
+        xbuf[i] = x[ix]
+        ybuf[i] = y[iy]
+        ix += incx
+        iy += incy
 
     var upper = uplo == "U" or uplo == "u"
+    for i in range(n):
+        var sum: Scalar[dtype] = 0
+        for j in range(n):
+            var ii = i
+            var jj = j
+            if upper:
+                if ii > jj:
+                    ii = j
+                    jj = i
+                var idx = (jj * (jj + 1)) // 2 + ii
+                sum = sum + ap[idx] * xbuf[j]
+            else:
+                if ii < jj:
+                    ii = j
+                    jj = i
+                var start = jj * n - (jj * (jj - 1)) // 2
+                var idx = start + (ii - jj)
+                sum = sum + ap[idx] * xbuf[j]
+        ybuf[i] = alpha * sum + beta * ybuf[i]
 
-    if upper:
-        var kk: Int = 1
-        if incx == 1:
-            for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[j]
-                var temp2: Scalar[dtype] = 0
-                var k: Int = kk
-                for i in range(j):
-                    y[i] = y[i] + temp1 * ap[k]
-                    temp2 = temp2 + ap[k] * x[i]
-                    k += 1
-                y[j] = y[j] + temp1 * ap[kk + j] + alpha * temp2
-                kk += n - j
-        else:
-            var jx: Int = kx
-            for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[jx - 1]
-                var temp2: Scalar[dtype] = 0
-                var ix: Int = kx
-                var i: Int = 0
-                for k in range(kk, kk + j):
-                    y[i] = y[i] + temp1 * ap[k]
-                    temp2 = temp2 + ap[k] * x[ix - 1]
-                    ix += incx
-                    i += 1
-                y[j] = y[j] + temp1 * ap[kk + j] + alpha * temp2
-                jx += incx
-                kk += n - j
-    else:
-        var kk: Int = 1
-        if incx == 1:
-            for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[j]
-                var temp2: Scalar[dtype] = 0
-                var k: Int = kk
-                for i in range(j, n):
-                    y[i] = y[i] + temp1 * ap[k]
-                    temp2 = temp2 + ap[k] * x[i]
-                    k += 1
-                y[j] = y[j] + temp1 * ap[kk] + alpha * temp2
-                kk += n - j
-        else:
-            var jx: Int = kx
-            for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[jx - 1]
-                var temp2: Scalar[dtype] = 0
-                var ix: Int = jx
-                var i: Int = j
-                for k in range(kk, kk + n - j):
-                    y[i] = y[i] + temp1 * ap[k]
-                    temp2 = temp2 + ap[k] * x[ix - 1]
-                    ix += incx
-                    i += 1
-                y[j] = y[j] + temp1 * ap[kk] + alpha * temp2
-                jx += incx
-                kk += n - j
+    iy = ky
+    for i in range(n):
+        y[iy] = ybuf[i]
+        iy += incy
 
-    return
+    xbuf.free()
+    ybuf.free()

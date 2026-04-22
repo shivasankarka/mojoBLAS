@@ -80,116 +80,42 @@ def tpmv[
     var upper = uplo == "U" or uplo == "u"
     var no_trans = trans == "N" or trans == "n"
 
-    var kx: Int = 1
-    if incx < 0:
-        kx = 1 - (n - 1) * incx
+    var x_in = alloc[Scalar[dtype]](n)
+    var x_out = alloc[Scalar[dtype]](n)
 
-    if no_trans:
-        if upper:
-            var kk: Int = 1
-            if incx == 1:
-                for j in range(n):
-                    if x[j] != 0:
-                        var temp: Scalar[dtype] = x[j]
-                        var k: Int = kk
-                        for i in range(j):
-                            x[i] = x[i] + temp * ap[k]
-                            k += 1
-                        if no_unit:
-                            x[j] = x[j] * ap[kk + j]
-                    kk += n - j
-            else:
-                var jx: Int = kx
-                for j in range(n):
-                    if x[jx - 1] != 0:
-                        var temp: Scalar[dtype] = x[jx - 1]
-                        var ix: Int = kx
-                        for k in range(kk, kk + j):
-                            x[ix - 1] = x[ix - 1] + temp * ap[k]
-                            ix += incx
-                        if no_unit:
-                            x[jx - 1] = x[jx - 1] * ap[kk + j]
-                    jx += incx
-                    kk += n - j
-        else:
-            var kk: Int = 1
-            if incx == 1:
-                for j in range(n - 1, -1, -1):
-                    if x[j] != 0:
-                        var temp: Scalar[dtype] = x[j]
-                        var k: Int = kk
-                        for i in range(j + 1, n):
-                            x[i] = x[i] + temp * ap[k]
-                            k += 1
-                        if no_unit:
-                            x[j] = x[j] * ap[kk]
-                    kk += n - j
-            else:
-                var kx_plus: Int = kx + (n - 1) * incx
-                var jx: Int = kx_plus
-                for j in range(n - 1, -1, -1):
-                    if x[jx - 1] != 0:
-                        var temp: Scalar[dtype] = x[jx - 1]
-                        var ix: Int = kx_plus
-                        for k in range(kk + 1, kk + n - j):
-                            x[ix - 1] = x[ix - 1] + temp * ap[k]
-                            ix += incx
-                        if no_unit:
-                            x[jx - 1] = x[jx - 1] * ap[kk]
-                    jx -= incx
-                    kk += n - j
-    else:
-        if upper:
-            var kk: Int = (n * (n + 1)) // 2
-            if incx == 1:
-                for j in range(n - 1, -1, -1):
-                    kk -= n - j
-                    var temp: Scalar[dtype] = x[j]
-                    if no_unit:
-                        temp = temp * ap[kk + j]
-                    var k: Int = kk
-                    for i in range(j - 1, -1, -1):
-                        k += 1
-                        temp = temp + ap[k] * x[i]
-                    x[j] = temp
-            else:
-                var jx: Int = kx + (n - 1) * incx
-                for j in range(n - 1, -1, -1):
-                    kk -= n - j
-                    var ix: Int = jx
-                    var temp: Scalar[dtype] = x[jx - 1]
-                    if no_unit:
-                        temp = temp * ap[kk + j]
-                    for k in range(kk + n - j - 1, kk, -1):
-                        ix -= incx
-                        temp = temp + ap[k] * x[ix - 1]
-                    x[jx - 1] = temp
-                    jx -= incx
-        else:
-            var kk: Int = (n * (n + 1)) // 2
-            if incx == 1:
-                for j in range(n):
-                    kk -= n - j
-                    var temp: Scalar[dtype] = x[j]
-                    if no_unit:
-                        temp = temp * ap[kk]
-                    var k: Int = kk + n - j
-                    for i in range(j + 1, n):
-                        k -= 1
-                        temp = temp + ap[k] * x[i]
-                    x[j] = temp
-            else:
-                var jx: Int = kx
-                for j in range(n):
-                    kk -= n - j
-                    var ix: Int = jx
-                    var temp: Scalar[dtype] = x[jx - 1]
-                    if no_unit:
-                        temp = temp * ap[kk]
-                    for k in range(kk + n - j - 1, kk, -1):
-                        ix += incx
-                        temp = temp + ap[k] * x[ix - 1]
-                    x[jx - 1] = temp
-                    jx += incx
+    var kx: Int = 0 if incx > 0 else (1 - n) * incx
+    var ix: Int = kx
+    for i in range(n):
+        x_in[i] = x[ix]
+        ix += incx
 
-    return
+    @parameter
+    def a_at(i: Int, j: Int) -> Scalar[dtype]:
+        if i == j and not no_unit:
+            return 1
+        if upper:
+            if i > j:
+                return 0
+            var idx = (j * (j + 1)) // 2 + i
+            return ap[idx]
+        if i < j:
+            return 0
+        var start = j * n - (j * (j - 1)) // 2
+        return ap[start + (i - j)]
+
+    for i in range(n):
+        var sum: Scalar[dtype] = 0
+        for j in range(n):
+            if no_trans:
+                sum = sum + a_at(i, j) * x_in[j]
+            else:
+                sum = sum + a_at(j, i) * x_in[j]
+        x_out[i] = sum
+
+    ix = kx
+    for i in range(n):
+        x[ix] = x_out[i]
+        ix += incx
+
+    x_in.free()
+    x_out.free()
