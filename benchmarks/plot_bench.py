@@ -70,7 +70,7 @@ def build_series(results, elem_sizes):
     return series
 
 
-def plot_level(series, out_path, title, ops, scale):
+def plot_level(series, out_path, ops, scale):
     n_ops = len(ops)
     ncols = min(n_ops, 4)
     nrows = (n_ops + ncols - 1) // ncols
@@ -107,7 +107,6 @@ def plot_level(series, out_path, title, ops, scale):
             for lib in series.get(op, {}):
                 all_libs.add(lib)
         fig.legend(handles, labels, loc="upper center", ncol=len(all_libs))
-    # fig.suptitle(title)
     fig.tight_layout(rect=[0, 0, 1, 0.92])
     fig.savefig(out_path, dpi=200)
 
@@ -141,21 +140,18 @@ def main():
     plot_level(
         series,
         f"{args.out_prefix}_level1.png",
-        "BLAS Level 1 (avg_seconds)",
         LEVEL1_OPS,
         "log",
     )
     plot_level(
         series,
         f"{args.out_prefix}_level2.png",
-        "BLAS Level 2 (avg_seconds)",
         LEVEL2_OPS,
         "linear",
     )
     plot_level(
         series,
         f"{args.out_prefix}_level3.png",
-        "BLAS Level 3 (avg_seconds)",
         LEVEL3_OPS,
         "linear",
     )
