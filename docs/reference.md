@@ -14,15 +14,18 @@ Complete list of available BLAS operations in mojoBLAS.
 | `dot` | Dot product | `result = X · Y` |
 | `nrm2` | Euclidean norm | `result = √(Σx²)` |
 | `asum` | Sum of absolute values | `result = Σ|x|` |
-| `swap` | Swap vectors X and Y | `X ↔ Y` |
+| `vswap` | Swap vectors X and Y | `X ↔ Y` |
 | `iamax` | Index of max absolute value | `result = argmax(|x|)` |
 | `rotg` | Generate Given rotation | Construct rotation matrix |
 | `rot` | Apply Givens rotation | Apply rotation to vectors |
+| `rotm` | Apply modified Givens rotation | Apply modified rotation to vectors |
+| `rotmg` | Construct modified Givens transform | Build modified rotation parameters |
 
 ### Level 2 BLAS Operations (Matrix-Vector)
 
 | Function | Description | Formula |
 |----------|-------------|---------|
+| `ger` | General rank-1 update | `A := α*x*y^T + A` |
 | `gemv` | General matrix-vector multiply | `Y := α*A*X + β*Y` |
 | `gbmv` | General banded matrix-vector multiply | `Y := α*A*X + β*Y` |
 | `sbmv` | Symmetric banded matrix-vector multiply | `Y := α*A*X + β*Y` |
@@ -30,6 +33,8 @@ Complete list of available BLAS operations in mojoBLAS.
 | `symv` | Symmetric matrix-vector multiply | `Y := α*A*X + β*Y` |
 | `syr` | Symmetric rank-1 update | `A := α*X*X^T + A` |
 | `syr2` | Symmetric rank-2 update | `A := α*X*Y^T + α*Y*X^T + A` |
+| `spr` | Symmetric packed rank-1 update | `AP := α*X*X^T + AP` |
+| `spr2` | Symmetric packed rank-2 update | `AP := α*X*Y^T + α*Y*X^T + AP` |
 | `tbmv` | Triangular banded matrix-vector multiply | `X := A*X` |
 | `tbsv` | Triangular banded solve | `X := A^-1*X` |
 | `tpmv` | Triangular packed matrix-vector multiply | `X := A*X` |
@@ -48,7 +53,7 @@ Complete list of available BLAS operations in mojoBLAS.
 | `trmm` | Triangular matrix multiply | `B := α*A*B` |
 | `trsm` | Triangular solve (multiple RHS) | `B := α*A^-1*B` |
 
-## Function Signatures
+## Selected Function Signatures
 
 ### Level 1 BLAS
 
@@ -125,9 +130,11 @@ fn iamax[
 fn rotg[
     origin_a: MutOrigin,
     origin_b: MutOrigin,
+    origin_c: MutOrigin,
+    origin_s: MutOrigin,
     //,
     dtype: DType,
-](a: Scalar[dtype], b: Scalar[dtype]) -> Tuple[Scalar[dtype], Scalar[dtype], Scalar[dtype], Scalar[dtype]]
+](a: BLASPtr[dtype, origin_a], b: BLASPtr[dtype, origin_b], c: BLASPtr[dtype, origin_c], s: BLASPtr[dtype, origin_s]) -> None
 
 # Apply Givens rotation
 fn rot[
@@ -137,6 +144,28 @@ fn rot[
     //,
     dtype: DType,
 ](n: Int, x: BLASPtr[dtype, origin_x], incx: Int, y: BLASPtr[dtype, origin_y], incy: Int, c: Scalar[dtype], s: Scalar[dtype]) -> None
+
+# Apply modified Givens rotation
+fn rotm[
+    origin_x: MutOrigin,
+    origin_y: MutOrigin,
+    mut_param: Bool,
+    origin_param: Origin[mut=mut_param],
+    //,
+    dtype: DType,
+](n: Int, x: BLASPtr[dtype, origin_x], incx: Int, y: BLASPtr[dtype, origin_y], incy: Int, param: BLASPtr[dtype, origin_param]) -> None
+
+# Construct modified Givens rotation parameters
+fn rotmg[
+    origin_d1: MutOrigin,
+    origin_d2: MutOrigin,
+    origin_x1: MutOrigin,
+    mut_y1: Bool,
+    origin_y1: Origin[mut=mut_y1],
+    origin_param: MutOrigin,
+    //,
+    dtype: DType,
+](d1: BLASPtr[dtype, origin_d1], d2: BLASPtr[dtype, origin_d2], x1: BLASPtr[dtype, origin_x1], y1: BLASPtr[dtype, origin_y1], param: BLASPtr[dtype, origin_param]) -> None
 ```
 
 ### Level 2 BLAS
@@ -208,6 +237,28 @@ fn syr[
     dtype: DType,
 ](uplo: String, n: Int, alpha: Scalar[dtype], x: BLASPtr[dtype, origin_x], incx: Int,
  a: BLASPtr[dtype, origin_a], lda: Int) -> None
+
+# Symmetric packed rank-1 update
+fn spr[
+    mut_x: Bool,
+    origin_x: Origin[mut=mut_x],
+    origin_ap: MutOrigin,
+    //,
+    dtype: DType,
+](uplo: String, n: Int, alpha: Scalar[dtype], x: BLASPtr[dtype, origin_x], incx: Int,
+ ap: BLASPtr[dtype, origin_ap]) -> None
+
+# Symmetric packed rank-2 update
+fn spr2[
+    mut_x: Bool,
+    mut_y: Bool,
+    origin_x: Origin[mut=mut_x],
+    origin_y: Origin[mut=mut_y],
+    origin_ap: MutOrigin,
+    //,
+    dtype: DType,
+](uplo: String, n: Int, alpha: Scalar[dtype], x: BLASPtr[dtype, origin_x], incx: Int,
+ y: BLASPtr[dtype, origin_y], incy: Int, ap: BLASPtr[dtype, origin_ap]) -> None
 ```
 
 ### Level 3 BLAS
