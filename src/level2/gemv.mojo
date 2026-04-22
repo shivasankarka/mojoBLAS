@@ -84,6 +84,7 @@ def gemv[
     elif incy == 0:
         info = 11
     if info != 0:
+        print("gemv: Info", info)
         return
 
     if m == 0 or n == 0 or (alpha == 0 and beta == 1):
