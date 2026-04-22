@@ -41,6 +41,93 @@ def test_gemm_no_transpose() raises:
     c.free()
 
 
+
+
+
+def test_gemm_transpose_b() raises:
+    print("Testing gemm (transpose B)...")
+    var m = 2
+    var n = 2
+    var k = 3
+    var lda = m
+    var ldb = n
+    var ldc = m
+
+    var a = alloc[Scalar[DType.float32]](lda * k)
+    var b = alloc[Scalar[DType.float32]](ldb * k)
+    var c = alloc[Scalar[DType.float32]](ldc * n)
+
+    a[0] = 1.0
+    a[1] = 2.0
+    a[2] = 3.0
+    a[3] = 4.0
+    a[4] = 5.0
+    a[5] = 6.0
+
+    b[0] = 1.0
+    b[1] = 3.0
+    b[2] = 5.0
+    b[3] = 2.0
+    b[4] = 4.0
+    b[5] = 6.0
+
+    for i in range(ldc * n):
+        c[i] = 0.0
+
+    gemm("N", "T", m, n, k, Float32(1.0), a, lda, b, ldb, Float32(0.0), c, ldc)
+
+    assert_almost_equal(c[0], Float32(36.0))
+    assert_almost_equal(c[1], Float32(46.0))
+    assert_almost_equal(c[2], Float32(39.0))
+    assert_almost_equal(c[3], Float32(50.0))
+
+    a.free()
+    b.free()
+    c.free()
+
+
+def test_gemm_transpose_both() raises:
+    print("Testing gemm (transpose both)...")
+    var m = 2
+    var n = 2
+    var k = 3
+    var lda = k
+    var ldb = n
+    var ldc = m
+
+    var a = alloc[Scalar[DType.float32]](lda * m)
+    var b = alloc[Scalar[DType.float32]](ldb * k)
+    var c = alloc[Scalar[DType.float32]](ldc * n)
+
+    a[0] = 1.0
+    a[1] = 2.0
+    a[2] = 3.0
+    a[3] = 4.0
+    a[4] = 5.0
+    a[5] = 6.0
+
+    b[0] = 1.0
+    b[1] = 3.0
+    b[2] = 5.0
+    b[3] = 2.0
+    b[4] = 4.0
+    b[5] = 6.0
+
+    for i in range(ldc * n):
+        c[i] = 0.0
+
+    gemm("T", "T", m, n, k, Float32(1.0), a, lda, b, ldb, Float32(0.0), c, ldc)
+
+    assert_almost_equal(c[0], Float32(23.0))
+    assert_almost_equal(c[1], Float32(53.0))
+    assert_almost_equal(c[2], Float32(25.0))
+    assert_almost_equal(c[3], Float32(58.0))
+
+    a.free()
+    b.free()
+    c.free()
+
+
 def test_gemm_with_beta() raises:
     print("Testing gemm (with beta)...")
     var m = 2
@@ -109,6 +196,72 @@ def test_syrk_upper() raises:
 
     a.free()
     c.free()
+
+
+def test_syrk_lower() raises:
+    print("Testing syrk (lower)...")
+    var n = 2
+    var k = 3
+    var lda = n
+    var ldc = n
+
+    var a = alloc[Scalar[DType.float32]](lda * k)
+    var c = alloc[Scalar[DType.float32]](ldc * n)
+
+    a[0] = 1.0
+    a[1] = 2.0
+    a[2] = 3.0
+    a[3] = 4.0
+    a[4] = 5.0
+    a[5] = 6.0
+
+    for i in range(ldc * n):
+        c[i] = 0.0
+
+    syrk("L", "N", n, k, Float32(1.0), a, lda, Float32(0.0), c, ldc)
+
+    assert_almost_equal(c[0], Float32(35.0))
+    assert_almost_equal(c[1], Float32(44.0))
+    assert_almost_equal(c[3], Float32(56.0))
+
+    a.free()
+    c.free()
+
+
+def test_syrk_transpose() raises:
+    print("Testing syrk (transpose)...")
+    var n = 2
+    var k = 3
+    var lda = k
+    var ldc = n
+
+    var a = alloc[Scalar[DType.float32]](lda * n)
+    var c = alloc[Scalar[DType.float32]](ldc * n)
+
+    a[0] = 1.0
+    a[1] = 3.0
+    a[2] = 5.0
+    a[3] = 2.0
+    a[4] = 4.0
+    a[5] = 6.0
+
+    for i in range(ldc * n):
+        c[i] = 0.0
+
+    syrk("U", "T", n, k, Float32(1.0), a, lda, Float32(0.0), c, ldc)
+
+    assert_almost_equal(c[0], Float32(35.0))
+    assert_almost_equal(c[2], Float32(44.0))
+    assert_almost_equal(c[3], Float32(56.0))
+
+    a.free()
+    c.free()
+
+
+
+
+
+
 
 
 def test_trmm_left_upper() raises:
@@ -244,6 +397,148 @@ def test_syr2k_upper() raises:
     assert_almost_equal(c[0], Float32(100.0))
     assert_almost_equal(c[2], Float32(190.0))
     assert_almost_equal(c[3], Float32(334.0))
+
+    a.free()
+    b.free()
+    c.free()
+
+
+
+
+
+def test_gemm_alpha_zero() raises:
+    print("Testing gemm (alpha=0)...")
+    var m = 2
+    var n = 2
+    var k = 2
+    var lda = m
+    var ldb = k
+    var ldc = m
+
+    var a = alloc[Scalar[DType.float32]](lda * k)
+    var b = alloc[Scalar[DType.float32]](ldb * n)
+    var c = alloc[Scalar[DType.float32]](ldc * n)
+
+    a[0] = 1.0
+    a[1] = 2.0
+    a[2] = 3.0
+    a[3] = 4.0
+
+    b[0] = 5.0
+    b[1] = 6.0
+    b[2] = 7.0
+    b[3] = 8.0
+
+    c[0] = 1.0
+    c[1] = 2.0
+    c[2] = 3.0
+    c[3] = 4.0
+
+    gemm("N", "N", m, n, k, Float32(0.0), a, lda, b, ldb, Float32(1.0), c, ldc)
+
+    assert_almost_equal(c[0], Float32(1.0))
+    assert_almost_equal(c[1], Float32(2.0))
+    assert_almost_equal(c[2], Float32(3.0))
+    assert_almost_equal(c[3], Float32(4.0))
+
+    a.free()
+    b.free()
+    c.free()
+
+
+def test_trmm_no_unit_diagonal() raises:
+    print("Testing trmm (no unit diagonal)...")
+    var m = 2
+    var n = 2
+    var lda = m
+    var ldb = m
+
+    var a = alloc[Scalar[DType.float32]](lda * m)
+    var b = alloc[Scalar[DType.float32]](ldb * n)
+
+    a[0] = 1.0
+    a[1] = 0.0
+    a[2] = 2.0
+    a[3] = 3.0
+
+    b[0] = 1.0
+    b[1] = 2.0
+    b[2] = 3.0
+    b[3] = 4.0
+
+    trmm("L", "U", "N", "N", m, n, Float32(1.0), a, lda, b, ldb)
+
+    assert_almost_equal(b[0], Float32(5.0))
+    assert_almost_equal(b[1], Float32(6.0))
+    assert_almost_equal(b[2], Float32(11.0))
+    assert_almost_equal(b[3], Float32(12.0))
+
+    a.free()
+    b.free()
+
+
+def test_trsm_no_unit_diagonal() raises:
+    print("Testing trsm (no unit diagonal)...")
+    var m = 2
+    var n = 2
+    var lda = m
+    var ldb = m
+
+    var a = alloc[Scalar[DType.float32]](lda * m)
+    var b = alloc[Scalar[DType.float32]](ldb * n)
+
+    a[0] = 1.0
+    a[1] = 0.0
+    a[2] = 2.0
+    a[3] = 3.0
+
+    b[0] = 5.0
+    b[1] = 6.0
+    b[2] = 11.0
+    b[3] = 12.0
+
+    trsm("L", "U", "N", "N", m, n, Float32(1.0), a, lda, b, ldb)
+
+    assert_almost_equal(b[0], Float32(1.0))
+    assert_almost_equal(b[1], Float32(2.0))
+    assert_almost_equal(b[2], Float32(3.0))
+    assert_almost_equal(b[3], Float32(4.0))
+
+    a.free()
+    b.free()
+
+
+def test_symm_right_upper() raises:
+    print("Testing symm (right, upper)...")
+    var m = 2
+    var n = 2
+    var lda = n
+    var ldb = m
+    var ldc = m
+
+    var a = alloc[Scalar[DType.float32]](lda * n)
+    var b = alloc[Scalar[DType.float32]](ldb * n)
+    var c = alloc[Scalar[DType.float32]](ldc * n)
+
+    a[0] = 1.0
+    a[1] = 0.0
+    a[2] = 2.0
+    a[3] = 3.0
+
+    b[0] = 1.0
+    b[1] = 2.0
+    b[2] = 3.0
+    b[3] = 4.0
+
+    for i in range(ldc * n):
+        c[i] = 0.0
+
+    symm("R", "U", m, n, Float32(1.0), a, lda, b, ldb, Float32(0.0), c, ldc)
+
+    assert_almost_equal(c[0], Float32(7.0))
+    assert_almost_equal(c[1], Float32(10.0))
+    assert_almost_equal(c[2], Float32(11.0))
+    assert_almost_equal(c[3], Float32(16.0))
 
     a.free()
     b.free()
