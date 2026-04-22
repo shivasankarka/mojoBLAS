@@ -1,17 +1,39 @@
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Mojo bindings for BLAS library
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+
+"""
+Symmetric Matrix-Matrix Operations (`level3.symm`)
+=============================================
+
+Provides symmetric matrix-matrix operations as defined in the BLAS library standard.
+"""
+
 def symm[
-    dtype: DType
+    mut_a: Bool,
+    mut_b: Bool,
+    origin_a: Origin[mut=mut_a],
+    origin_b: Origin[mut=mut_b],
+    origin_c: MutOrigin,
+    //,
+    dtype: DType,
 ](
     side: String,
     uplo: String,
     m: Int,
     n: Int,
     alpha: Scalar[dtype],
-    a: BLASPtr[Scalar[dtype]],
+    a: BLASPtr[dtype, origin_a],
     lda: Int,
-    b: BLASPtr[Scalar[dtype]],
+    b: BLASPtr[dtype, origin_b],
     ldb: Int,
     beta: Scalar[dtype],
-    c: BLASPtr[Scalar[dtype]],
+    c: BLASPtr[dtype, origin_c],
     ldc: Int,
 ):
     """
@@ -19,6 +41,11 @@ def symm[
     where A is a symmetric matrix and B and C are m by n matrices.
 
     Parameters:
+        mut_a: Indicates whether the pointer a is mutable (True) or immutable (False).
+        mut_b: Indicates whether the pointer b is mutable (True) or immutable (False).
+        origin_a: Memory origin of the pointer a.
+        origin_b: Memory origin of the pointer b.
+        origin_c: Memory origin of the pointer c (mutable, input/output).
         dtype: The data type of the elements (e.g., Float32, Float64).
 
     Args:

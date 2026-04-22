@@ -1,3 +1,19 @@
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Mojo bindings for BLAS library
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+
+"""
+Triangular Matrix-Vector Operations (`level2trmv`)
+=============================================
+
+Provides triangular matrix-vector operations as defined in the BLAS library standard.
+"""
+
 def trmv[
     mut_a: Bool,
     origin_a: Origin[mut=mut_a],
@@ -67,7 +83,7 @@ def trmv[
     var no_trans = trans == "N" or trans == "n"
 
     var kx: Int = 1
-    var ky: Int = 1
+    # var ky: Int = 1
     if incx < 0:
         kx = 1 - (n - 1) * incx
 

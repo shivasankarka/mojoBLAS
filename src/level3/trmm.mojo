@@ -1,5 +1,25 @@
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Mojo bindings for BLAS library
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+
+"""
+Triangular Matrix-Matrix Operations (`level3.trmm`)
+=============================================
+
+Provides triangular matrix-matrix operations as defined in the BLAS library standard.
+"""
+
 def trmm[
-    dtype: DType
+    mut_a: Bool,
+    origin_a: Origin[mut=mut_a],
+    origin_b: MutOrigin,
+    //,
+    dtype: DType,
 ](
     side: String,
     uplo: String,
@@ -8,9 +28,9 @@ def trmm[
     m: Int,
     n: Int,
     alpha: Scalar[dtype],
-    a: BLASPtr[Scalar[dtype]],
+    a: BLASPtr[dtype, origin_a],
     lda: Int,
-    b: BLASPtr[Scalar[dtype]],
+    b: BLASPtr[dtype, origin_b],
     ldb: Int,
 ):
     """
@@ -18,6 +38,9 @@ def trmm[
     where A is a triangular matrix and B is an m by n matrix.
 
     Parameters:
+        mut_a: Indicates whether the pointer a is mutable (True) or immutable (False).
+        origin_a: Memory origin of the pointer a.
+        origin_b: Memory origin of the pointer b (mutable, input/output).
         dtype: The data type of the elements (e.g., Float32, Float64).
 
     Args:

@@ -1,14 +1,36 @@
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Mojo bindings for BLAS library
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+
+"""
+Symmetric Packed Matrix-Vector Operations (`level2.spmv`)
+=============================================
+
+Provides symmetric packed matrix-vector operations as defined in the BLAS library standard.
+"""
+
 def spmv[
-    dtype: DType
+    mut_ap: Bool,
+    mut_x: Bool,
+    origin_ap: Origin[mut=mut_ap],
+    origin_x: Origin[mut=mut_x],
+    origin_y: MutOrigin,
+    //,
+    dtype: DType,
 ](
     uplo: String,
     n: Int,
     alpha: Scalar[dtype],
-    ap: BLASPtr[Scalar[dtype]],
-    x: BLASPtr[Scalar[dtype]],
+    ap: BLASPtr[dtype, origin_ap],
+    x: BLASPtr[dtype, origin_x],
     incx: Int,
     beta: Scalar[dtype],
-    y: BLASPtr[Scalar[dtype]],
+    y: BLASPtr[dtype, origin_y],
     incy: Int,
 ):
     """
@@ -16,6 +38,11 @@ def spmv[
     where A is an n by n symmetric matrix stored in packed format.
 
     Parameters:
+        mut_ap: Indicates whether the pointer ap is mutable (True) or immutable (False).
+        mut_x: Indicates whether the pointer x is mutable (True) or immutable (False).
+        origin_ap: Memory origin of the pointer ap.
+        origin_x: Memory origin of the pointer x.
+        origin_y: Memory origin of the pointer y (mutable, input/output).
         dtype: The data type of the elements (e.g., Float32, Float64).
 
     Args:
@@ -26,7 +53,7 @@ def spmv[
         x: A pointer to the first element of the vector x.
         incx: The increment for the elements of x.
         beta: The scalar multiplier for the vector y.
-        y: A pointer to the first element of the vector y.
+        y: A pointer to the first element of the vector y (input/output).
         incy: The increment for the elements of y.
     """
     var info: Int = 0
@@ -62,11 +89,11 @@ def spmv[
         else:
             var iy: Int = ky
             if beta == 0:
-                for i in range(leny):
+                for _ in range(leny):
                     y[iy - 1] = 0
                     iy += incy
             else:
-                for i in range(leny):
+                for _ in range(leny):
                     y[iy - 1] = beta * y[iy - 1]
                     iy += incy
 

@@ -1,3 +1,19 @@
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Mojo bindings for BLAS library
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+
+"""
+Dot Product Operations (`level1.dot`)
+============================================
+
+Provides dot product operations as defined in the BLAS library standard.
+"""
+
 from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of
 

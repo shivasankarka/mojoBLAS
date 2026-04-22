@@ -1,3 +1,22 @@
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Mojo bindings for BLAS library
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+
+"""
+General Matrix-Vector Operations (`level2.gemv`)
+=============================================
+
+Provides general matrix-vector operations as defined in the BLAS library standard.
+
+This module implements the gemv operation for matrix-vector multiplication
+with support for various transpositions and scaling factors.
+"""
+
 from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of
 
@@ -6,18 +25,24 @@ from std.sys.info import simd_width_of
 
 
 def gemv[
-    dtype: DType
+    mut_a: Bool,
+    mut_x: Bool,
+    origin_a: Origin[mut=mut_a],
+    origin_x: Origin[mut=mut_x],
+    origin_y: MutOrigin,
+    //,
+    dtype: DType,
 ](
     trans: String,
     m: Int,
     n: Int,
     alpha: Scalar[dtype],
-    a: BLASPtr[Scalar[dtype]],
+    a: BLASPtr[dtype, origin_a],
     lda: Int,
-    x: BLASPtr[Scalar[dtype]],
+    x: BLASPtr[dtype, origin_x],
     incx: Int,
     beta: Scalar[dtype],
-    y: BLASPtr[Scalar[dtype]],
+    y: BLASPtr[dtype, origin_y],
     incy: Int,
 ):
     """
@@ -25,6 +50,11 @@ def gemv[
     where alpha and beta are scalars, x and y are vectors and A is an m by n matrix.
 
     Parameters:
+        mut_a: Indicates whether the pointer a is mutable (True) or immutable (False).
+        mut_x: Indicates whether the pointer x is mutable (True) or immutable (False).
+        origin_a: Memory origin of the pointer a.
+        origin_x: Memory origin of the pointer x.
+        origin_y: Memory origin of the pointer y (mutable, input/output).
         dtype: The data type of the elements (e.g., Float32, Float64).
 
     Args:
@@ -37,7 +67,7 @@ def gemv[
         x: A pointer to the first element of the vector x.
         incx: The increment for the elements of x.
         beta: The scalar multiplier for the vector y.
-        y: A pointer to the first element of the vector y.
+        y: A pointer to the first element of the vector y (input/output).
         incy: The increment for the elements of y.
     """
     var info: Int = 0
@@ -92,11 +122,11 @@ def gemv[
         else:
             var iy: Int = ky
             if beta == 0:
-                for i in range(leny):
+                for _ in range(leny):
                     y[iy - 1] = 0
                     iy += incy
             else:
-                for i in range(leny):
+                for _ in range(leny):
                     y[iy - 1] = beta * y[iy - 1]
                     iy += incy
     if alpha == 0:

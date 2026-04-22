@@ -1,3 +1,19 @@
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Mojo bindings for BLAS library
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+
+"""
+Triangular Band Solve Operations (`level2.tbsv`)
+=============================================
+
+Provides triangular band solve operations as defined in the BLAS library standard.
+"""
+
 def tbsv[
     mut_a: Bool,
     origin_a: Origin[mut=mut_a],

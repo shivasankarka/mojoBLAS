@@ -1,14 +1,36 @@
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Mojo bindings for BLAS library
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+
+"""
+Symmetric Rank-2 Operations (`level2.syr2`)
+=============================================
+
+Provides symmetric rank-2 operations as defined in the BLAS library standard.
+"""
+
 def syr2[
-    dtype: DType
+    mut_x: Bool,
+    mut_y: Bool,
+    origin_x: Origin[mut=mut_x],
+    origin_y: Origin[mut=mut_y],
+    origin_a: MutOrigin,
+    //,
+    dtype: DType,
 ](
     uplo: String,
     n: Int,
     alpha: Scalar[dtype],
-    x: BLASPtr[Scalar[dtype]],
+    x: BLASPtr[dtype, origin_x],
     incx: Int,
-    y: BLASPtr[Scalar[dtype]],
+    y: BLASPtr[dtype, origin_y],
     incy: Int,
-    a: BLASPtr[Scalar[dtype]],
+    a: BLASPtr[dtype, origin_a],
     lda: Int,
 ):
     """
@@ -16,6 +38,11 @@ def syr2[
     where A is an n by n symmetric matrix.
 
     Parameters:
+        mut_x: Indicates whether the pointer x is mutable (True) or immutable (False).
+        mut_y: Indicates whether the pointer y is mutable (True) or immutable (False).
+        origin_x: Memory origin of the pointer x.
+        origin_y: Memory origin of the pointer y.
+        origin_a: Memory origin of the pointer a (mutable, input/output).
         dtype: The data type of the elements (e.g., Float32, Float64).
 
     Args:

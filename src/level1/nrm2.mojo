@@ -1,3 +1,19 @@
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Mojo bindings for BLAS library
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+
+"""
+Euclidean Norm Operations (`level1.nrm2`)
+============================================
+
+Provides Euclidean norm operations as defined in the BLAS library standard.
+"""
+
 from std.math import sqrt
 from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of

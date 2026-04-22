@@ -1,15 +1,35 @@
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Mojo bindings for BLAS library
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+
+"""
+Symmetric Rank-k Operations (`level3.syrk`)
+=============================================
+
+Provides symmetric rank-k operations as defined in the BLAS library standard.
+"""
+
 def syrk[
-    dtype: DType
+    mut_a: Bool,
+    origin_a: Origin[mut=mut_a],
+    origin_c: MutOrigin,
+    //,
+    dtype: DType,
 ](
     uplo: String,
     trans: String,
     n: Int,
     k: Int,
     alpha: Scalar[dtype],
-    a: BLASPtr[Scalar[dtype]],
+    a: BLASPtr[dtype, origin_a],
     lda: Int,
     beta: Scalar[dtype],
-    c: BLASPtr[Scalar[dtype]],
+    c: BLASPtr[dtype, origin_c],
     ldc: Int,
 ):
     """
@@ -17,6 +37,9 @@ def syrk[
     or C := alpha*A^T*A + beta*C.
 
     Parameters:
+        mut_a: Indicates whether the pointer a is mutable (True) or immutable (False).
+        origin_a: Memory origin of the pointer a.
+        origin_c: Memory origin of the pointer c (mutable, input/output).
         dtype: The data type of the elements (e.g., Float32, Float64).
 
     Args:
