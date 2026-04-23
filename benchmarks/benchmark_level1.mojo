@@ -3,7 +3,7 @@ from std.time import sleep
 import std.benchmark as benchmark
 from std.benchmark import keep
 
-from mojoblas.level1 import *
+from src.level1 import *
 
 comptime f64 = DType.float64
 
@@ -219,6 +219,71 @@ def bench_drotg[current_size: Int]() raises -> Float64:
     return report.mean("ns")
 
 
+def bench_drotm[current_size: Int]() raises -> Float64:
+    var x = alloc[Scalar[f64]](current_size)
+    var y = alloc[Scalar[f64]](current_size)
+    var p = alloc[Scalar[f64]](5)
+
+    for i in range(current_size):
+        x[i] = Float64(i + 1)
+        y[i] = Float64(i + 2)
+
+    p[0] = -1.0
+    p[1] = 1.0
+    p[2] = 2.0
+    p[3] = 3.0
+    p[4] = 4.0
+
+    @parameter
+    def drotm_only() -> None:
+        rotm[f64](current_size, x, 1, y, 1, p)
+
+    keep(x)
+    keep(y)
+    keep(p)
+
+    var report = benchmark.run[drotm_only](max_runtime_secs=1)
+
+    x.free()
+    y.free()
+    p.free()
+
+    return report.mean("ns")
+
+
+def bench_drotmg[current_size: Int]() raises -> Float64:
+    var d1 = alloc[Scalar[f64]](1)
+    var d2 = alloc[Scalar[f64]](1)
+    var x1 = alloc[Scalar[f64]](1)
+    var y1 = alloc[Scalar[f64]](1)
+    var p = alloc[Scalar[f64]](5)
+
+    d1[0] = 2.0
+    d2[0] = 3.0
+    x1[0] = 4.0
+    y1[0] = 5.0
+
+    @parameter
+    def drotmg_only() -> None:
+        rotmg[f64](d1, d2, x1, y1, p)
+
+    keep(d1)
+    keep(d2)
+    keep(x1)
+    keep(y1)
+    keep(p)
+
+    var report = benchmark.run[drotmg_only](max_runtime_secs=1)
+
+    d1.free()
+    d2.free()
+    x1.free()
+    y1.free()
+    p.free()
+
+    return report.mean("ns")
+
+
 comptime sizes: List[Int] = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144]
 
 def benchmark_axpy() raises -> List[Float64]:
@@ -290,6 +355,20 @@ def benchmark_rotg() raises -> List[Float64]:
     return times^
 
 
+def benchmark_rotm() raises -> List[Float64]:
+    var times: List[Float64] = []
+    comptime for size in materialize[sizes]():
+        times.append(bench_drotm[size]())
+    return times^
+
+
+def benchmark_rotmg() raises -> List[Float64]:
+    var times: List[Float64] = []
+    comptime for size in materialize[sizes]():
+        times.append(bench_drotmg[size]())
+    return times^
+
+
 def main() raises:
     var min_n: Int = 256
     var max_n: Int = 262144
@@ -300,6 +379,8 @@ def main() raises:
     var dot_ns = benchmark_dot()
     var nrm2_ns = benchmark_nrm2()
     var sum_ns = benchmark_asum()
+    var rotm_ns = benchmark_rotm()
+    var rotmg_ns = benchmark_rotmg()
     var idx = 0
 
     print("{")
@@ -322,6 +403,8 @@ def main() raises:
         var dot_s = dot_ns_value * 1e-9
         var nrm2_s = nrm2_ns_value * 1e-9
         var sum_s = sum_ns_value * 1e-9
+        var rotm_s = rotm_ns[idx] * 1e-9
+        var rotmg_s = rotmg_ns[idx] * 1e-9
 
         if not first:
             print(",")
@@ -335,6 +418,10 @@ def main() raises:
         print("    {\"lib\":\"mojo\",\"op\":\"nrm2\",\"n\":", size, ",\"avg_ns\":", nrm2_ns_value, ",\"avg_seconds\":", nrm2_s, "}")
         print(",")
         print("    {\"lib\":\"mojo\",\"op\":\"sum\",\"n\":", size, ",\"avg_ns\":", sum_ns_value, ",\"avg_seconds\":", sum_s, "}")
+        print(",")
+        print("    {\"lib\":\"mojo\",\"op\":\"rotm\",\"n\":", size, ",\"avg_ns\":", rotm_ns[idx], ",\"avg_seconds\":", rotm_s, "}")
+        print(",")
+        print("    {\"lib\":\"mojo\",\"op\":\"rotmg\",\"n\":", size, ",\"avg_ns\":", rotmg_ns[idx], ",\"avg_seconds\":", rotmg_s, "}")
 
         idx += 1
 
