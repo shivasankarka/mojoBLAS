@@ -10,5 +10,17 @@
     "machine": "arm64",
     "python": "3.14.4",
     "skip_run": false
+  },
+  {
+    "commit_sha": "c34fcb8",
+    "commit_title": "perf(level2): hoist fast-path checks and skip zero-lane work in gemv/symv",
+    "commit_idx": 2,
+    "phase": "phase1_c",
+    "timestamp": "2026-04-23T07:11:12.086040+00:00",
+    "host": "ShivaSankars-MacBook-Air.local",
+    "platform": "macOS-26.3-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "python": "3.14.4",
+    "skip_run": false
   }
 ]
