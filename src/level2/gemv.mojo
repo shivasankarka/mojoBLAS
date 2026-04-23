@@ -133,22 +133,28 @@ def gemv[
     if alpha == 0:
         return
 
+    var no_trans = trans == "N"
+
     # NOTE: might be parallizable
-    if trans == "N":
+    if no_trans:
         var jx: Int = kx
         if incy == 1:
             for j in range(n):
-                var temp: Scalar[dtype] = alpha * x[jx - 1]
-                for i in range(m):
-                    y[i] = y[i] + temp * a[i + j * lda]
+                var xj = x[jx - 1]
+                if xj != 0:
+                    var temp: Scalar[dtype] = alpha * xj
+                    for i in range(m):
+                        y[i] = y[i] + temp * a[i + j * lda]
                 jx += incx
         else:
             for j in range(n):
-                var temp: Scalar[dtype] = alpha * x[jx - 1]
-                var iy: Int = ky
-                for i in range(m):
-                    y[iy - 1] = y[iy - 1] + temp * a[i + j * lda]
-                    iy += incy
+                var xj = x[jx - 1]
+                if xj != 0:
+                    var temp: Scalar[dtype] = alpha * xj
+                    var iy: Int = ky
+                    for i in range(m):
+                        y[iy - 1] = y[iy - 1] + temp * a[i + j * lda]
+                        iy += incy
                 jx += incx
     else:
         var jy: Int = ky
@@ -157,7 +163,8 @@ def gemv[
                 var temp: Scalar[dtype] = 0
                 for i in range(m):
                     temp = temp + a[i + j * lda] * x[i]
-                y[jy - 1] = y[jy - 1] + alpha * temp
+                if temp != 0:
+                    y[jy - 1] = y[jy - 1] + alpha * temp
                 jy += incy
         else:
             for j in range(n):
@@ -166,7 +173,8 @@ def gemv[
                 for i in range(m):
                     temp = temp + a[i + j * lda] * x[ix - 1]
                     ix += incx
-                y[jy - 1] = y[jy - 1] + alpha * temp
+                if temp != 0:
+                    y[jy - 1] = y[jy - 1] + alpha * temp
                 jy += incy
 
     return

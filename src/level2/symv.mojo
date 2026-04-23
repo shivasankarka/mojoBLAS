@@ -114,44 +114,48 @@ def symv[
     if upper:
         if incx == 1:
             for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[j]
-                var temp2: Scalar[dtype] = 0
-                for i in range(j):
-                    y[i] = y[i] + temp1 * a[i + j * lda]
-                    temp2 = temp2 + a[i + j * lda] * x[i]
-                y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
+                if x[j] != 0:
+                    var temp1: Scalar[dtype] = alpha * x[j]
+                    var temp2: Scalar[dtype] = 0
+                    for i in range(j):
+                        y[i] = y[i] + temp1 * a[i + j * lda]
+                        temp2 = temp2 + a[i + j * lda] * x[i]
+                    y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
         else:
             var jx: Int = kx
             for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[jx - 1]
-                var temp2: Scalar[dtype] = 0
-                var ix: Int = kx
-                for i in range(j):
-                    y[i] = y[i] + temp1 * a[i + j * lda]
-                    temp2 = temp2 + a[i + j * lda] * x[ix - 1]
-                    ix += incx
-                y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
+                if x[jx - 1] != 0:
+                    var temp1: Scalar[dtype] = alpha * x[jx - 1]
+                    var temp2: Scalar[dtype] = 0
+                    var ix: Int = kx
+                    for i in range(j):
+                        y[i] = y[i] + temp1 * a[i + j * lda]
+                        temp2 = temp2 + a[i + j * lda] * x[ix - 1]
+                        ix += incx
+                    y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
                 jx += incx
     else:
         if incx == 1:
             for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[j]
-                var temp2: Scalar[dtype] = 0
-                for i in range(j + 1, n):
-                    y[i] = y[i] + temp1 * a[i + j * lda]
-                    temp2 = temp2 + a[i + j * lda] * x[i]
-                y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
+                if x[j] != 0:
+                    var temp1: Scalar[dtype] = alpha * x[j]
+                    var temp2: Scalar[dtype] = 0
+                    for i in range(j + 1, n):
+                        y[i] = y[i] + temp1 * a[i + j * lda]
+                        temp2 = temp2 + a[i + j * lda] * x[i]
+                    y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
         else:
             var jx: Int = kx
             for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[jx - 1]
-                var temp2: Scalar[dtype] = 0
-                var ix: Int = kx
-                for i in range(j + 1, n):
-                    y[i] = y[i] + temp1 * a[i + j * lda]
-                    temp2 = temp2 + a[i + j * lda] * x[ix - 1]
-                    ix += incx
-                y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
+                if x[jx - 1] != 0:
+                    var temp1: Scalar[dtype] = alpha * x[jx - 1]
+                    var temp2: Scalar[dtype] = 0
+                    var ix: Int = kx
+                    for i in range(j + 1, n):
+                        y[i] = y[i] + temp1 * a[i + j * lda]
+                        temp2 = temp2 + a[i + j * lda] * x[ix - 1]
+                        ix += incx
+                    y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
                 jx += incx
 
     return
