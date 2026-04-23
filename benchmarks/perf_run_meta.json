@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "commit_sha": "e8125cc",
+    "commit_title": "bench: expand L1/L2 coverage and use local src imports",
+    "commit_idx": 1,
+    "phase": "phase0_baseline",
+    "timestamp": "2026-04-23T07:05:53.826934+00:00",
+    "host": "ShivaSankars-MacBook-Air.local",
+    "platform": "macOS-26.3-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "python": "3.14.4",
+    "skip_run": false
+  }
+]
