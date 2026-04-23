@@ -22,5 +22,17 @@
     "machine": "arm64",
     "python": "3.14.4",
     "skip_run": false
+  },
+  {
+    "commit_sha": "12a40a4",
+    "commit_title": "perf(level2): add direct packed-index fast paths for contiguous spmv/tpmv/tpsv",
+    "commit_idx": 3,
+    "phase": "phase1_d",
+    "timestamp": "2026-04-23T07:18:57.975738+00:00",
+    "host": "ShivaSankars-MacBook-Air.local",
+    "platform": "macOS-26.3-arm64-arm-64bit-Mach-O",
+    "machine": "arm64",
+    "python": "3.14.4",
+    "skip_run": false
   }
 ]
