@@ -16,7 +16,6 @@ Provides vector copy operations as defined in the BLAS library standard.
 
 from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of
-from std.memory import memcpy
 
 
 def copy[
@@ -49,13 +48,12 @@ def copy[
 
     comptime simd_width: Int = simd_width_of[dtype]()
     if incx == 1 and incy == 1:
-        memcpy(dest=dy, src=dx, count=n)
-        # @parameter
-        # def closure[width: Int](i: Int) unified {mut y, read x}:
-        #     y.store[width=width](i, x.load[width=width](i))
+        @parameter
+        def closure[width: Int](i: Int) unified {mut dy, read dx}:
+            dy.store[width=width](i, dx.load[width=width](i))
 
-        # vectorize[simd_width](n, closure)
-        # return
+        vectorize[simd_width](n, closure)
+        return
 
     var ix: Int = 0
     var iy: Int = 0
