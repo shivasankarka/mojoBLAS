@@ -73,6 +73,46 @@ def spmv[
 
     if n == 0 or (alpha == 0 and beta == 1):
         return
+
+    var upper = uplo == "U" or uplo == "u"
+
+    # Fast path for contiguous vectors using direct packed indexing.
+    if incx == 1 and incy == 1:
+        if beta == 0:
+            for i in range(n):
+                y[i] = 0
+        elif beta != 1:
+            for i in range(n):
+                y[i] = beta * y[i]
+
+        if alpha == 0:
+            return
+
+        if upper:
+            var kk: Int = 0
+            for j in range(n):
+                var temp1: Scalar[dtype] = alpha * x[j]
+                var temp2: Scalar[dtype] = 0
+                for i in range(j):
+                    var aij = ap[kk + i]
+                    y[i] = y[i] + temp1 * aij
+                    temp2 = temp2 + aij * x[i]
+                y[j] = y[j] + temp1 * ap[kk + j] + alpha * temp2
+                kk += j + 1
+        else:
+            var kk: Int = 0
+            for j in range(n):
+                var temp1: Scalar[dtype] = alpha * x[j]
+                var temp2: Scalar[dtype] = 0
+                y[j] = y[j] + temp1 * ap[kk]
+                for i in range(j + 1, n):
+                    var aij = ap[kk + i - j]
+                    y[i] = y[i] + temp1 * aij
+                    temp2 = temp2 + aij * x[i]
+                y[j] = y[j] + alpha * temp2
+                kk += n - j
+        return
+
     var xbuf = alloc[Scalar[dtype]](n)
     var ybuf = alloc[Scalar[dtype]](n)
 
@@ -87,7 +127,6 @@ def spmv[
         ix += incx
         iy += incy
 
-    var upper = uplo == "U" or uplo == "u"
     for i in range(n):
         var sum: Scalar[dtype] = 0
         for j in range(n):
