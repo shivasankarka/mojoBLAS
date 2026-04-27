@@ -25,11 +25,12 @@ def bench_dgemm[current_size: Int]() raises -> Float64:
         c[i] = Float64(i + 1)
 
     @parameter
-    def dgemm_only() -> None:
+    def dgemm_only()  -> None:
         gemm[f64]("N", "N", m, n, k, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc)
-        keep(a)
-        keep(b)
-        keep(c)
+
+    keep(a)
+    keep(b)
+    keep(c)
 
     var report = benchmark.run[dgemm_only](max_runtime_secs=1)
 
@@ -54,8 +55,9 @@ def bench_dsyrk[current_size: Int]() raises -> Float64:
     @parameter
     def dsyrk_only() -> None:
         syrk[f64]("U", "N", n, k, Float64(1.0), a, lda, Float64(1.0), c, ldc)
-        keep(a)
-        keep(c)
+
+    keep(a)
+    keep(c)
 
     var report = benchmark.run[dsyrk_only](max_runtime_secs=1)
 
@@ -83,9 +85,10 @@ def bench_dsyr2k[current_size: Int]() raises -> Float64:
     @parameter
     def dsyr2k_only() -> None:
         syr2k[f64]("U", "N", n, k, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc)
-        keep(a)
-        keep(b)
-        keep(c)
+
+    keep(a)
+    keep(b)
+    keep(c)
 
     var report = benchmark.run[dsyr2k_only](max_runtime_secs=1)
 
@@ -114,9 +117,10 @@ def bench_dsymm[current_size: Int]() raises -> Float64:
     @parameter
     def dsymm_only() -> None:
         symm[f64]("L", "U", m, n, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc)
-        keep(a)
-        keep(b)
-        keep(c)
+
+    keep(a)
+    keep(b)
+    keep(c)
 
     var report = benchmark.run[dsymm_only](max_runtime_secs=1)
 
@@ -141,8 +145,9 @@ def bench_dtrmm[current_size: Int]() raises -> Float64:
     @parameter
     def dtrmm_only() -> None:
         trmm[f64]("L", "U", "N", "N", m, n, Float64(1.0), a, lda, b, ldb)
-        keep(a)
-        keep(b)
+
+    keep(a)
+    keep(b)
 
     var report = benchmark.run[dtrmm_only](max_runtime_secs=1)
 
@@ -166,8 +171,9 @@ def bench_dtrsm[current_size: Int]() raises -> Float64:
     @parameter
     def dtrsm_only() -> None:
         trsm[f64]("L", "U", "N", "N", m, n, Float64(1.0), a, lda, b, ldb)
-        keep(a)
-        keep(b)
+
+    keep(a)
+    keep(b)
 
     var report = benchmark.run[dtrsm_only](max_runtime_secs=1)
 
