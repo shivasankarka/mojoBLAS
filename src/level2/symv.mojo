@@ -14,6 +14,7 @@ Symmetric Matrix-Vector Operations (`level2.symv`)
 Provides symmetric matrix-vector operations as defined in the BLAS library standard.
 """
 
+
 def symv[
     mut_a: Bool,
     mut_x: Bool,

@@ -14,6 +14,7 @@ Symmetric Rank-1 Operations (`level2.syr`)
 Provides symmetric rank-1 operations as defined in the BLAS library standard.
 """
 
+
 def syr[
     mut_x: Bool,
     origin_x: Origin[mut=mut_x],

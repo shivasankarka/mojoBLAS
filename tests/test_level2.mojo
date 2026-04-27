@@ -1,6 +1,20 @@
 from std.testing import assert_almost_equal, assert_equal, TestSuite
 
-from src.level2 import gemv, trmv, trsv, symv, syr, syr2, gbmv, sbmv, spmv, tbmv, tbsv, tpmv, tpsv
+from src.level2 import (
+    gemv,
+    trmv,
+    trsv,
+    symv,
+    syr,
+    syr2,
+    gbmv,
+    sbmv,
+    spmv,
+    tbmv,
+    tbsv,
+    tpmv,
+    tpsv,
+)
 
 
 def test_gemv_no_transpose() raises:

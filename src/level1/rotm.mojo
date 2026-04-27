@@ -87,4 +87,3 @@ def rotm[
 
         kx += incx
         ky += incy
-

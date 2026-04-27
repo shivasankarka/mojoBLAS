@@ -14,6 +14,7 @@ Symmetric Matrix-Matrix Operations (`level3.symm`)
 Provides symmetric matrix-matrix operations as defined in the BLAS library standard.
 """
 
+
 def symm[
     mut_a: Bool,
     mut_b: Bool,
@@ -144,19 +145,27 @@ def symm[
                 for k in range(j):
                     var temp_k: Scalar[dtype] = alpha * a[k + j * lda]
                     for i in range(m):
-                        c[i + j * ldc] = c[i + j * ldc] + temp_k * b[i + k * ldb]
+                        c[i + j * ldc] = (
+                            c[i + j * ldc] + temp_k * b[i + k * ldb]
+                        )
                 for k in range(j + 1, n):
                     var temp_k: Scalar[dtype] = alpha * a[j + k * lda]
                     for i in range(m):
-                        c[i + j * ldc] = c[i + j * ldc] + temp_k * b[i + k * ldb]
+                        c[i + j * ldc] = (
+                            c[i + j * ldc] + temp_k * b[i + k * ldb]
+                        )
             else:
                 for k in range(j):
                     var temp_k: Scalar[dtype] = alpha * a[j + k * lda]
                     for i in range(m):
-                        c[i + j * ldc] = c[i + j * ldc] + temp_k * b[i + k * ldb]
+                        c[i + j * ldc] = (
+                            c[i + j * ldc] + temp_k * b[i + k * ldb]
+                        )
                 for k in range(j + 1, n):
                     var temp_k: Scalar[dtype] = alpha * a[k + j * lda]
                     for i in range(m):
-                        c[i + j * ldc] = c[i + j * ldc] + temp_k * b[i + k * ldb]
+                        c[i + j * ldc] = (
+                            c[i + j * ldc] + temp_k * b[i + k * ldb]
+                        )
 
     return

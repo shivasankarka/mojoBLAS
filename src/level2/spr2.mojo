@@ -109,4 +109,3 @@ def spr2[
                 kk += n - j
 
     return
-

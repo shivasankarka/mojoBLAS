@@ -88,4 +88,3 @@ def spr[
                 kk += n - j
 
     return
-

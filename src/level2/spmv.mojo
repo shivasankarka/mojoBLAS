@@ -14,6 +14,7 @@ Symmetric Packed Matrix-Vector Operations (`level2.spmv`)
 Provides symmetric packed matrix-vector operations as defined in the BLAS library standard.
 """
 
+
 def spmv[
     mut_ap: Bool,
     mut_x: Bool,

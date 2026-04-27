@@ -14,6 +14,7 @@ Symmetric Rank-2k Operations (`level3.syr2k`)
 Provides symmetric rank-2k operations as defined in the BLAS library standard.
 """
 
+
 def syr2k[
     mut_a: Bool,
     mut_b: Bool,

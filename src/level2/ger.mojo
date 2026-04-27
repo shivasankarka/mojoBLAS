@@ -14,6 +14,7 @@ General Rank-1 Update (`level2.ger`)
 Provides general rank-1 update operations as defined in the BLAS library standard.
 """
 
+
 def ger[
     mut_x: Bool,
     mut_y: Bool,

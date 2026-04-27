@@ -41,9 +41,6 @@ def test_gemm_no_transpose() raises:
     c.free()
 
 
-
-
-
 def test_gemm_transpose_b() raises:
     print("Testing gemm (transpose B)...")
     var m = 2
@@ -258,12 +255,6 @@ def test_syrk_transpose() raises:
     c.free()
 
 
-
-
-
-
-
-
 def test_trmm_left_upper() raises:
     print("Testing trmm (left, upper)...")
     var m = 2
@@ -401,9 +392,6 @@ def test_syr2k_upper() raises:
     a.free()
     b.free()
     c.free()
-
-
-
 
 
 def test_gemm_alpha_zero() raises:
