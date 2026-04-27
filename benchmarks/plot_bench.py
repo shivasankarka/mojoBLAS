@@ -62,8 +62,7 @@ def build_series(results, elem_sizes):
             avg_seconds = float(row["avg_ns"]) * 1e-9
         else:
             continue
-        gb_per_s = avg_seconds
-        series[op][lib].append((n, gb_per_s))
+        series[op][lib].append((n, avg_seconds))
     for op in series:
         for lib in series[op]:
             series[op][lib].sort(key=lambda t: t[0])
@@ -85,17 +84,20 @@ def plot_level(series, out_path, ops, scale):
     for idx, op in enumerate(ops):
         ax = axes[idx]
         libs = series.get(op, {})
+        all_xs = []
         for lib, points in libs.items():
             xs = [p[0] for p in points]
             ys = [p[1] for p in points]
             ax.plot(xs, ys, marker="o", label=lib)
+            all_xs.extend(xs)
         ax.set_title(op)
         ax.set_xlabel("n")
         ax.set_ylabel("avg_seconds")
         ax.set_yscale("log")
         ax.grid(True, which="major", linestyle="--", linewidth=0.5)
         ax.set_xscale(scale)
-        ax.set_xlim([min(xs) * 0.8, max(xs) * 1.2])
+        if all_xs:
+            ax.set_xlim([min(all_xs) * 0.8, max(all_xs) * 1.2])
 
     for idx in range(len(ops), len(axes)):
         axes[idx].set_visible(False)
