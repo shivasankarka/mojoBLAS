@@ -163,10 +163,16 @@ def bench_dtrsm[current_size: Int]() raises -> Float64:
     var ldb = m
     var a = alloc[Scalar[f64]](lda * m)
     var b = alloc[Scalar[f64]](ldb * n)
-    for i in range(lda * m):
-        a[i] = Float64(i + 1)
+    for j in range(m):
+        for i in range(m):
+            if i > j:
+                a[i + j * lda] = Float64(0.0)
+            elif i == j:
+                a[i + j * lda] = Float64(1.0) + Float64((i % 9) + 1) * Float64(1e-3)
+            else:
+                a[i + j * lda] = Float64(((i + j) % 17) + 1) * Float64(1e-4)
     for i in range(ldb * n):
-        b[i] = Float64(i + 1)
+        b[i] = Float64(1.0) + Float64((i % 23) + 1) * Float64(1e-3)
 
     @parameter
     def dtrsm_only() -> None:

@@ -96,10 +96,16 @@ def bench_dtrsv[current_size: Int]() raises -> Float64:
     var lda = n
     var x = alloc[Scalar[f64]](n)
     var a = alloc[Scalar[f64]](lda * n)
-    for i in range(n * n):
-        a[i] = Float64(i + 1)
+    for j in range(n):
+        for i in range(n):
+            if i > j:
+                a[i + j * lda] = Float64(0.0)
+            elif i == j:
+                a[i + j * lda] = Float64(1.0) + Float64((i % 7) + 1) * Float64(1e-3)
+            else:
+                a[i + j * lda] = Float64(((i + j) % 11) + 1) * Float64(1e-4)
     for i in range(n):
-        x[i] = Float64(i + 1)
+        x[i] = Float64(1.0) + Float64((i % 13) + 1) * Float64(1e-3)
 
     @parameter
     def dtrsv_only() -> None:
