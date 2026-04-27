@@ -135,6 +135,10 @@ static void fill_random(double *buf, int n) {
     }
 }
 
+static void copy_buf(double *dst, const double *src, size_t n) {
+    memcpy(dst, src, sizeof(double) * n);
+}
+
 static void write_json_header(FILE *f, int min_n, int max_n, double step, int iters, const char *openblas_path) {
     fprintf(f, "{\n");
     fprintf(f, "  \"metadata\": {\n");
@@ -163,14 +167,20 @@ static void write_json_footer(FILE *f) {
 static void bench_level1(BlasLib *lib, const char *lib_name, FILE *out, int n, int iters, int *first) {
     double *x = NULL;
     double *y = NULL;
+    double *x0 = NULL;
+    double *y0 = NULL;
     if (posix_memalign((void **)&x, 64, sizeof(double) * (size_t)n) != 0 ||
-        posix_memalign((void **)&y, 64, sizeof(double) * (size_t)n) != 0) {
+        posix_memalign((void **)&y, 64, sizeof(double) * (size_t)n) != 0 ||
+        posix_memalign((void **)&x0, 64, sizeof(double) * (size_t)n) != 0 ||
+        posix_memalign((void **)&y0, 64, sizeof(double) * (size_t)n) != 0) {
         fprintf(stderr, "Allocation failed for n=%d\n", n);
-        free(x); free(y);
+        free(x); free(y); free(x0); free(y0);
         return;
     }
-    fill_random(x, n);
-    fill_random(y, n);
+    fill_random(x0, n);
+    fill_random(y0, n);
+    copy_buf(x, x0, (size_t)n);
+    copy_buf(y, y0, (size_t)n);
 
     for (int warm = 0; warm < 5; warm++) {
         lib->daxpy(n, 1.1, x, 1, y, 1);
@@ -179,46 +189,60 @@ static void bench_level1(BlasLib *lib, const char *lib_name, FILE *out, int n, i
 
     double t0, t1;
 
+    copy_buf(x, x0, (size_t)n);
+    copy_buf(y, y0, (size_t)n);
     t0 = now_seconds();
     for (int it = 0; it < iters; it++) lib->daxpy(n, 1.1, x, 1, y, 1);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "axpy", n, iters, t1 - t0);
 
+    copy_buf(x, x0, (size_t)n);
     t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dscal(n, 1.01, x, 1);
+    for (int it = 0; it < iters; it++) lib->dscal(n, 0.99999, x, 1);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "scal", n, iters, t1 - t0);
 
+    copy_buf(x, x0, (size_t)n);
+    copy_buf(y, y0, (size_t)n);
     t0 = now_seconds();
     for (int it = 0; it < iters; it++) lib->ddot(n, x, 1, y, 1);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "dot", n, iters, t1 - t0);
 
+    copy_buf(x, x0, (size_t)n);
     t0 = now_seconds();
     for (int it = 0; it < iters; it++) lib->dnrm2(n, x, 1);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "nrm2", n, iters, t1 - t0);
 
+    copy_buf(x, x0, (size_t)n);
     t0 = now_seconds();
     for (int it = 0; it < iters; it++) lib->dasum(n, x, 1);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "sum", n, iters, t1 - t0);
 
-    free(x); free(y);
+    free(x); free(y); free(x0); free(y0);
 }
 
 static void bench_level2(BlasLib *lib, const char *lib_name, FILE *out, int n, int iters, int *first) {
     double *a = NULL, *x = NULL, *y = NULL;
+    double *a0 = NULL, *x0 = NULL, *y0 = NULL;
     if (posix_memalign((void **)&a, 64, sizeof(double) * (size_t)n * n) != 0 ||
         posix_memalign((void **)&x, 64, sizeof(double) * (size_t)n) != 0 ||
-        posix_memalign((void **)&y, 64, sizeof(double) * (size_t)n) != 0) {
+        posix_memalign((void **)&y, 64, sizeof(double) * (size_t)n) != 0 ||
+        posix_memalign((void **)&a0, 64, sizeof(double) * (size_t)n * n) != 0 ||
+        posix_memalign((void **)&x0, 64, sizeof(double) * (size_t)n) != 0 ||
+        posix_memalign((void **)&y0, 64, sizeof(double) * (size_t)n) != 0) {
         fprintf(stderr, "Allocation failed for n=%d\n", n);
-        free(a); free(x); free(y);
+        free(a); free(x); free(y); free(a0); free(x0); free(y0);
         return;
     }
-    fill_random(a, n * n);
-    fill_random(x, n);
-    fill_random(y, n);
+    fill_random(a0, n * n);
+    fill_random(x0, n);
+    fill_random(y0, n);
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(x, x0, (size_t)n);
+    copy_buf(y, y0, (size_t)n);
 
     double one_d = 1.0, zero_d = 0.0;
 
@@ -230,58 +254,87 @@ static void bench_level2(BlasLib *lib, const char *lib_name, FILE *out, int n, i
 
     double t0, t1;
 
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(x, x0, (size_t)n);
+    copy_buf(y, y0, (size_t)n);
     t0 = now_seconds();
     for (int it = 0; it < iters; it++) lib->dgemv(CblasColMajor, CblasNoTrans, n, n, one_d, a, n, x, 1, zero_d, y, 1);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "gemv", n, iters, t1 - t0);
 
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(x, x0, (size_t)n);
+    copy_buf(y, y0, (size_t)n);
     t0 = now_seconds();
     for (int it = 0; it < iters; it++) lib->dgemv(CblasColMajor, CblasTrans, n, n, one_d, a, n, x, 1, zero_d, y, 1);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "gemv_trans", n, iters, t1 - t0);
 
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(x, x0, (size_t)n);
     t0 = now_seconds();
     for (int it = 0; it < iters; it++) lib->dtrmv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit, n, a, n, x, 1);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "trmv", n, iters, t1 - t0);
 
-    t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dtrsv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit, n, a, n, x, 1);
-    t1 = now_seconds();
-    WRITE_RESULT(lib_name, "trsv", n, iters, t1 - t0);
+    double trsv_elapsed = 0.0;
+    for (int it = 0; it < iters; it++) {
+        copy_buf(x, x0, (size_t)n);
+        t0 = now_seconds();
+        lib->dtrsv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit, n, a, n, x, 1);
+        t1 = now_seconds();
+        trsv_elapsed += t1 - t0;
+    }
+    WRITE_RESULT(lib_name, "trsv", n, iters, trsv_elapsed);
 
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(x, x0, (size_t)n);
+    copy_buf(y, y0, (size_t)n);
     t0 = now_seconds();
     for (int it = 0; it < iters; it++) lib->dsymv(CblasColMajor, CblasUpper, n, one_d, a, n, x, 1, zero_d, y, 1);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "symv", n, iters, t1 - t0);
 
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(x, x0, (size_t)n);
     t0 = now_seconds();
     for (int it = 0; it < iters; it++) lib->dsyr(CblasColMajor, CblasUpper, n, one_d, x, 1, a, n);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "syr", n, iters, t1 - t0);
 
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(x, x0, (size_t)n);
+    copy_buf(y, y0, (size_t)n);
     t0 = now_seconds();
     for (int it = 0; it < iters; it++) lib->dsyr2(CblasColMajor, CblasUpper, n, one_d, x, 1, y, 1, a, n);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "syr2", n, iters, t1 - t0);
 
-    free(a); free(x); free(y);
+    free(a); free(x); free(y); free(a0); free(x0); free(y0);
 }
 
 static void bench_level3(BlasLib *lib, const char *lib_name, FILE *out, int n, int iters, int *first) {
     double *a = NULL, *b = NULL, *c = NULL;
+    double *a0 = NULL, *b0 = NULL, *c0 = NULL;
     if (posix_memalign((void **)&a, 64, sizeof(double) * (size_t)n * n) != 0 ||
         posix_memalign((void **)&b, 64, sizeof(double) * (size_t)n * n) != 0 ||
-        posix_memalign((void **)&c, 64, sizeof(double) * (size_t)n * n) != 0) {
+        posix_memalign((void **)&c, 64, sizeof(double) * (size_t)n * n) != 0 ||
+        posix_memalign((void **)&a0, 64, sizeof(double) * (size_t)n * n) != 0 ||
+        posix_memalign((void **)&b0, 64, sizeof(double) * (size_t)n * n) != 0 ||
+        posix_memalign((void **)&c0, 64, sizeof(double) * (size_t)n * n) != 0) {
         fprintf(stderr, "Allocation failed for n=%d\n", n);
-        free(a); free(b); free(c);
+        free(a); free(b); free(c); free(a0); free(b0); free(c0);
         return;
     }
-    fill_random(a, n * n);
-    fill_random(b, n * n);
-    fill_random(c, n * n);
+    fill_random(a0, n * n);
+    fill_random(b0, n * n);
+    fill_random(c0, n * n);
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(b, b0, (size_t)n * (size_t)n);
+    copy_buf(c, c0, (size_t)n * (size_t)n);
 
     double one_d = 1.0;
+    double zero_d = 0.0;
 
     for (int warm = 0; warm < 5; warm++) {
         lib->dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, one_d, a, n, b, n, one_d, c, n);
@@ -290,37 +343,55 @@ static void bench_level3(BlasLib *lib, const char *lib_name, FILE *out, int n, i
 
     double t0, t1;
 
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(b, b0, (size_t)n * (size_t)n);
+    copy_buf(c, c0, (size_t)n * (size_t)n);
     t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, one_d, a, n, b, n, one_d, c, n);
+    for (int it = 0; it < iters; it++) lib->dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, n, n, n, one_d, a, n, b, n, zero_d, c, n);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "gemm", n, iters, t1 - t0);
 
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(c, c0, (size_t)n * (size_t)n);
     t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dsyrk(CblasColMajor, CblasUpper, CblasNoTrans, n, n, one_d, a, n, one_d, c, n);
+    for (int it = 0; it < iters; it++) lib->dsyrk(CblasColMajor, CblasUpper, CblasNoTrans, n, n, one_d, a, n, zero_d, c, n);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "syrk", n, iters, t1 - t0);
 
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(b, b0, (size_t)n * (size_t)n);
+    copy_buf(c, c0, (size_t)n * (size_t)n);
     t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dsyr2k(CblasColMajor, CblasUpper, CblasNoTrans, n, n, one_d, a, n, b, n, one_d, c, n);
+    for (int it = 0; it < iters; it++) lib->dsyr2k(CblasColMajor, CblasUpper, CblasNoTrans, n, n, one_d, a, n, b, n, zero_d, c, n);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "syr2k", n, iters, t1 - t0);
 
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(b, b0, (size_t)n * (size_t)n);
+    copy_buf(c, c0, (size_t)n * (size_t)n);
     t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dsymm(CblasColMajor, CblasLeft, CblasUpper, n, n, one_d, a, n, b, n, one_d, c, n);
+    for (int it = 0; it < iters; it++) lib->dsymm(CblasColMajor, CblasLeft, CblasUpper, n, n, one_d, a, n, b, n, zero_d, c, n);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "symm", n, iters, t1 - t0);
 
+    copy_buf(a, a0, (size_t)n * (size_t)n);
+    copy_buf(b, b0, (size_t)n * (size_t)n);
     t0 = now_seconds();
     for (int it = 0; it < iters; it++) lib->dtrmm(CblasColMajor, CblasLeft, CblasUpper, CblasNoTrans, CblasNonUnit, n, n, one_d, a, n, b, n);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "trmm", n, iters, t1 - t0);
 
-    t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dtrsm(CblasColMajor, CblasLeft, CblasUpper, CblasNoTrans, CblasNonUnit, n, n, one_d, a, n, b, n);
-    t1 = now_seconds();
-    WRITE_RESULT(lib_name, "trsm", n, iters, t1 - t0);
+    double trsm_elapsed = 0.0;
+    for (int it = 0; it < iters; it++) {
+        copy_buf(b, b0, (size_t)n * (size_t)n);
+        t0 = now_seconds();
+        lib->dtrsm(CblasColMajor, CblasLeft, CblasUpper, CblasNoTrans, CblasNonUnit, n, n, one_d, a, n, b, n);
+        t1 = now_seconds();
+        trsm_elapsed += t1 - t0;
+    }
+    WRITE_RESULT(lib_name, "trsm", n, iters, trsm_elapsed);
 
-    free(a); free(b); free(c);
+    free(a); free(b); free(c); free(a0); free(b0); free(c0);
 }
 
 int main(int argc, char **argv) {
@@ -331,6 +402,10 @@ int main(int argc, char **argv) {
     const char *json_path = "bench_results.json";
     const char *openblas_path = getenv("OPENBLAS_PATH");
     const char *accelerate_path = "/System/Library/Frameworks/Accelerate.framework/Accelerate";
+
+    setenv("OPENBLAS_NUM_THREADS", "1", 0);
+    setenv("OMP_NUM_THREADS", "1", 0);
+    setenv("VECLIB_MAXIMUM_THREADS", "1", 0);
 
     srand((unsigned)time(NULL));
 
@@ -420,6 +495,7 @@ int main(int argc, char **argv) {
             const double target_ops = 1e7;
             local_iters = (int)(target_ops / (double)(n * n * n));
             if (local_iters < 1) local_iters = 1;
+            if (local_iters < 3) local_iters = 3;
         }
 
         bench_level3(&accel, "accelerate", out, n, local_iters, &first);
