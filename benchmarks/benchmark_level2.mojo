@@ -54,6 +54,7 @@ def bench_dgemv_trans[current_size: Int]() raises -> Float64:
     @parameter
     def dgemv_trans_only() -> None:
         gemv[f64]("T", m, n, Float64(1.0), a, lda, x, 1, Float64(0.0), y, 1)
+
     keep(a)
     keep(x)
     keep(y)
@@ -79,6 +80,7 @@ def bench_dtrmv[current_size: Int]() raises -> Float64:
     @parameter
     def dtrmv_only() -> None:
         trmv[f64]("U", "N", "N", n, a, lda, x, 1)
+
     keep(a)
     keep(x)
 
@@ -102,6 +104,7 @@ def bench_dtrsv[current_size: Int]() raises -> Float64:
     @parameter
     def dtrsv_only() -> None:
         trsv[f64]("U", "N", "N", n, a, lda, x, 1)
+
     keep(a)
     keep(x)
 
@@ -127,6 +130,7 @@ def bench_dsymv[current_size: Int]() raises -> Float64:
     @parameter
     def dsymv_only() -> None:
         symv[f64]("U", n, Float64(1.0), a, lda, x, 1, Float64(0.0), y, 1)
+
     keep(a)
     keep(x)
     keep(y)
@@ -152,6 +156,7 @@ def bench_dsyr[current_size: Int]() raises -> Float64:
     @parameter
     def dsyr_only() -> None:
         syr[f64]("U", n, Float64(1.0), x, 1, a, lda)
+
     keep(a)
     keep(x)
 
@@ -177,6 +182,7 @@ def bench_dsyr2[current_size: Int]() raises -> Float64:
     @parameter
     def dsyr2_only() -> None:
         syr2[f64]("U", n, Float64(1.0), x, 1, y, 1, a, lda)
+
     keep(a)
     keep(x)
     keep(y)
