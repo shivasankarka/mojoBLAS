@@ -14,6 +14,9 @@ Symmetric Rank-k Operations (`level3.syrk`)
 Provides symmetric rank-k operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
+
 
 def syrk[
     mut_a: Bool,
@@ -86,6 +89,8 @@ def syrk[
     var upper = uplo == "U" or uplo == "u"
     var no_trans = trans == "N" or trans == "n"
 
+    comptime simd_width: Int = simd_width_of[dtype]()
+
     if beta == 0:
         if upper:
             for j in range(n):
@@ -111,23 +116,37 @@ def syrk[
     if no_trans:
         if upper:
             for j in range(n):
+                var cj = c + j * ldc
                 for l in range(k):
                     if a[j + l * lda] != 0:
                         var temp: Scalar[dtype] = alpha * a[j + l * lda]
-                        for i in range(j + 1):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp * a[i + l * lda]
+                        var al = a + l * lda
+
+                        @parameter
+                        def axpy_upper[width: Int](i: Int) unified {mut cj, read al, read temp}:
+                            cj.store[width=width](
+                                i, cj.load[width=width](i) + temp * al.load[width=width](i)
                             )
+
+                        vectorize[simd_width](j + 1, axpy_upper)
         else:
             for j in range(n):
+                var cj = c + j * ldc
                 for l in range(k):
                     if a[j + l * lda] != 0:
                         var temp: Scalar[dtype] = alpha * a[j + l * lda]
-                        for i in range(j, n):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp * a[i + l * lda]
+                        var al = a + l * lda
+
+                        @parameter
+                        def axpy_lower[width: Int](i: Int) unified {mut cj, read al, read temp}:
+                            var ii = j + i
+                            cj.store[width=width](
+                                ii, cj.load[width=width](ii) + temp * al.load[width=width](ii)
                             )
+
+                        vectorize[simd_width](n - j, axpy_lower)
     else:
+        # Trans: rows of A^T are non-contiguous — scalar k reduction per (i,j)
         if upper:
             for j in range(n):
                 for i in range(j + 1):

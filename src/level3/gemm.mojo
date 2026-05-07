@@ -14,6 +14,9 @@ General Matrix-Matrix Operations (`level3.gemm`)
 Provides general matrix-matrix operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
+
 
 def gemm[
     mut_a: Bool,
@@ -104,15 +107,27 @@ def gemm[
     if m == 0 or n == 0:
         return
 
+    comptime simd_width: Int = simd_width_of[dtype]()
+
     if alpha == 0 or k == 0:
         if beta == 0:
             for j in range(n):
-                for i in range(m):
-                    c[i + j * ldc] = 0
+                var cj = c + j * ldc
+
+                @parameter
+                def zero_col[width: Int](i: Int) unified {mut cj}:
+                    cj.store[width=width](i, SIMD[dtype, width](0))
+
+                vectorize[simd_width](m, zero_col)
         elif beta != 1:
             for j in range(n):
-                for i in range(m):
-                    c[i + j * ldc] = beta * c[i + j * ldc]
+                var cj = c + j * ldc
+
+                @parameter
+                def scale_col[width: Int](i: Int) unified {mut cj, read beta}:
+                    cj.store[width=width](i, beta * cj.load[width=width](i))
+
+                vectorize[simd_width](m, scale_col)
         return
 
     var no_trans_a = trans_a == "N" or trans_a == "n"
@@ -120,65 +135,98 @@ def gemm[
 
     if no_trans_a:
         if no_trans_b:
+            # C += alpha * A * B  (A col-major, B col-major)
             for j in range(n):
+                var cj = c + j * ldc
                 if beta == 0:
-                    for i in range(m):
-                        c[i + j * ldc] = 0
+                    @parameter
+                    def zero_nn[width: Int](i: Int) unified {mut cj}:
+                        cj.store[width=width](i, SIMD[dtype, width](0))
+                    vectorize[simd_width](m, zero_nn)
                 elif beta != 1:
-                    for i in range(m):
-                        c[i + j * ldc] = beta * c[i + j * ldc]
+                    @parameter
+                    def scale_nn[width: Int](i: Int) unified {mut cj, read beta}:
+                        cj.store[width=width](i, beta * cj.load[width=width](i))
+                    vectorize[simd_width](m, scale_nn)
                 for l in range(k):
                     if b[l + j * ldb] != 0:
                         var temp: Scalar[dtype] = alpha * b[l + j * ldb]
-                        for i in range(m):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp * a[i + l * lda]
+                        var al = a + l * lda
+
+                        @parameter
+                        def axpy_nn[width: Int](i: Int) unified {mut cj, read al, read temp}:
+                            cj.store[width=width](
+                                i, cj.load[width=width](i) + temp * al.load[width=width](i)
                             )
+
+                        vectorize[simd_width](m, axpy_nn)
         else:
+            # C += alpha * A * B^T
             for j in range(n):
+                var cj = c + j * ldc
                 if beta == 0:
-                    for i in range(m):
-                        c[i + j * ldc] = 0
+                    @parameter
+                    def zero_nt[width: Int](i: Int) unified {mut cj}:
+                        cj.store[width=width](i, SIMD[dtype, width](0))
+                    vectorize[simd_width](m, zero_nt)
                 elif beta != 1:
-                    for i in range(m):
-                        c[i + j * ldc] = beta * c[i + j * ldc]
+                    @parameter
+                    def scale_nt[width: Int](i: Int) unified {mut cj, read beta}:
+                        cj.store[width=width](i, beta * cj.load[width=width](i))
+                    vectorize[simd_width](m, scale_nt)
                 for l in range(k):
                     if b[j + l * ldb] != 0:
                         var temp: Scalar[dtype] = alpha * b[j + l * ldb]
-                        for i in range(m):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp * a[i + l * lda]
+                        var al = a + l * lda
+
+                        @parameter
+                        def axpy_nt[width: Int](i: Int) unified {mut cj, read al, read temp}:
+                            cj.store[width=width](
+                                i, cj.load[width=width](i) + temp * al.load[width=width](i)
                             )
+
+                        vectorize[simd_width](m, axpy_nt)
     else:
         if no_trans_b:
+            # C += alpha * A^T * B  — A rows are contiguous (row-major layout of A^T)
             for j in range(n):
+                var cj = c + j * ldc
                 if beta == 0:
-                    for i in range(m):
-                        c[i + j * ldc] = 0
+                    @parameter
+                    def zero_tn[width: Int](i: Int) unified {mut cj}:
+                        cj.store[width=width](i, SIMD[dtype, width](0))
+                    vectorize[simd_width](m, zero_tn)
                 elif beta != 1:
-                    for i in range(m):
-                        c[i + j * ldc] = beta * c[i + j * ldc]
+                    @parameter
+                    def scale_tn[width: Int](i: Int) unified {mut cj, read beta}:
+                        cj.store[width=width](i, beta * cj.load[width=width](i))
+                    vectorize[simd_width](m, scale_tn)
                 for l in range(k):
                     if b[l + j * ldb] != 0:
                         var temp: Scalar[dtype] = alpha * b[l + j * ldb]
+                        var al = a + l  # A^T row l = A column l: a[l + i*lda]
+                        # Non-contiguous (stride lda) — scalar loop
                         for i in range(m):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp * a[l + i * lda]
-                            )
+                            cj[i] = cj[i] + temp * al[i * lda]
         else:
+            # C += alpha * A^T * B^T
             for j in range(n):
+                var cj = c + j * ldc
                 if beta == 0:
-                    for i in range(m):
-                        c[i + j * ldc] = 0
+                    @parameter
+                    def zero_tt[width: Int](i: Int) unified {mut cj}:
+                        cj.store[width=width](i, SIMD[dtype, width](0))
+                    vectorize[simd_width](m, zero_tt)
                 elif beta != 1:
-                    for i in range(m):
-                        c[i + j * ldc] = beta * c[i + j * ldc]
+                    @parameter
+                    def scale_tt[width: Int](i: Int) unified {mut cj, read beta}:
+                        cj.store[width=width](i, beta * cj.load[width=width](i))
+                    vectorize[simd_width](m, scale_tt)
                 for l in range(k):
                     if b[j + l * ldb] != 0:
                         var temp: Scalar[dtype] = alpha * b[j + l * ldb]
+                        var al = a + l
                         for i in range(m):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp * a[l + i * lda]
-                            )
+                            cj[i] = cj[i] + temp * al[i * lda]
 
     return

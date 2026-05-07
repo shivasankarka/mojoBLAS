@@ -14,6 +14,9 @@ Triangular Matrix-Vector Operations (`level2trmv`)
 Provides triangular matrix-vector operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
+
 
 def trmv[
     mut_a: Bool,
@@ -88,14 +91,23 @@ def trmv[
     if incx < 0:
         kx = 1 - (n - 1) * incx
 
+    comptime simd_width: Int = simd_width_of[dtype]()
+
     if no_trans:
         if upper:
             if incx == 1:
                 for j in range(n):
                     if x[j] != 0:
                         var temp: Scalar[dtype] = x[j]
-                        for i in range(j):
-                            x[i] = x[i] + temp * a[i + j * lda]
+                        var aj = a + j * lda
+
+                        @parameter
+                        def axpy_upper[width: Int](i: Int) unified {mut x, read aj, read temp}:
+                            x.store[width=width](
+                                i, x.load[width=width](i) + temp * aj.load[width=width](i)
+                            )
+
+                        vectorize[simd_width](j, axpy_upper)
                         if no_unit:
                             x[j] = x[j] * a[j + j * lda]
             else:
@@ -115,8 +127,16 @@ def trmv[
                 for j in range(n - 1, -1, -1):
                     if x[j] != 0:
                         var temp: Scalar[dtype] = x[j]
-                        for i in range(n - 1, j, -1):
-                            x[i] = x[i] + temp * a[i + j * lda]
+                        var aj = a + j * lda
+
+                        @parameter
+                        def axpy_lower[width: Int](i: Int) unified {mut x, read aj, read temp, read j}:
+                            var ii = j + 1 + i
+                            x.store[width=width](
+                                ii, x.load[width=width](ii) + temp * aj.load[width=width](ii)
+                            )
+
+                        vectorize[simd_width](n - j - 1, axpy_lower)
                         if no_unit:
                             x[j] = x[j] * a[j + j * lda]
             else:
@@ -139,8 +159,13 @@ def trmv[
                     var temp: Scalar[dtype] = x[j]
                     if no_unit:
                         temp = temp * a[j + j * lda]
-                    for i in range(j - 1, -1, -1):
-                        temp = temp + a[i + j * lda] * x[i]
+                    var aj = a + j * lda
+
+                    @parameter
+                    def dot_upper[width: Int](i: Int) unified {mut temp, read aj, read x}:
+                        temp += (aj.load[width=width](i) * x.load[width=width](i)).reduce_add()
+
+                    vectorize[simd_width](j, dot_upper)
                     x[j] = temp
             else:
                 var jx: Int = kx + (n - 1) * incx
@@ -160,8 +185,14 @@ def trmv[
                     var temp: Scalar[dtype] = x[j]
                     if no_unit:
                         temp = temp * a[j + j * lda]
-                    for i in range(j + 1, n):
-                        temp = temp + a[i + j * lda] * x[i]
+                    var aj = a + j * lda
+
+                    @parameter
+                    def dot_lower[width: Int](i: Int) unified {mut temp, read aj, read x, read j}:
+                        var ii = j + 1 + i
+                        temp += (aj.load[width=width](ii) * x.load[width=width](ii)).reduce_add()
+
+                    vectorize[simd_width](n - j - 1, dot_lower)
                     x[j] = temp
             else:
                 var jx: Int = kx

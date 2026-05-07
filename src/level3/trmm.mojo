@@ -14,6 +14,9 @@ Triangular Matrix-Matrix Operations (`level3.trmm`)
 Provides triangular matrix-matrix operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
+
 
 def trmm[
     mut_a: Bool,
@@ -95,6 +98,7 @@ def trmm[
                 b[i + j * ldb] = 0
         return
 
+    comptime simd_width: Int = simd_width_of[dtype]()
     var left_side = side == "L" or side == "l"
     var upper = uplo == "U" or uplo == "u"
     var no_trans = trans_a == "N" or trans_a == "n"
@@ -104,107 +108,159 @@ def trmm[
         if no_trans:
             if upper:
                 for j in range(n):
+                    var bj = b + j * ldb
                     for k in range(m):
-                        if b[k + j * ldb] != 0:
-                            var temp: Scalar[dtype] = alpha * b[k + j * ldb]
-                            for i in range(k):
-                                b[i + j * ldb] = (
-                                    b[i + j * ldb] + temp * a[i + k * lda]
+                        if bj[k] != 0:
+                            var temp: Scalar[dtype] = alpha * bj[k]
+                            var ak = a + k * lda
+
+                            @parameter
+                            def axpy_lu[width: Int](i: Int) unified {mut bj, read ak, read temp}:
+                                bj.store[width=width](
+                                    i, bj.load[width=width](i) + temp * ak.load[width=width](i)
                                 )
+
+                            vectorize[simd_width](k, axpy_lu)
                             if no_unit:
                                 temp = temp * a[k + k * lda]
-                            b[k + j * ldb] = temp
+                            bj[k] = temp
             else:
                 for j in range(n):
+                    var bj = b + j * ldb
                     for k in range(m - 1, -1, -1):
-                        if b[k + j * ldb] != 0:
-                            var temp: Scalar[dtype] = alpha * b[k + j * ldb]
-                            b[k + j * ldb] = temp
+                        if bj[k] != 0:
+                            var temp: Scalar[dtype] = alpha * bj[k]
+                            bj[k] = temp
                             if no_unit:
-                                b[k + j * ldb] = b[k + j * ldb] * a[k + k * lda]
-                            for i in range(k + 1, m):
-                                b[i + j * ldb] = (
-                                    b[i + j * ldb] + temp * a[i + k * lda]
+                                bj[k] = bj[k] * a[k + k * lda]
+                            var ak = a + k * lda
+
+                            @parameter
+                            def axpy_ll[width: Int](i: Int) unified {mut bj, read ak, read temp}:
+                                var ii = k + 1 + i
+                                bj.store[width=width](
+                                    ii, bj.load[width=width](ii) + temp * ak.load[width=width](ii)
                                 )
+
+                            vectorize[simd_width](m - k - 1, axpy_ll)
         else:
+            # Trans left: dot reduction over k — a[k + i*lda] is non-contiguous, scalar
             if upper:
                 for j in range(n):
+                    var bj = b + j * ldb
                     for i in range(m - 1, -1, -1):
-                        var temp: Scalar[dtype] = b[i + j * ldb]
+                        var temp: Scalar[dtype] = bj[i]
                         if no_unit:
                             temp = temp * a[i + i * lda]
                         for k in range(i):
-                            temp = temp + a[k + i * lda] * b[k + j * ldb]
-                        b[i + j * ldb] = alpha * temp
+                            temp = temp + a[k + i * lda] * bj[k]
+                        bj[i] = alpha * temp
             else:
                 for j in range(n):
+                    var bj = b + j * ldb
                     for i in range(m):
-                        var temp: Scalar[dtype] = b[i + j * ldb]
+                        var temp: Scalar[dtype] = bj[i]
                         if no_unit:
                             temp = temp * a[i + i * lda]
                         for k in range(i + 1, m):
-                            temp = temp + a[k + i * lda] * b[k + j * ldb]
-                        b[i + j * ldb] = alpha * temp
+                            temp = temp + a[k + i * lda] * bj[k]
+                        bj[i] = alpha * temp
     else:
         if no_trans:
             if upper:
                 for j in range(n - 1, -1, -1):
+                    var bj = b + j * ldb
                     var temp: Scalar[dtype] = alpha
                     if no_unit:
                         temp = temp * a[j + j * lda]
-                    for i in range(m):
-                        b[i + j * ldb] = temp * b[i + j * ldb]
+
+                    @parameter
+                    def scale_bj_u[width: Int](i: Int) unified {mut bj, read temp}:
+                        bj.store[width=width](i, temp * bj.load[width=width](i))
+
+                    vectorize[simd_width](m, scale_bj_u)
                     for k in range(j):
                         if a[k + j * lda] != 0:
                             temp = alpha * a[k + j * lda]
-                            for i in range(m):
-                                b[i + j * ldb] = (
-                                    b[i + j * ldb] + temp * b[i + k * ldb]
+                            var bk = b + k * ldb
+
+                            @parameter
+                            def axpy_ru[width: Int](i: Int) unified {mut bj, read bk, read temp}:
+                                bj.store[width=width](
+                                    i, bj.load[width=width](i) + temp * bk.load[width=width](i)
                                 )
+
+                            vectorize[simd_width](m, axpy_ru)
             else:
                 for j in range(n):
+                    var bj = b + j * ldb
                     var temp: Scalar[dtype] = alpha
                     if no_unit:
                         temp = temp * a[j + j * lda]
-                    for i in range(m):
-                        b[i + j * ldb] = temp * b[i + j * ldb]
+
+                    @parameter
+                    def scale_bj_l[width: Int](i: Int) unified {mut bj, read temp}:
+                        bj.store[width=width](i, temp * bj.load[width=width](i))
+
+                    vectorize[simd_width](m, scale_bj_l)
                     for k in range(j + 1, n):
                         if a[k + j * lda] != 0:
                             temp = alpha * a[k + j * lda]
-                            for i in range(m):
-                                b[i + j * ldb] = (
-                                    b[i + j * ldb] + temp * b[i + k * ldb]
+                            var bk = b + k * ldb
+
+                            @parameter
+                            def axpy_rl[width: Int](i: Int) unified {mut bj, read bk, read temp}:
+                                bj.store[width=width](
+                                    i, bj.load[width=width](i) + temp * bk.load[width=width](i)
                                 )
+
+                            vectorize[simd_width](m, axpy_rl)
         else:
             if upper:
                 for k in range(n):
+                    var bk = b + k * ldb
                     for j in range(k):
                         if a[j + k * lda] != 0:
                             var temp: Scalar[dtype] = alpha * a[j + k * lda]
-                            for i in range(m):
-                                b[i + j * ldb] = (
-                                    b[i + j * ldb] + temp * b[i + k * ldb]
+                            var bj = b + j * ldb
+
+                            @parameter
+                            def axpy_rtu[width: Int](i: Int) unified {mut bj, read bk, read temp}:
+                                bj.store[width=width](
+                                    i, bj.load[width=width](i) + temp * bk.load[width=width](i)
                                 )
+
+                            vectorize[simd_width](m, axpy_rtu)
                     var temp: Scalar[dtype] = alpha
                     if no_unit:
                         temp = temp * a[k + k * lda]
                     if temp != 1:
-                        for i in range(m):
-                            b[i + k * ldb] = temp * b[i + k * ldb]
+                        @parameter
+                        def scale_bk_u[width: Int](i: Int) unified {mut bk, read temp}:
+                            bk.store[width=width](i, temp * bk.load[width=width](i))
+                        vectorize[simd_width](m, scale_bk_u)
             else:
                 for k in range(n - 1, -1, -1):
+                    var bk = b + k * ldb
                     for j in range(k + 1, n):
                         if a[j + k * lda] != 0:
                             var temp: Scalar[dtype] = alpha * a[j + k * lda]
-                            for i in range(m):
-                                b[i + j * ldb] = (
-                                    b[i + j * ldb] + temp * b[i + k * ldb]
+                            var bj = b + j * ldb
+
+                            @parameter
+                            def axpy_rtl[width: Int](i: Int) unified {mut bj, read bk, read temp}:
+                                bj.store[width=width](
+                                    i, bj.load[width=width](i) + temp * bk.load[width=width](i)
                                 )
+
+                            vectorize[simd_width](m, axpy_rtl)
                     var temp: Scalar[dtype] = alpha
                     if no_unit:
                         temp = temp * a[k + k * lda]
                     if temp != 1:
-                        for i in range(m):
-                            b[i + k * ldb] = temp * b[i + k * ldb]
+                        @parameter
+                        def scale_bk_l[width: Int](i: Int) unified {mut bk, read temp}:
+                            bk.store[width=width](i, temp * bk.load[width=width](i))
+                        vectorize[simd_width](m, scale_bk_l)
 
     return

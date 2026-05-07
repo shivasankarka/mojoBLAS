@@ -135,16 +135,37 @@ def gemv[
 
     var no_trans = trans == "N"
 
-    # NOTE: might be parallizable
     if no_trans:
         var jx: Int = kx
-        if incy == 1:
+        if incx == 1 and incy == 1:
+            # Fast path: both vectors contiguous — vectorize the inner column axpy
+            for j in range(n):
+                var xj = x[j]
+                if xj != 0:
+                    var temp: Scalar[dtype] = alpha * xj
+                    var aj = a + j * lda
+
+                    @parameter
+                    def axpy_col[width: Int](i: Int) unified {mut y, read aj, read temp}:
+                        y.store[width=width](
+                            i, y.load[width=width](i) + temp * aj.load[width=width](i)
+                        )
+
+                    vectorize[simd_width](m, axpy_col)
+        elif incy == 1:
             for j in range(n):
                 var xj = x[jx - 1]
                 if xj != 0:
                     var temp: Scalar[dtype] = alpha * xj
-                    for i in range(m):
-                        y[i] = y[i] + temp * a[i + j * lda]
+                    var aj = a + j * lda
+
+                    @parameter
+                    def axpy_col_sx[width: Int](i: Int) unified {mut y, read aj, read temp}:
+                        y.store[width=width](
+                            i, y.load[width=width](i) + temp * aj.load[width=width](i)
+                        )
+
+                    vectorize[simd_width](m, axpy_col_sx)
                 jx += incx
         else:
             for j in range(n):
@@ -159,10 +180,16 @@ def gemv[
     else:
         var jy: Int = ky
         if incx == 1:
+            # Fast path: x contiguous — vectorize inner dot product
             for j in range(n):
                 var temp: Scalar[dtype] = 0
-                for i in range(m):
-                    temp = temp + a[i + j * lda] * x[i]
+                var aj = a + j * lda
+
+                @parameter
+                def dot_col[width: Int](i: Int) unified {mut temp, read aj, read x}:
+                    temp += (aj.load[width=width](i) * x.load[width=width](i)).reduce_add()
+
+                vectorize[simd_width](m, dot_col)
                 if temp != 0:
                     y[jy - 1] = y[jy - 1] + alpha * temp
                 jy += incy
