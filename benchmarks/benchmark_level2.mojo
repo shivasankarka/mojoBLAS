@@ -25,12 +25,11 @@ def bench_dgemv[current_size: Int]() raises -> Float64:
     def dgemv_only() -> None:
         gemv[f64]("N", m, n, Float64(1.0), a, lda, x, 1, Float64(0.0), y, 1)
 
+    var report = benchmark.run[dgemv_only](max_runtime_secs=1)
+
     keep(a)
     keep(x)
     keep(y)
-
-    var report = benchmark.run[dgemv_only](max_runtime_secs=1)
-
     a.free()
     x.free()
     y.free()
@@ -55,12 +54,11 @@ def bench_dgemv_trans[current_size: Int]() raises -> Float64:
     def dgemv_trans_only() -> None:
         gemv[f64]("T", m, n, Float64(1.0), a, lda, x, 1, Float64(0.0), y, 1)
 
+    var report = benchmark.run[dgemv_trans_only](max_runtime_secs=1)
+
     keep(a)
     keep(x)
     keep(y)
-
-    var report = benchmark.run[dgemv_trans_only](max_runtime_secs=1)
-
     a.free()
     x.free()
     y.free()
@@ -81,11 +79,10 @@ def bench_dtrmv[current_size: Int]() raises -> Float64:
     def dtrmv_only() -> None:
         trmv[f64]("U", "N", "N", n, a, lda, x, 1)
 
-    keep(a)
-    keep(x)
-
     var report = benchmark.run[dtrmv_only](max_runtime_secs=1)
 
+    keep(a)
+    keep(x)
     a.free()
     x.free()
 
@@ -111,11 +108,10 @@ def bench_dtrsv[current_size: Int]() raises -> Float64:
     def dtrsv_only() -> None:
         trsv[f64]("U", "N", "N", n, a, lda, x, 1)
 
-    keep(a)
-    keep(x)
-
     var report = benchmark.run[dtrsv_only](max_runtime_secs=1)
 
+    keep(a)
+    keep(x)
     a.free()
     x.free()
 
@@ -137,12 +133,11 @@ def bench_dsymv[current_size: Int]() raises -> Float64:
     def dsymv_only() -> None:
         symv[f64]("U", n, Float64(1.0), a, lda, x, 1, Float64(0.0), y, 1)
 
+    var report = benchmark.run[dsymv_only](max_runtime_secs=1)
+
     keep(a)
     keep(x)
     keep(y)
-
-    var report = benchmark.run[dsymv_only](max_runtime_secs=1)
-
     a.free()
     x.free()
     y.free()
@@ -163,11 +158,10 @@ def bench_dsyr[current_size: Int]() raises -> Float64:
     def dsyr_only() -> None:
         syr[f64]("U", n, Float64(1.0), x, 1, a, lda)
 
-    keep(a)
-    keep(x)
-
     var report = benchmark.run[dsyr_only](max_runtime_secs=1)
 
+    keep(a)
+    keep(x)
     a.free()
     x.free()
 
@@ -189,12 +183,11 @@ def bench_dsyr2[current_size: Int]() raises -> Float64:
     def dsyr2_only() -> None:
         syr2[f64]("U", n, Float64(1.0), x, 1, y, 1, a, lda)
 
+    var report = benchmark.run[dsyr2_only](max_runtime_secs=1)
+
     keep(a)
     keep(x)
     keep(y)
-
-    var report = benchmark.run[dsyr2_only](max_runtime_secs=1)
-
     a.free()
     x.free()
     y.free()
@@ -214,12 +207,14 @@ def bench_dspr[current_size: Int]() raises -> Float64:
     @parameter
     def dspr_only() -> None:
         spr[f64]("U", n, Float64(1.0), x, 1, ap)
-    keep(x)
-    keep(ap)
 
     var report = benchmark.run[dspr_only](max_runtime_secs=1)
+
+    keep(x)
+    keep(ap)
     x.free()
     ap.free()
+
     return report.mean("ns")
 
 
@@ -237,14 +232,16 @@ def bench_dspr2[current_size: Int]() raises -> Float64:
     @parameter
     def dspr2_only() -> None:
         spr2[f64]("U", n, Float64(1.0), x, 1, y, 1, ap)
+
+    var report = benchmark.run[dspr2_only](max_runtime_secs=1)
+
     keep(x)
     keep(y)
     keep(ap)
-
-    var report = benchmark.run[dspr2_only](max_runtime_secs=1)
     x.free()
     y.free()
     ap.free()
+
     return report.mean("ns")
 
 
@@ -262,14 +259,16 @@ def bench_dspmv[current_size: Int]() raises -> Float64:
     @parameter
     def dspmv_only() -> None:
         spmv[f64]("U", n, Float64(1.0), ap, x, 1, Float64(1.0), y, 1)
+
+    var report = benchmark.run[dspmv_only](max_runtime_secs=1)
+
     keep(ap)
     keep(x)
     keep(y)
-
-    var report = benchmark.run[dspmv_only](max_runtime_secs=1)
     ap.free()
     x.free()
     y.free()
+
     return report.mean("ns")
 
 
@@ -285,12 +284,14 @@ def bench_dtpmv[current_size: Int]() raises -> Float64:
     @parameter
     def dtpmv_only() -> None:
         tpmv[f64]("U", "N", "N", n, ap, x, 1)
-    keep(ap)
-    keep(x)
 
     var report = benchmark.run[dtpmv_only](max_runtime_secs=1)
+
+    keep(ap)
+    keep(x)
     ap.free()
     x.free()
+
     return report.mean("ns")
 
 
@@ -309,12 +310,14 @@ def bench_dtpsv[current_size: Int]() raises -> Float64:
     @parameter
     def dtpsv_only() -> None:
         tpsv[f64]("U", "N", "N", n, ap, x, 1)
-    keep(ap)
-    keep(x)
 
     var report = benchmark.run[dtpsv_only](max_runtime_secs=1)
+
+    keep(ap)
+    keep(x)
     ap.free()
     x.free()
+
     return report.mean("ns")
 
 
@@ -336,12 +339,14 @@ def bench_dtbmv[current_size: Int]() raises -> Float64:
     @parameter
     def dtbmv_only() -> None:
         tbmv[f64]("U", "N", "N", n, k, a, lda, x, 1)
-    keep(a)
-    keep(x)
 
     var report = benchmark.run[dtbmv_only](max_runtime_secs=1)
+
+    keep(a)
+    keep(x)
     a.free()
     x.free()
+
     return report.mean("ns")
 
 
@@ -363,12 +368,14 @@ def bench_dtbsv[current_size: Int]() raises -> Float64:
     @parameter
     def dtbsv_only() -> None:
         tbsv[f64]("U", "N", "N", n, k, a, lda, x, 1)
-    keep(a)
-    keep(x)
 
     var report = benchmark.run[dtbsv_only](max_runtime_secs=1)
+
+    keep(a)
+    keep(x)
     a.free()
     x.free()
+
     return report.mean("ns")
 
 

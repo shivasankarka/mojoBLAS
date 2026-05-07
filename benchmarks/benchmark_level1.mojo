@@ -18,11 +18,10 @@ def bench_daxpy[current_size: Int]() raises -> Float64:
     def daxpy_only() -> None:
         axpy[f64](current_size, Float64(2.0), x, 1, y, 1)
 
-    keep(x)
-    keep(y)
-
     var report = benchmark.run[daxpy_only](max_runtime_secs=1)
 
+    keep(x)
+    keep(y)
     x.free()
     y.free()
 
@@ -38,11 +37,10 @@ def bench_dcopy[current_size: Int]() raises -> Float64:
     def dcopy_only() -> None:
         copy[f64](current_size, x, 1, y, 1)
 
-    keep(x)
-    keep(y)
-
     var report = benchmark.run[dcopy_only](max_runtime_secs=1)
 
+    keep(x)
+    keep(y)
     x.free()
     y.free()
 
@@ -58,10 +56,9 @@ def bench_dscal[current_size: Int]() raises -> Float64:
     def dscal_only() -> None:
         scal[f64](current_size, Float64(2.5), x, 1)
 
-    keep(x)
-
     var report = benchmark.run[dscal_only](max_runtime_secs=1)
 
+    keep(x)
     x.free()
 
     return report.mean("ns")
@@ -79,11 +76,10 @@ def bench_ddot[current_size: Int]() raises -> Float64:
         var result = dot[f64](current_size, x, 1, y, 1)
         keep(result)
 
-    keep(x)
-    keep(y)
-
     var report = benchmark.run[ddot_only](max_runtime_secs=1)
 
+    keep(x)
+    keep(y)
     x.free()
     y.free()
 
@@ -100,10 +96,9 @@ def bench_dasum[current_size: Int]() raises -> Float64:
         var result = asum[f64](current_size, x, 1)
         keep(result)
 
-    keep(x)
-
     var report = benchmark.run[dasum_only](max_runtime_secs=1)
 
+    keep(x)
     x.free()
 
     return report.mean("ns")
@@ -119,10 +114,9 @@ def bench_dnrm2[current_size: Int]() raises -> Float64:
         var result = nrm2[f64](current_size, x, 1)
         keep(result)
 
-    keep(x)
-
     var report = benchmark.run[dnrm2_only](max_runtime_secs=1)
 
+    keep(x)
     x.free()
 
     return report.mean("ns")
@@ -139,11 +133,10 @@ def bench_dswap[current_size: Int]() raises -> Float64:
     def dswap_only() -> None:
         vswap[f64](current_size, x, 1, y, 1)
 
-    keep(x)
-    keep(y)
-
     var report = benchmark.run[dswap_only](max_runtime_secs=1)
 
+    keep(x)
+    keep(y)
     x.free()
     y.free()
 
@@ -160,10 +153,9 @@ def bench_diamax[current_size: Int]() raises -> Float64:
         var result = iamax[f64](current_size, x, 1)
         keep(result)
 
-    keep(x)
-
     var report = benchmark.run[diamax_only](max_runtime_secs=1)
 
+    keep(x)
     x.free()
 
     return report.mean("ns")
@@ -180,11 +172,10 @@ def bench_drot[current_size: Int]() raises -> Float64:
     def drot_only() -> None:
         rot[f64](current_size, x, 1, y, 1, Float64(0.6), Float64(0.8))
 
-    keep(x)
-    keep(y)
-
     var report = benchmark.run[drot_only](max_runtime_secs=1)
 
+    keep(x)
+    keep(y)
     x.free()
     y.free()
 
@@ -204,13 +195,12 @@ def bench_drotg[current_size: Int]() raises -> Float64:
     def drotg_only() -> None:
         rotg[f64](a, b, c, s)
 
+    var report = benchmark.run[drotg_only](max_runtime_secs=1)
+
     keep(a)
     keep(b)
     keep(c)
     keep(s)
-
-    var report = benchmark.run[drotg_only](max_runtime_secs=1)
-
     a.free()
     b.free()
     c.free()
@@ -238,12 +228,11 @@ def bench_drotm[current_size: Int]() raises -> Float64:
     def drotm_only() -> None:
         rotm[f64](current_size, x, 1, y, 1, p)
 
+    var report = benchmark.run[drotm_only](max_runtime_secs=1)
+
     keep(x)
     keep(y)
     keep(p)
-
-    var report = benchmark.run[drotm_only](max_runtime_secs=1)
-
     x.free()
     y.free()
     p.free()
@@ -267,14 +256,13 @@ def bench_drotmg[current_size: Int]() raises -> Float64:
     def drotmg_only() -> None:
         rotmg[f64](d1, d2, x1, y1, p)
 
+    var report = benchmark.run[drotmg_only](max_runtime_secs=1)
+
     keep(d1)
     keep(d2)
     keep(x1)
     keep(y1)
     keep(p)
-
-    var report = benchmark.run[drotmg_only](max_runtime_secs=1)
-
     d1.free()
     d2.free()
     x1.free()
