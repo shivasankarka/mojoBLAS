@@ -138,7 +138,7 @@ def syrk[
                         var al = a + l * lda
 
                         @parameter
-                        def axpy_lower[width: Int](i: Int) unified {mut cj, read al, read temp}:
+                        def axpy_lower[width: Int](i: Int) unified {mut cj, read al, read temp, read j}:
                             var ii = j + i
                             cj.store[width=width](
                                 ii, cj.load[width=width](ii) + temp * al.load[width=width](ii)

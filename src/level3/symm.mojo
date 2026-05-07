@@ -129,7 +129,7 @@ def symm[
                         var al = a + l * lda
 
                         @parameter
-                        def fused_lower[width: Int](i: Int) unified {mut cj, mut temp2, read al, read bj, read temp1}:
+                        def fused_lower[width: Int](i: Int) unified {mut cj, mut temp2, read al, read bj, read temp1, read l}:
                             var ii = l + 1 + i
                             var av = al.load[width=width](ii)
                             cj.store[width=width](ii, cj.load[width=width](ii) + temp1 * av)

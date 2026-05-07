@@ -139,7 +139,7 @@ def trsm[
                             var al = a + l * lda
 
                             @parameter
-                            def axpy_ll[width: Int](i: Int) unified {mut bj, read al, read pivot}:
+                            def axpy_ll[width: Int](i: Int) unified {mut bj, read al, read pivot, read l}:
                                 var ii = l + 1 + i
                                 bj.store[width=width](
                                     ii, bj.load[width=width](ii) - pivot * al.load[width=width](ii)

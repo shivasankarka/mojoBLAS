@@ -136,7 +136,7 @@ def trmm[
                             var ak = a + k * lda
 
                             @parameter
-                            def axpy_ll[width: Int](i: Int) unified {mut bj, read ak, read temp}:
+                            def axpy_ll[width: Int](i: Int) unified {mut bj, read ak, read temp, read k}:
                                 var ii = k + 1 + i
                                 bj.store[width=width](
                                     ii, bj.load[width=width](ii) + temp * ak.load[width=width](ii)
