@@ -14,7 +14,7 @@ Symmetric Matrix-Matrix Operations (`level3.symm`)
 Provides symmetric matrix-matrix operations as defined in the BLAS library standard.
 """
 
-from std.algorithm.functional import vectorize
+from std.algorithm.functional import vectorize, parallelize
 from std.sys.info import simd_width_of
 
 
@@ -90,11 +90,13 @@ def symm[
         return
 
     comptime simd_width: Int = simd_width_of[dtype]()
+    comptime PAR_THRESHOLD: Int = 64
     var left_side = side == "L" or side == "l"
     var upper = uplo == "U" or uplo == "u"
 
     if left_side:
-        for j in range(n):
+        @parameter
+        def symm_left_col(j: Int):
             var cj = c + j * ldc
             var bj = b + j * ldb
             if beta == 0:
@@ -137,8 +139,15 @@ def symm[
 
                         vectorize[simd_width](m - l - 1, fused_lower)
                         cj[l] = cj[l] + temp1 * a[l + l * lda] + alpha * temp2
+
+        if n >= PAR_THRESHOLD:
+            parallelize[symm_left_col](n)
+        else:
+            for j in range(n):
+                symm_left_col(j)
     else:
-        for j in range(n):
+        @parameter
+        def symm_right_col(j: Int):
             var cj = c + j * ldc
             var bj = b + j * ldb
             if beta == 0:
@@ -194,5 +203,11 @@ def symm[
                         cj.store[width=width](i, cj.load[width=width](i) + temp_k * bk.load[width=width](i))
 
                     vectorize[simd_width](m, axpy_lower_r2)
+
+        if n >= PAR_THRESHOLD:
+            parallelize[symm_right_col](n)
+        else:
+            for j in range(n):
+                symm_right_col(j)
 
     return

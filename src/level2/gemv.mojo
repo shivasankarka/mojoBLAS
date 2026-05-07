@@ -17,7 +17,7 @@ This module implements the gemv operation for matrix-vector multiplication
 with support for various transpositions and scaling factors.
 """
 
-from std.algorithm.functional import vectorize
+from std.algorithm.functional import vectorize, parallelize
 from std.sys.info import simd_width_of
 
 # NOTE: I think we could so much optimization here if we promote a lot of these arguments into
@@ -178,10 +178,11 @@ def gemv[
                         iy += incy
                 jx += incx
     else:
-        var jy: Int = ky
+        comptime PAR_THRESHOLD: Int = 256
         if incx == 1:
-            # Fast path: x contiguous — vectorize inner dot product
-            for j in range(n):
+            # Trans + contiguous x: each j writes to independent y[ky-1 + j*incy] — safe to parallelize
+            @parameter
+            def gemv_trans_col(j: Int):
                 var temp: Scalar[dtype] = 0
                 var aj = a + j * lda
 
@@ -191,9 +192,16 @@ def gemv[
 
                 vectorize[simd_width](m, dot_col)
                 if temp != 0:
-                    y[jy - 1] = y[jy - 1] + alpha * temp
-                jy += incy
+                    var jy_idx = ky - 1 + j * incy
+                    y[jy_idx] = y[jy_idx] + alpha * temp
+
+            if n >= PAR_THRESHOLD:
+                parallelize[gemv_trans_col](n)
+            else:
+                for j in range(n):
+                    gemv_trans_col(j)
         else:
+            var jy: Int = ky
             for j in range(n):
                 var temp: Scalar[dtype] = 0
                 var ix: Int = kx

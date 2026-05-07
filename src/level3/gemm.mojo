@@ -14,7 +14,7 @@ General Matrix-Matrix Operations (`level3.gemm`)
 Provides general matrix-matrix operations as defined in the BLAS library standard.
 """
 
-from std.algorithm.functional import vectorize
+from std.algorithm.functional import vectorize, parallelize
 from std.sys.info import simd_width_of
 
 
@@ -133,10 +133,14 @@ def gemm[
     var no_trans_a = trans_a == "N" or trans_a == "n"
     var no_trans_b = trans_b == "N" or trans_b == "n"
 
+    # Threshold: only parallelize outer-j if n is large enough to amortize thread cost
+    comptime PAR_THRESHOLD: Int = 64
+
     if no_trans_a:
         if no_trans_b:
-            # C += alpha * A * B  (A col-major, B col-major)
-            for j in range(n):
+            # C += alpha * A * B  (both col-major, each column j independent)
+            @parameter
+            def gemm_nn_col(j: Int):
                 var cj = c + j * ldc
                 if beta == 0:
                     @parameter
@@ -160,9 +164,16 @@ def gemm[
                             )
 
                         vectorize[simd_width](m, axpy_nn)
+
+            if n >= PAR_THRESHOLD:
+                parallelize[gemm_nn_col](n)
+            else:
+                for j in range(n):
+                    gemm_nn_col(j)
         else:
             # C += alpha * A * B^T
-            for j in range(n):
+            @parameter
+            def gemm_nt_col(j: Int):
                 var cj = c + j * ldc
                 if beta == 0:
                     @parameter
@@ -186,10 +197,17 @@ def gemm[
                             )
 
                         vectorize[simd_width](m, axpy_nt)
+
+            if n >= PAR_THRESHOLD:
+                parallelize[gemm_nt_col](n)
+            else:
+                for j in range(n):
+                    gemm_nt_col(j)
     else:
         if no_trans_b:
-            # C += alpha * A^T * B  — A rows are contiguous (row-major layout of A^T)
-            for j in range(n):
+            # C += alpha * A^T * B  — A rows non-contiguous (stride lda), scalar inner
+            @parameter
+            def gemm_tn_col(j: Int):
                 var cj = c + j * ldc
                 if beta == 0:
                     @parameter
@@ -204,13 +222,19 @@ def gemm[
                 for l in range(k):
                     if b[l + j * ldb] != 0:
                         var temp: Scalar[dtype] = alpha * b[l + j * ldb]
-                        var al = a + l  # A^T row l = A column l: a[l + i*lda]
-                        # Non-contiguous (stride lda) — scalar loop
+                        var al = a + l
                         for i in range(m):
                             cj[i] = cj[i] + temp * al[i * lda]
+
+            if n >= PAR_THRESHOLD:
+                parallelize[gemm_tn_col](n)
+            else:
+                for j in range(n):
+                    gemm_tn_col(j)
         else:
             # C += alpha * A^T * B^T
-            for j in range(n):
+            @parameter
+            def gemm_tt_col(j: Int):
                 var cj = c + j * ldc
                 if beta == 0:
                     @parameter
@@ -228,5 +252,11 @@ def gemm[
                         var al = a + l
                         for i in range(m):
                             cj[i] = cj[i] + temp * al[i * lda]
+
+            if n >= PAR_THRESHOLD:
+                parallelize[gemm_tt_col](n)
+            else:
+                for j in range(n):
+                    gemm_tt_col(j)
 
     return

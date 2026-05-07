@@ -14,7 +14,7 @@ Triangular Matrix-Matrix Operations (`level3.trmm`)
 Provides triangular matrix-matrix operations as defined in the BLAS library standard.
 """
 
-from std.algorithm.functional import vectorize
+from std.algorithm.functional import vectorize, parallelize
 from std.sys.info import simd_width_of
 
 
@@ -99,6 +99,7 @@ def trmm[
         return
 
     comptime simd_width: Int = simd_width_of[dtype]()
+    comptime PAR_THRESHOLD: Int = 64
     var left_side = side == "L" or side == "l"
     var upper = uplo == "U" or uplo == "u"
     var no_trans = trans_a == "N" or trans_a == "n"
@@ -144,31 +145,45 @@ def trmm[
 
                             vectorize[simd_width](m - k - 1, axpy_ll)
         else:
-            # Trans left: dot reduction over k — a[k + i*lda] is non-contiguous, scalar
+            # Trans left: each j column of B is independent — safe to parallelize
             if upper:
-                for j in range(n):
+                @parameter
+                def trmm_lt_upper(j: Int):
                     var bj = b + j * ldb
                     for i in range(m - 1, -1, -1):
                         var temp: Scalar[dtype] = bj[i]
                         if no_unit:
                             temp = temp * a[i + i * lda]
-                        for k in range(i):
-                            temp = temp + a[k + i * lda] * bj[k]
+                        for kk in range(i):
+                            temp = temp + a[kk + i * lda] * bj[kk]
                         bj[i] = alpha * temp
+                if n >= PAR_THRESHOLD:
+                    parallelize[trmm_lt_upper](n)
+                else:
+                    for j in range(n):
+                        trmm_lt_upper(j)
             else:
-                for j in range(n):
+                @parameter
+                def trmm_lt_lower(j: Int):
                     var bj = b + j * ldb
                     for i in range(m):
                         var temp: Scalar[dtype] = bj[i]
                         if no_unit:
                             temp = temp * a[i + i * lda]
-                        for k in range(i + 1, m):
-                            temp = temp + a[k + i * lda] * bj[k]
+                        for kk in range(i + 1, m):
+                            temp = temp + a[kk + i * lda] * bj[kk]
                         bj[i] = alpha * temp
+                if n >= PAR_THRESHOLD:
+                    parallelize[trmm_lt_lower](n)
+                else:
+                    for j in range(n):
+                        trmm_lt_lower(j)
     else:
         if no_trans:
+            # Right no-trans: each j only reads from columns k<j or k>j, writes to j — safe
             if upper:
-                for j in range(n - 1, -1, -1):
+                @parameter
+                def trmm_rn_upper(j: Int):
                     var bj = b + j * ldb
                     var temp: Scalar[dtype] = alpha
                     if no_unit:
@@ -179,10 +194,10 @@ def trmm[
                         bj.store[width=width](i, temp * bj.load[width=width](i))
 
                     vectorize[simd_width](m, scale_bj_u)
-                    for k in range(j):
-                        if a[k + j * lda] != 0:
-                            temp = alpha * a[k + j * lda]
-                            var bk = b + k * ldb
+                    for kk in range(j):
+                        if a[kk + j * lda] != 0:
+                            temp = alpha * a[kk + j * lda]
+                            var bk = b + kk * ldb
 
                             @parameter
                             def axpy_ru[width: Int](i: Int) unified {mut bj, read bk, read temp}:
@@ -191,8 +206,12 @@ def trmm[
                                 )
 
                             vectorize[simd_width](m, axpy_ru)
+                # upper no-trans: j iterates n-1 down to 0 (sequential dep) — skip parallelize
+                for j in range(n - 1, -1, -1):
+                    trmm_rn_upper(j)
             else:
-                for j in range(n):
+                @parameter
+                def trmm_rn_lower(j: Int):
                     var bj = b + j * ldb
                     var temp: Scalar[dtype] = alpha
                     if no_unit:
@@ -203,10 +222,10 @@ def trmm[
                         bj.store[width=width](i, temp * bj.load[width=width](i))
 
                     vectorize[simd_width](m, scale_bj_l)
-                    for k in range(j + 1, n):
-                        if a[k + j * lda] != 0:
-                            temp = alpha * a[k + j * lda]
-                            var bk = b + k * ldb
+                    for kk in range(j + 1, n):
+                        if a[kk + j * lda] != 0:
+                            temp = alpha * a[kk + j * lda]
+                            var bk = b + kk * ldb
 
                             @parameter
                             def axpy_rl[width: Int](i: Int) unified {mut bj, read bk, read temp}:
@@ -215,6 +234,9 @@ def trmm[
                                 )
 
                             vectorize[simd_width](m, axpy_rl)
+                # lower no-trans: j iterates 0..n-1 forward (sequential dep) — skip parallelize
+                for j in range(n):
+                    trmm_rn_lower(j)
         else:
             if upper:
                 for k in range(n):
