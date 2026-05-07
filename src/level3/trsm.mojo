@@ -147,28 +147,43 @@ def trsm[
 
                             vectorize[simd_width](m - l - 1, axpy_ll)
         else:
-            # Trans left: sequential dot — scalar inner l loop
+            # Trans left: U^T*X=B forward sub, L^T*X=B backward sub
             if upper:
+                # U^T[i,l] = U[l,i] = a[l + i*lda]; forward i=0..m-1, deps on l<i
                 for j in range(n):
                     var bj = b + j * ldb
                     for i in range(m):
+                        for l in range(i):
+                            bj[i] = bj[i] - a[l + i * lda] * bj[l]
                         if no_unit:
                             bj[i] = bj[i] / a[i + i * lda]
-                        for l in range(i + 1, m):
-                            bj[i] = bj[i] - a[i + l * lda] * bj[l]
             else:
+                # L^T[i,l] = L[l,i] = a[l + i*lda]; backward i=m-1..0, deps on l>i
                 for j in range(n):
                     var bj = b + j * ldb
                     for i in range(m - 1, -1, -1):
+                        for l in range(i + 1, m):
+                            bj[i] = bj[i] - a[l + i * lda] * bj[l]
                         if no_unit:
                             bj[i] = bj[i] / a[i + i * lda]
-                        for l in range(i):
-                            bj[i] = bj[i] - a[i + l * lda] * bj[l]
     else:
         if no_trans:
             if upper:
+                # X*U=B: x_j = (b_j - sum_{l<j} X[:,l]*U[l,j]) / U[j,j], forward j
+                # U[l,j] = a[l + j*lda]
                 for j in range(n):
                     var bj = b + j * ldb
+                    for l in range(j):
+                        var bl = b + l * ldb
+                        var alj: Scalar[dtype] = a[l + j * lda]
+
+                        @parameter
+                        def axpy_ru[width: Int](i: Int) unified {mut bj, read bl, read alj}:
+                            bj.store[width=width](
+                                i, bj.load[width=width](i) - alj * bl.load[width=width](i)
+                            )
+
+                        vectorize[simd_width](m, axpy_ru)
                     if no_unit:
                         var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
 
@@ -177,20 +192,22 @@ def trsm[
                             bj.store[width=width](i, bj.load[width=width](i) * inv_diag)
 
                         vectorize[simd_width](m, scale_u)
-                    for l in range(j + 1, n):
-                        var bl = b + l * ldb
-                        var ajl: Scalar[dtype] = a[j + l * lda]
-
-                        @parameter
-                        def axpy_ru[width: Int](i: Int) unified {mut bj, read bl, read ajl}:
-                            bj.store[width=width](
-                                i, bj.load[width=width](i) - ajl * bl.load[width=width](i)
-                            )
-
-                        vectorize[simd_width](m, axpy_ru)
             else:
+                # X*L=B: x_j = (b_j - sum_{l>j} X[:,l]*L[l,j]) / L[j,j], backward j
+                # L[l,j] = a[l + j*lda]
                 for j in range(n - 1, -1, -1):
                     var bj = b + j * ldb
+                    for l in range(j + 1, n):
+                        var bl = b + l * ldb
+                        var alj: Scalar[dtype] = a[l + j * lda]
+
+                        @parameter
+                        def axpy_rl[width: Int](i: Int) unified {mut bj, read bl, read alj}:
+                            bj.store[width=width](
+                                i, bj.load[width=width](i) - alj * bl.load[width=width](i)
+                            )
+
+                        vectorize[simd_width](m, axpy_rl)
                     if no_unit:
                         var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
 
@@ -199,20 +216,10 @@ def trsm[
                             bj.store[width=width](i, bj.load[width=width](i) * inv_diag)
 
                         vectorize[simd_width](m, scale_l)
-                    for l in range(j):
-                        var bl = b + l * ldb
-                        var ajl: Scalar[dtype] = a[j + l * lda]
-
-                        @parameter
-                        def axpy_rl[width: Int](i: Int) unified {mut bj, read bl, read ajl}:
-                            bj.store[width=width](
-                                i, bj.load[width=width](i) - ajl * bl.load[width=width](i)
-                            )
-
-                        vectorize[simd_width](m, axpy_rl)
         else:
             if upper:
-                for j in range(n - 1, -1, -1):
+                # X*U^T=B: x_j depends on l<j (left-to-right)
+                for j in range(n):
                     var bj = b + j * ldb
                     for l in range(j):
                         var bl = b + l * ldb
@@ -234,7 +241,8 @@ def trsm[
 
                         vectorize[simd_width](m, scale_rtu)
             else:
-                for j in range(n):
+                # X*L^T=B: x_j depends on l>j (right-to-left)
+                for j in range(n - 1, -1, -1):
                     var bj = b + j * ldb
                     for l in range(j + 1, n):
                         var bl = b + l * ldb
