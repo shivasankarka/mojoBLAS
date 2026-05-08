@@ -10,7 +10,6 @@
 """
 Vector Scale Operations (`level1.scal`)
 ============================================
-
 Provides vector scale operations as defined in the BLAS library standard.
 """
 
@@ -40,8 +39,7 @@ def scal[
     comptime simd_width: Int = simd_width_of[dtype]()
     if incx == 1:
 
-        @parameter
-        def closure[width: Int](i: Int) unified {mut dx, read alpha}:
+        def closure[width: Int](i: Int) {dx, alpha}:
             dx.store[width=width](i, alpha * dx.load[width=width](i))
 
         vectorize[simd_width](n, closure)

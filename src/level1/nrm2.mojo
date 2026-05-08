@@ -10,7 +10,6 @@
 """
 Euclidean Norm Operations (`level1.nrm2`)
 ============================================
-
 Provides Euclidean norm operations as defined in the BLAS library standard.
 """
 
@@ -47,8 +46,7 @@ def nrm2[
 
     if incx == 1:
 
-        @parameter
-        def closure[width: Int](i: Int) unified {mut result, read x}:
+        def closure[width: Int](i: Int) {mut result, x}:
             result += (
                 x.load[width=width](i) * x.load[width=width](i)
             ).reduce_add()

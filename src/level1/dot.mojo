@@ -10,7 +10,6 @@
 """
 Dot Product Operations (`level1.dot`)
 ============================================
-
 Provides dot product operations as defined in the BLAS library standard.
 """
 
@@ -60,8 +59,7 @@ def dot[
     comptime simd_width: Int = simd_width_of[dtype]()
     if incx == 1 and incy == 1:
 
-        @parameter
-        def closure[width: Int](i: Int) unified {mut result, read dx, read dy}:
+        def closure[width: Int](i: Int) {mut result, dx, dy}:
             result += (
                 dx.load[width=width](i) * dy.load[width=width](i)
             ).reduce_add()

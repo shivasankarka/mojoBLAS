@@ -14,6 +14,9 @@ Symmetric Rank-2 Operations (`level2.syr2`)
 Provides symmetric rank-2 operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
+
 
 def syr2[
     mut_x: Bool,
@@ -85,16 +88,27 @@ def syr2[
 
     var upper = uplo == "U" or uplo == "u"
 
+    comptime simd_width: Int = simd_width_of[dtype]()
+
     if upper:
         if incx == 1 and incy == 1:
             for j in range(n):
                 if x[j] != 0 or y[j] != 0:
                     var temp1: Scalar[dtype] = alpha * y[j]
                     var temp2: Scalar[dtype] = alpha * x[j]
-                    for i in range(j + 1):
-                        a[i + j * lda] = (
-                            a[i + j * lda] + x[i] * temp1 + y[i] * temp2
+                    var aj = a + j * lda
+
+                    def rank2_upper[
+                        width: Int
+                    ](i: Int) {aj, x, y, temp1, temp2}:
+                        aj.store[width=width](
+                            i,
+                            aj.load[width=width](i)
+                            + x.load[width=width](i) * temp1
+                            + y.load[width=width](i) * temp2,
                         )
+
+                    vectorize[simd_width](j + 1, rank2_upper)
         else:
             var jx: Int = kx
             var jy: Int = ky
@@ -120,10 +134,20 @@ def syr2[
                 if x[j] != 0 or y[j] != 0:
                     var temp1: Scalar[dtype] = alpha * y[j]
                     var temp2: Scalar[dtype] = alpha * x[j]
-                    for i in range(j, n):
-                        a[i + j * lda] = (
-                            a[i + j * lda] + x[i] * temp1 + y[i] * temp2
+                    var aj = a + j * lda
+
+                    def rank2_lower[
+                        width: Int
+                    ](i: Int) {aj, x, y, temp1, temp2, j}:
+                        var ii = j + i
+                        aj.store[width=width](
+                            ii,
+                            aj.load[width=width](ii)
+                            + x.load[width=width](ii) * temp1
+                            + y.load[width=width](ii) * temp2,
                         )
+
+                    vectorize[simd_width](n - j, rank2_lower)
         else:
             var jx: Int = kx
             var jy: Int = ky

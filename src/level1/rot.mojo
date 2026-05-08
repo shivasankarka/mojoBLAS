@@ -10,7 +10,6 @@
 """
 Plane Rotation Operations (`level1.rot`)
 ============================================
-
 Provides plane rotation operations as defined in the BLAS library standard.
 """
 
@@ -59,8 +58,7 @@ def rot[
 
     if incx == 1 and incy == 1:
 
-        @parameter
-        def closure[width: Int](i: Int) unified {mut y, read x, read c, read s}:
+        def closure[width: Int](i: Int) {y, x, c, s}:
             var temp_x = c * x.load[width=width](i) + s * y.load[width=width](i)
             var temp_y = -s * x.load[width=width](i) + c * y.load[width=width](
                 i

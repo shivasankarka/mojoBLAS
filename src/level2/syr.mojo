@@ -14,6 +14,9 @@ Symmetric Rank-1 Operations (`level2.syr`)
 Provides symmetric rank-1 operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
+
 
 def syr[
     mut_x: Bool,
@@ -66,6 +69,7 @@ def syr[
     if n == 0 or alpha == 0:
         return
 
+    comptime simd_width: Int = simd_width_of[dtype]()
     var kx: Int = 1
     if incx < 0:
         kx = 1 - (n - 1) * incx
@@ -77,8 +81,16 @@ def syr[
             for j in range(n):
                 if x[j] != 0:
                     var temp: Scalar[dtype] = alpha * x[j]
-                    for i in range(j + 1):
-                        a[i + j * lda] = a[i + j * lda] + x[i] * temp
+                    var aj = a + j * lda
+
+                    def axpy_upper[width: Int](i: Int) {aj, x, temp}:
+                        aj.store[width=width](
+                            i,
+                            aj.load[width=width](i)
+                            + x.load[width=width](i) * temp,
+                        )
+
+                    vectorize[simd_width](j + 1, axpy_upper)
         else:
             var jx: Int = kx
             for j in range(n):
@@ -94,8 +106,17 @@ def syr[
             for j in range(n):
                 if x[j] != 0:
                     var temp: Scalar[dtype] = alpha * x[j]
-                    for i in range(j, n):
-                        a[i + j * lda] = a[i + j * lda] + x[i] * temp
+                    var aj = a + j * lda
+
+                    def axpy_lower[width: Int](i: Int) {aj, x, temp, j}:
+                        var ii = j + i
+                        aj.store[width=width](
+                            ii,
+                            aj.load[width=width](ii)
+                            + x.load[width=width](ii) * temp,
+                        )
+
+                    vectorize[simd_width](n - j, axpy_lower)
         else:
             var jx: Int = kx
             for j in range(n):

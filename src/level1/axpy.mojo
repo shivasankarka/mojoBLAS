@@ -52,8 +52,7 @@ def axpy[
     comptime simd_width: Int = simd_width_of[dtype]()
     if incx == 1 and incy == 1:
 
-        @parameter
-        def closure[width: Int](i: Int) unified {mut dy, read dx, read da}:
+        def closure[width: Int](i: Int) {dy, dx, da}:
             dy.store[width=width](
                 i, da * dx.load[width=width](i) + dy.load[width=width](i)
             )

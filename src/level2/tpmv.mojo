@@ -81,6 +81,54 @@ def tpmv[
     var upper = uplo == "U" or uplo == "u"
     var no_trans = trans == "N" or trans == "n"
 
+    # Fast path for contiguous vectors using direct packed indexing.
+    if incx == 1:
+        var x_in = alloc[Scalar[dtype]](n)
+        var x_out = alloc[Scalar[dtype]](n)
+        for i in range(n):
+            x_in[i] = x[i]
+
+        if no_trans:
+            for i in range(n):
+                var sum: Scalar[dtype] = 0
+                if upper:
+                    for j in range(i, n):
+                        var aij: Scalar[dtype] = 1 if (
+                            i == j and not no_unit
+                        ) else ap[(j * (j + 1)) // 2 + i]
+                        sum = sum + aij * x_in[j]
+                else:
+                    for j in range(i + 1):
+                        var start = j * n - (j * (j - 1)) // 2
+                        var aij: Scalar[dtype] = 1 if (
+                            i == j and not no_unit
+                        ) else ap[start + (i - j)]
+                        sum = sum + aij * x_in[j]
+                x_out[i] = sum
+        else:
+            for i in range(n):
+                var sum: Scalar[dtype] = 0
+                if upper:
+                    for j in range(i + 1):
+                        var aji: Scalar[dtype] = 1 if (
+                            i == j and not no_unit
+                        ) else ap[(i * (i + 1)) // 2 + j]
+                        sum = sum + aji * x_in[j]
+                else:
+                    for j in range(i, n):
+                        var start = i * n - (i * (i - 1)) // 2
+                        var aji: Scalar[dtype] = 1 if (
+                            i == j and not no_unit
+                        ) else ap[start + (j - i)]
+                        sum = sum + aji * x_in[j]
+                x_out[i] = sum
+
+        for i in range(n):
+            x[i] = x_out[i]
+        x_in.free()
+        x_out.free()
+        return
+
     var x_in = alloc[Scalar[dtype]](n)
     var x_out = alloc[Scalar[dtype]](n)
 
@@ -90,8 +138,9 @@ def tpmv[
         x_in[i] = x[ix]
         ix += incx
 
-    @parameter
-    def a_at(i: Int, j: Int) -> Scalar[dtype]:
+    def a_at(
+        i: Int, j: Int
+    ) {read no_unit, read upper, read ap, read n} -> Scalar[dtype]:
         if i == j and not no_unit:
             return 1
         if upper:

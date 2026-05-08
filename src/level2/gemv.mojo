@@ -10,14 +10,13 @@
 """
 General Matrix-Vector Operations (`level2.gemv`)
 =============================================
-
 Provides general matrix-vector operations as defined in the BLAS library standard.
 
 This module implements the gemv operation for matrix-vector multiplication
 with support for various transpositions and scaling factors.
 """
 
-from std.algorithm.functional import vectorize
+from std.algorithm.functional import vectorize, parallelize
 from std.sys.info import simd_width_of
 
 # NOTE: I think we could so much optimization here if we promote a lot of these arguments into
@@ -115,8 +114,7 @@ def gemv[
                     y[i] = 0
             else:
 
-                @parameter
-                def closure[width: Int](i: Int) unified {mut y, read beta}:
+                def closure[width: Int](i: Int) {y, beta}:
                     y.store[width=width](i, beta * y.load[width=width](i))
 
                 vectorize[simd_width](leny, closure)
@@ -133,40 +131,86 @@ def gemv[
     if alpha == 0:
         return
 
-    # NOTE: might be parallizable
-    if trans == "N":
+    var no_trans = trans == "N"
+
+    if no_trans:
         var jx: Int = kx
-        if incy == 1:
+        if incx == 1 and incy == 1:
+            # Fast path: both vectors contiguous — vectorize the inner column axpy
             for j in range(n):
-                var temp: Scalar[dtype] = alpha * x[jx - 1]
-                for i in range(m):
-                    y[i] = y[i] + temp * a[i + j * lda]
+                var xj = x[j]
+                if xj != 0:
+                    var temp: Scalar[dtype] = alpha * xj
+                    var aj = a + j * lda
+
+                    def axpy_col[width: Int](i: Int) {y, aj, temp}:
+                        y.store[width=width](
+                            i,
+                            y.load[width=width](i)
+                            + temp * aj.load[width=width](i),
+                        )
+
+                    vectorize[simd_width](m, axpy_col)
+        elif incy == 1:
+            for j in range(n):
+                var xj = x[jx - 1]
+                if xj != 0:
+                    var temp: Scalar[dtype] = alpha * xj
+                    var aj = a + j * lda
+
+                    def axpy_col_sx[width: Int](i: Int) {y, aj, temp}:
+                        y.store[width=width](
+                            i,
+                            y.load[width=width](i)
+                            + temp * aj.load[width=width](i),
+                        )
+
+                    vectorize[simd_width](m, axpy_col_sx)
                 jx += incx
         else:
             for j in range(n):
-                var temp: Scalar[dtype] = alpha * x[jx - 1]
-                var iy: Int = ky
-                for i in range(m):
-                    y[iy - 1] = y[iy - 1] + temp * a[i + j * lda]
-                    iy += incy
+                var xj = x[jx - 1]
+                if xj != 0:
+                    var temp: Scalar[dtype] = alpha * xj
+                    var iy: Int = ky
+                    for i in range(m):
+                        y[iy - 1] = y[iy - 1] + temp * a[i + j * lda]
+                        iy += incy
                 jx += incx
     else:
-        var jy: Int = ky
+        comptime PAR_THRESHOLD: Int = 256
         if incx == 1:
-            for j in range(n):
+            # Trans + contiguous x: each j writes to independent y[ky-1 + j*incy] — safe to parallelize
+            @parameter
+            def gemv_trans_col(j: Int):
                 var temp: Scalar[dtype] = 0
-                for i in range(m):
-                    temp = temp + a[i + j * lda] * x[i]
-                y[jy - 1] = y[jy - 1] + alpha * temp
-                jy += incy
+                var aj = a + j * lda
+
+                def dot_col[width: Int](i: Int) {mut temp, aj, x}:
+                    temp += (
+                        aj.load[width=width](i) * x.load[width=width](i)
+                    ).reduce_add()
+
+                vectorize[simd_width](m, dot_col)
+                if temp != 0:
+                    var jy_idx = ky - 1 + j * incy
+                    y[jy_idx] = y[jy_idx] + alpha * temp
+
+            if n >= PAR_THRESHOLD:
+                parallelize[gemv_trans_col](n)
+            else:
+                for j in range(n):
+                    gemv_trans_col(j)
         else:
+            var jy: Int = ky
             for j in range(n):
                 var temp: Scalar[dtype] = 0
                 var ix: Int = kx
                 for i in range(m):
                     temp = temp + a[i + j * lda] * x[ix - 1]
                     ix += incx
-                y[jy - 1] = y[jy - 1] + alpha * temp
+                if temp != 0:
+                    y[jy - 1] = y[jy - 1] + alpha * temp
                 jy += incy
 
     return

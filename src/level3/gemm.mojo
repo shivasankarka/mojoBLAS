@@ -14,6 +14,9 @@ General Matrix-Matrix Operations (`level3.gemm`)
 Provides general matrix-matrix operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize, parallelize
+from std.sys.info import simd_width_of
+
 
 def gemm[
     mut_a: Bool,
@@ -104,81 +107,164 @@ def gemm[
     if m == 0 or n == 0:
         return
 
+    comptime simd_width: Int = simd_width_of[dtype]()
+
     if alpha == 0 or k == 0:
         if beta == 0:
             for j in range(n):
-                for i in range(m):
-                    c[i + j * ldc] = 0
+                var cj = c + j * ldc
+
+                def zero_col[width: Int](i: Int) {cj}:
+                    cj.store[width=width](i, SIMD[dtype, width](0))
+
+                vectorize[simd_width](m, zero_col)
         elif beta != 1:
             for j in range(n):
-                for i in range(m):
-                    c[i + j * ldc] = beta * c[i + j * ldc]
+                var cj = c + j * ldc
+
+                def scale_col[width: Int](i: Int) {cj, beta}:
+                    cj.store[width=width](i, beta * cj.load[width=width](i))
+
+                vectorize[simd_width](m, scale_col)
         return
 
     var no_trans_a = trans_a == "N" or trans_a == "n"
     var no_trans_b = trans_b == "N" or trans_b == "n"
 
+    # Threshold: only parallelize outer-j if n is large enough to amortize thread cost
+    comptime PAR_THRESHOLD: Int = 64
+
     if no_trans_a:
         if no_trans_b:
-            for j in range(n):
+            # C += alpha * A * B  (both col-major, each column j independent)
+            @parameter
+            def gemm_nn_col(j: Int):
+                var cj = c + j * ldc
                 if beta == 0:
-                    for i in range(m):
-                        c[i + j * ldc] = 0
+
+                    def zero_nn[width: Int](i: Int) {cj}:
+                        cj.store[width=width](i, SIMD[dtype, width](0))
+
+                    vectorize[simd_width](m, zero_nn)
                 elif beta != 1:
-                    for i in range(m):
-                        c[i + j * ldc] = beta * c[i + j * ldc]
+
+                    def scale_nn[width: Int](i: Int) {cj, beta}:
+                        cj.store[width=width](i, beta * cj.load[width=width](i))
+
+                    vectorize[simd_width](m, scale_nn)
                 for l in range(k):
                     if b[l + j * ldb] != 0:
                         var temp: Scalar[dtype] = alpha * b[l + j * ldb]
-                        for i in range(m):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp * a[i + l * lda]
+                        var al = a + l * lda
+
+                        def axpy_nn[width: Int](i: Int) {cj, al, temp}:
+                            cj.store[width=width](
+                                i,
+                                cj.load[width=width](i)
+                                + temp * al.load[width=width](i),
                             )
+
+                        vectorize[simd_width](m, axpy_nn)
+
+            if n >= PAR_THRESHOLD:
+                parallelize[gemm_nn_col](n)
+            else:
+                for j in range(n):
+                    gemm_nn_col(j)
         else:
-            for j in range(n):
+            # C += alpha * A * B^T
+            @parameter
+            def gemm_nt_col(j: Int):
+                var cj = c + j * ldc
                 if beta == 0:
-                    for i in range(m):
-                        c[i + j * ldc] = 0
+
+                    def zero_nt[width: Int](i: Int) {cj}:
+                        cj.store[width=width](i, SIMD[dtype, width](0))
+
+                    vectorize[simd_width](m, zero_nt)
                 elif beta != 1:
-                    for i in range(m):
-                        c[i + j * ldc] = beta * c[i + j * ldc]
+
+                    def scale_nt[width: Int](i: Int) {cj, beta}:
+                        cj.store[width=width](i, beta * cj.load[width=width](i))
+
+                    vectorize[simd_width](m, scale_nt)
                 for l in range(k):
                     if b[j + l * ldb] != 0:
                         var temp: Scalar[dtype] = alpha * b[j + l * ldb]
-                        for i in range(m):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp * a[i + l * lda]
+                        var al = a + l * lda
+
+                        def axpy_nt[width: Int](i: Int) {cj, al, temp}:
+                            cj.store[width=width](
+                                i,
+                                cj.load[width=width](i)
+                                + temp * al.load[width=width](i),
                             )
+
+                        vectorize[simd_width](m, axpy_nt)
+
+            if n >= PAR_THRESHOLD:
+                parallelize[gemm_nt_col](n)
+            else:
+                for j in range(n):
+                    gemm_nt_col(j)
     else:
         if no_trans_b:
-            for j in range(n):
+            # C += alpha * A^T * B  — A rows non-contiguous (stride lda), scalar inner
+            @parameter
+            def gemm_tn_col(j: Int):
+                var cj = c + j * ldc
                 if beta == 0:
-                    for i in range(m):
-                        c[i + j * ldc] = 0
+
+                    def zero_tn[width: Int](i: Int) {cj}:
+                        cj.store[width=width](i, SIMD[dtype, width](0))
+
+                    vectorize[simd_width](m, zero_tn)
                 elif beta != 1:
-                    for i in range(m):
-                        c[i + j * ldc] = beta * c[i + j * ldc]
+
+                    def scale_tn[width: Int](i: Int) {cj, beta}:
+                        cj.store[width=width](i, beta * cj.load[width=width](i))
+
+                    vectorize[simd_width](m, scale_tn)
                 for l in range(k):
                     if b[l + j * ldb] != 0:
                         var temp: Scalar[dtype] = alpha * b[l + j * ldb]
+                        var al = a + l
                         for i in range(m):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp * a[l + i * lda]
-                            )
+                            cj[i] = cj[i] + temp * al[i * lda]
+
+            if n >= PAR_THRESHOLD:
+                parallelize[gemm_tn_col](n)
+            else:
+                for j in range(n):
+                    gemm_tn_col(j)
         else:
-            for j in range(n):
+            # C += alpha * A^T * B^T
+            @parameter
+            def gemm_tt_col(j: Int):
+                var cj = c + j * ldc
                 if beta == 0:
-                    for i in range(m):
-                        c[i + j * ldc] = 0
+
+                    def zero_tt[width: Int](i: Int) {cj}:
+                        cj.store[width=width](i, SIMD[dtype, width](0))
+
+                    vectorize[simd_width](m, zero_tt)
                 elif beta != 1:
-                    for i in range(m):
-                        c[i + j * ldc] = beta * c[i + j * ldc]
+
+                    def scale_tt[width: Int](i: Int) {cj, beta}:
+                        cj.store[width=width](i, beta * cj.load[width=width](i))
+
+                    vectorize[simd_width](m, scale_tt)
                 for l in range(k):
                     if b[j + l * ldb] != 0:
                         var temp: Scalar[dtype] = alpha * b[j + l * ldb]
+                        var al = a + l
                         for i in range(m):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc] + temp * a[l + i * lda]
-                            )
+                            cj[i] = cj[i] + temp * al[i * lda]
+
+            if n >= PAR_THRESHOLD:
+                parallelize[gemm_tt_col](n)
+            else:
+                for j in range(n):
+                    gemm_tt_col(j)
 
     return

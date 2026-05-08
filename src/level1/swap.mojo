@@ -10,7 +10,6 @@
 """
 Vector Swap Operations (`level1.swap`)
 ============================================
-
 Provides vector swap operations as defined in the BLAS library standard.
 """
 
@@ -49,8 +48,7 @@ def vswap[
     comptime simd_width: Int = simd_width_of[dtype]()
     if incx == 1 and incy == 1:
 
-        @parameter
-        def closure[width: Int](i: Int) unified {mut dx, mut dy}:
+        def closure[width: Int](i: Int) {dx, dy}:
             var temp = dx.load[width=width](i)
             dx.store[width=width](i, dy.load[width=width](i))
             dy.store[width=width](i, temp)

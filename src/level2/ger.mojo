@@ -14,6 +14,9 @@ General Rank-1 Update (`level2.ger`)
 Provides general rank-1 update operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize, parallelize
+from std.sys.info import simd_width_of
+
 
 def ger[
     mut_x: Bool,
@@ -84,12 +87,46 @@ def ger[
     if incy < 0:
         ky = 1 - (n - 1) * incy
 
-    if incy == 1:
-        for j in range(n):
+    comptime simd_width: Int = simd_width_of[dtype]()
+    comptime PAR_THRESHOLD: Int = 256
+
+    if incx == 1 and incy == 1:
+        # Both contiguous — vectorized column axpy, each j independent → parallelize
+        @parameter
+        def ger_col(j: Int):
             if y[j] != 0:
                 var temp: Scalar[dtype] = alpha * y[j]
+                var aj = a + j * lda
+
+                def axpy_col[width: Int](i: Int) {mut aj, x, temp}:
+                    aj.store[width=width](
+                        i,
+                        aj.load[width=width](i) + x.load[width=width](i) * temp,
+                    )
+
+                vectorize[simd_width](m, axpy_col)
+
+        if n >= PAR_THRESHOLD:
+            parallelize[ger_col](n)
+        else:
+            for j in range(n):
+                ger_col(j)
+    elif incy == 1:
+        # y contiguous, x strided — scalar inner loop, j independent → parallelize
+        @parameter
+        def ger_col_sx(j: Int):
+            if y[j] != 0:
+                var temp: Scalar[dtype] = alpha * y[j]
+                var ix: Int = kx
                 for i in range(m):
-                    a[i + j * lda] = a[i + j * lda] + x[i] * temp
+                    a[i + j * lda] = a[i + j * lda] + x[ix - 1] * temp
+                    ix += incx
+
+        if n >= PAR_THRESHOLD:
+            parallelize[ger_col_sx](n)
+        else:
+            for j in range(n):
+                ger_col_sx(j)
     else:
         var jy: Int = ky
         for j in range(n):

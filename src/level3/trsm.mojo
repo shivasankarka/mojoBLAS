@@ -14,6 +14,9 @@ Triangular Solve Operations (`level3.trsm`)
 Provides triangular solve operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
+
 
 def trsm[
     mut_a: Bool,
@@ -89,10 +92,16 @@ def trsm[
     if m == 0 or n == 0:
         return
 
+    comptime simd_width: Int = simd_width_of[dtype]()
+
     if alpha != 1:
         for j in range(n):
-            for i in range(m):
-                b[i + j * ldb] = alpha * b[i + j * ldb]
+            var bj = b + j * ldb
+
+            def scale_init[width: Int](i: Int) {bj, alpha}:
+                bj.store[width=width](i, alpha * bj.load[width=width](i))
+
+            vectorize[simd_width](m, scale_init)
 
     var left_side = side == "L" or side == "l"
     var upper = uplo == "U" or uplo == "u"
@@ -103,87 +112,165 @@ def trsm[
         if no_trans:
             if upper:
                 for j in range(n):
+                    var bj = b + j * ldb
                     for l in range(m - 1, -1, -1):
-                        if b[l + j * ldb] != 0:
+                        if bj[l] != 0:
                             if no_unit:
-                                b[l + j * ldb] = b[l + j * ldb] / a[l + l * lda]
-                            for i in range(l):
-                                b[i + j * ldb] = (
-                                    b[i + j * ldb]
-                                    - b[l + j * ldb] * a[i + l * lda]
+                                bj[l] = bj[l] / a[l + l * lda]
+                            var pivot: Scalar[dtype] = bj[l]
+                            var al = a + l * lda
+
+                            def axpy_lu[width: Int](i: Int) {bj, al, pivot}:
+                                bj.store[width=width](
+                                    i,
+                                    bj.load[width=width](i)
+                                    - pivot * al.load[width=width](i),
                                 )
+
+                            vectorize[simd_width](l, axpy_lu)
             else:
                 for j in range(n):
+                    var bj = b + j * ldb
                     for l in range(m):
-                        if b[l + j * ldb] != 0:
+                        if bj[l] != 0:
                             if no_unit:
-                                b[l + j * ldb] = b[l + j * ldb] / a[l + l * lda]
-                            for i in range(l + 1, m):
-                                b[i + j * ldb] = (
-                                    b[i + j * ldb]
-                                    - b[l + j * ldb] * a[i + l * lda]
+                                bj[l] = bj[l] / a[l + l * lda]
+                            var pivot: Scalar[dtype] = bj[l]
+                            var al = a + l * lda
+
+                            def axpy_ll[width: Int](i: Int) {bj, al, pivot, l}:
+                                var ii = l + 1 + i
+                                bj.store[width=width](
+                                    ii,
+                                    bj.load[width=width](ii)
+                                    - pivot * al.load[width=width](ii),
                                 )
+
+                            vectorize[simd_width](m - l - 1, axpy_ll)
         else:
+            # Trans left: U^T*X=B forward sub, L^T*X=B backward sub
             if upper:
+                # U^T[i,l] = U[l,i] = a[l + i*lda]; forward i=0..m-1, deps on l<i
                 for j in range(n):
+                    var bj = b + j * ldb
                     for i in range(m):
-                        if no_unit:
-                            b[i + j * ldb] = b[i + j * ldb] / a[i + i * lda]
-                        for l in range(i + 1, m):
-                            b[i + j * ldb] = (
-                                b[i + j * ldb] - a[i + l * lda] * b[l + j * ldb]
-                            )
-            else:
-                for j in range(n):
-                    for i in range(m - 1, -1, -1):
-                        if no_unit:
-                            b[i + j * ldb] = b[i + j * ldb] / a[i + i * lda]
                         for l in range(i):
-                            b[i + j * ldb] = (
-                                b[i + j * ldb] - a[i + l * lda] * b[l + j * ldb]
-                            )
+                            bj[i] = bj[i] - a[l + i * lda] * bj[l]
+                        if no_unit:
+                            bj[i] = bj[i] / a[i + i * lda]
+            else:
+                # L^T[i,l] = L[l,i] = a[l + i*lda]; backward i=m-1..0, deps on l>i
+                for j in range(n):
+                    var bj = b + j * ldb
+                    for i in range(m - 1, -1, -1):
+                        for l in range(i + 1, m):
+                            bj[i] = bj[i] - a[l + i * lda] * bj[l]
+                        if no_unit:
+                            bj[i] = bj[i] / a[i + i * lda]
     else:
         if no_trans:
             if upper:
+                # X*U=B: x_j = (b_j - sum_{l<j} X[:,l]*U[l,j]) / U[j,j], forward j
+                # U[l,j] = a[l + j*lda]
                 for j in range(n):
-                    if no_unit:
-                        for i in range(m):
-                            b[i + j * ldb] = b[i + j * ldb] / a[j + j * lda]
-                    for l in range(j + 1, n):
-                        for i in range(m):
-                            b[i + j * ldb] = (
-                                b[i + j * ldb] - a[j + l * lda] * b[i + l * ldb]
-                            )
-            else:
-                for j in range(n - 1, -1, -1):
-                    if no_unit:
-                        for i in range(m):
-                            b[i + j * ldb] = b[i + j * ldb] / a[j + j * lda]
+                    var bj = b + j * ldb
                     for l in range(j):
-                        for i in range(m):
-                            b[i + j * ldb] = (
-                                b[i + j * ldb] - a[j + l * lda] * b[i + l * ldb]
+                        var bl = b + l * ldb
+                        var alj: Scalar[dtype] = a[l + j * lda]
+
+                        def axpy_ru[width: Int](i: Int) {bj, bl, alj}:
+                            bj.store[width=width](
+                                i,
+                                bj.load[width=width](i)
+                                - alj * bl.load[width=width](i),
                             )
+
+                        vectorize[simd_width](m, axpy_ru)
+                    if no_unit:
+                        var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
+
+                        def scale_u[width: Int](i: Int) {bj, inv_diag}:
+                            bj.store[width=width](
+                                i, bj.load[width=width](i) * inv_diag
+                            )
+
+                        vectorize[simd_width](m, scale_u)
+            else:
+                # X*L=B: x_j = (b_j - sum_{l>j} X[:,l]*L[l,j]) / L[j,j], backward j
+                # L[l,j] = a[l + j*lda]
+                for j in range(n - 1, -1, -1):
+                    var bj = b + j * ldb
+                    for l in range(j + 1, n):
+                        var bl = b + l * ldb
+                        var alj: Scalar[dtype] = a[l + j * lda]
+
+                        def axpy_rl[width: Int](i: Int) {bj, bl, alj}:
+                            bj.store[width=width](
+                                i,
+                                bj.load[width=width](i)
+                                - alj * bl.load[width=width](i),
+                            )
+
+                        vectorize[simd_width](m, axpy_rl)
+                    if no_unit:
+                        var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
+
+                        def scale_l[width: Int](i: Int) {bj, inv_diag}:
+                            bj.store[width=width](
+                                i, bj.load[width=width](i) * inv_diag
+                            )
+
+                        vectorize[simd_width](m, scale_l)
         else:
             if upper:
-                for j in range(n - 1, -1, -1):
-                    for l in range(j):
-                        for i in range(m):
-                            b[i + j * ldb] = (
-                                b[i + j * ldb] - a[l + j * lda] * b[i + l * ldb]
-                            )
-                    if no_unit:
-                        for i in range(m):
-                            b[i + j * ldb] = b[i + j * ldb] / a[j + j * lda]
-            else:
+                # X*U^T=B: x_j depends on l<j (left-to-right)
                 for j in range(n):
-                    for l in range(j + 1, n):
-                        for i in range(m):
-                            b[i + j * ldb] = (
-                                b[i + j * ldb] - a[l + j * lda] * b[i + l * ldb]
+                    var bj = b + j * ldb
+                    for l in range(j):
+                        var bl = b + l * ldb
+                        var alj: Scalar[dtype] = a[l + j * lda]
+
+                        def axpy_rtu[width: Int](i: Int) {bj, bl, alj}:
+                            bj.store[width=width](
+                                i,
+                                bj.load[width=width](i)
+                                - alj * bl.load[width=width](i),
                             )
+
+                        vectorize[simd_width](m, axpy_rtu)
                     if no_unit:
-                        for i in range(m):
-                            b[i + j * ldb] = b[i + j * ldb] / a[j + j * lda]
+                        var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
+
+                        def scale_rtu[width: Int](i: Int) {bj, inv_diag}:
+                            bj.store[width=width](
+                                i, bj.load[width=width](i) * inv_diag
+                            )
+
+                        vectorize[simd_width](m, scale_rtu)
+            else:
+                # X*L^T=B: x_j depends on l>j (right-to-left)
+                for j in range(n - 1, -1, -1):
+                    var bj = b + j * ldb
+                    for l in range(j + 1, n):
+                        var bl = b + l * ldb
+                        var alj: Scalar[dtype] = a[l + j * lda]
+
+                        def axpy_rtl[width: Int](i: Int) {bj, bl, alj}:
+                            bj.store[width=width](
+                                i,
+                                bj.load[width=width](i)
+                                - alj * bl.load[width=width](i),
+                            )
+
+                        vectorize[simd_width](m, axpy_rtl)
+                    if no_unit:
+                        var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
+
+                        def scale_rtl[width: Int](i: Int) {bj, inv_diag}:
+                            bj.store[width=width](
+                                i, bj.load[width=width](i) * inv_diag
+                            )
+
+                        vectorize[simd_width](m, scale_rtl)
 
     return

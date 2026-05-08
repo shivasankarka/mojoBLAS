@@ -78,6 +78,48 @@ def tpsv[
     var no_unit = diag == "N" or diag == "n"
     var upper = uplo == "U" or uplo == "u"
     var no_trans = trans == "N" or trans == "n"
+
+    # Fast path for contiguous vectors using direct packed indexing.
+    if incx == 1:
+        if no_trans:
+            if upper:
+                for i in range(n - 1, -1, -1):
+                    var sum: Scalar[dtype] = x[i]
+                    for j in range(i + 1, n):
+                        sum = sum - ap[(j * (j + 1)) // 2 + i] * x[j]
+                    if no_unit:
+                        sum = sum / ap[(i * (i + 1)) // 2 + i]
+                    x[i] = sum
+            else:
+                for i in range(n):
+                    var sum: Scalar[dtype] = x[i]
+                    for j in range(i):
+                        var start = j * n - (j * (j - 1)) // 2
+                        sum = sum - ap[start + (i - j)] * x[j]
+                    if no_unit:
+                        var start_i = i * n - (i * (i - 1)) // 2
+                        sum = sum / ap[start_i]
+                    x[i] = sum
+        else:
+            if upper:
+                for i in range(n):
+                    var sum: Scalar[dtype] = x[i]
+                    for j in range(i):
+                        sum = sum - ap[(i * (i + 1)) // 2 + j] * x[j]
+                    if no_unit:
+                        sum = sum / ap[(i * (i + 1)) // 2 + i]
+                    x[i] = sum
+            else:
+                for i in range(n - 1, -1, -1):
+                    var sum: Scalar[dtype] = x[i]
+                    var start_i = i * n - (i * (i - 1)) // 2
+                    for j in range(i + 1, n):
+                        sum = sum - ap[start_i + (j - i)] * x[j]
+                    if no_unit:
+                        sum = sum / ap[start_i]
+                    x[i] = sum
+        return
+
     var xbuf = alloc[Scalar[dtype]](n)
     var kx: Int = 0 if incx > 0 else (1 - n) * incx
     var ix: Int = kx
@@ -85,8 +127,9 @@ def tpsv[
         xbuf[i] = x[ix]
         ix += incx
 
-    @parameter
-    def a_at(i: Int, j: Int) -> Scalar[dtype]:
+    def a_at(
+        i: Int, j: Int
+    ) {read no_unit, read upper, read ap, read n} -> Scalar[dtype]:
         if i == j and not no_unit:
             return 1
         if upper:

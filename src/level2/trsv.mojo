@@ -14,6 +14,9 @@ Triangular Solve Operations (`level2.trsv`)
 Provides triangular solve operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
+
 
 def trsv[
     mut_a: Bool,
@@ -90,6 +93,8 @@ def trsv[
     if incx < 0:
         kx = 1 - (n - 1) * incx
 
+    comptime simd_width: Int = simd_width_of[dtype]()
+
     if no_trans:
         if upper:
             if incx == 1:
@@ -98,8 +103,16 @@ def trsv[
                         if no_unit:
                             x[j] = x[j] / a[j + j * lda]
                         var temp: Scalar[dtype] = x[j]
-                        for i in range(j - 1, -1, -1):
-                            x[i] = x[i] - temp * a[i + j * lda]
+                        var aj = a + j * lda
+
+                        def axpy_upper[width: Int](i: Int) {x, aj, temp}:
+                            x.store[width=width](
+                                i,
+                                x.load[width=width](i)
+                                - temp * aj.load[width=width](i),
+                            )
+
+                        vectorize[simd_width](j, axpy_upper)
             else:
                 var kx_plus: Int = kx + (n - 1) * incx
                 var jx: Int = kx_plus
@@ -120,8 +133,17 @@ def trsv[
                         if no_unit:
                             x[j] = x[j] / a[j + j * lda]
                         var temp: Scalar[dtype] = x[j]
-                        for i in range(j + 1, n):
-                            x[i] = x[i] - temp * a[i + j * lda]
+                        var aj = a + j * lda
+
+                        def axpy_lower[width: Int](i: Int) {x, aj, temp, j}:
+                            var ii = j + 1 + i
+                            x.store[width=width](
+                                ii,
+                                x.load[width=width](ii)
+                                - temp * aj.load[width=width](ii),
+                            )
+
+                        vectorize[simd_width](n - j - 1, axpy_lower)
             else:
                 var jx: Int = kx
                 for j in range(n):
@@ -135,12 +157,19 @@ def trsv[
                             x[ix - 1] = x[ix - 1] - temp * a[i + j * lda]
                     jx += incx
     else:
+        # Trans paths: sequential dot reduction — scalar (each j depends on prior)
         if upper:
             if incx == 1:
                 for j in range(n):
                     var temp: Scalar[dtype] = x[j]
-                    for i in range(j):
-                        temp = temp - a[i + j * lda] * x[i]
+                    var aj = a + j * lda
+
+                    def dot_upper[width: Int](i: Int) {mut temp, aj, x}:
+                        temp -= (
+                            aj.load[width=width](i) * x.load[width=width](i)
+                        ).reduce_add()
+
+                    vectorize[simd_width](j, dot_upper)
                     if no_unit:
                         temp = temp / a[j + j * lda]
                     x[j] = temp
@@ -160,8 +189,15 @@ def trsv[
             if incx == 1:
                 for j in range(n - 1, -1, -1):
                     var temp: Scalar[dtype] = x[j]
-                    for i in range(n - 1, j, -1):
-                        temp = temp - a[i + j * lda] * x[i]
+                    var aj = a + j * lda
+
+                    def dot_lower[width: Int](i: Int) {mut temp, aj, x, j}:
+                        var ii = j + 1 + i
+                        temp -= (
+                            aj.load[width=width](ii) * x.load[width=width](ii)
+                        ).reduce_add()
+
+                    vectorize[simd_width](n - j - 1, dot_lower)
                     if no_unit:
                         temp = temp / a[j + j * lda]
                     x[j] = temp

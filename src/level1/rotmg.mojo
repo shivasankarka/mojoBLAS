@@ -10,7 +10,6 @@
 """
 Modified Givens Rotation Constructor (`level1.rotmg`)
 ============================================
-
 Provides modified Givens rotation construction as defined in the BLAS library standard.
 """
 
@@ -39,7 +38,7 @@ def rotmg[
     var one: T = 1
     var two: T = 2
 
-    var dflag: T = -one
+    var dflag: T
     var dh11: T = 0
     var dh12: T = 0
     var dh21: T = 0

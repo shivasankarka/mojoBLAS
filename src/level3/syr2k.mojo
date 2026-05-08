@@ -14,6 +14,9 @@ Symmetric Rank-2k Operations (`level3.syr2k`)
 Provides symmetric rank-2k operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize
+from std.sys.info import simd_width_of
+
 
 def syr2k[
     mut_a: Bool,
@@ -118,32 +121,54 @@ def syr2k[
     if alpha == 0:
         return
 
+    comptime simd_width: Int = simd_width_of[dtype]()
+
     if no_trans:
         if upper:
             for j in range(n):
+                var cj = c + j * ldc
                 for l in range(k):
                     if a[j + l * lda] != 0 or b[j + l * ldb] != 0:
                         var temp1: Scalar[dtype] = alpha * a[j + l * lda]
                         var temp2: Scalar[dtype] = alpha * b[j + l * ldb]
-                        for i in range(j + 1):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc]
-                                + temp1 * b[i + l * ldb]
-                                + temp2 * a[i + l * lda]
+                        var al = a + l * lda
+                        var bl = b + l * ldb
+
+                        def rank2k_upper[
+                            width: Int
+                        ](i: Int) {cj, al, bl, temp1, temp2}:
+                            cj.store[width=width](
+                                i,
+                                cj.load[width=width](i)
+                                + temp1 * bl.load[width=width](i)
+                                + temp2 * al.load[width=width](i),
                             )
+
+                        vectorize[simd_width](j + 1, rank2k_upper)
         else:
             for j in range(n):
+                var cj = c + j * ldc
                 for l in range(k):
                     if a[j + l * lda] != 0 or b[j + l * ldb] != 0:
                         var temp1: Scalar[dtype] = alpha * a[j + l * lda]
                         var temp2: Scalar[dtype] = alpha * b[j + l * ldb]
-                        for i in range(j, n):
-                            c[i + j * ldc] = (
-                                c[i + j * ldc]
-                                + temp1 * b[i + l * ldb]
-                                + temp2 * a[i + l * lda]
+                        var al = a + l * lda
+                        var bl = b + l * ldb
+
+                        def rank2k_lower[
+                            width: Int
+                        ](i: Int) {cj, al, bl, temp1, temp2, j}:
+                            var ii = j + i
+                            cj.store[width=width](
+                                ii,
+                                cj.load[width=width](ii)
+                                + temp1 * bl.load[width=width](ii)
+                                + temp2 * al.load[width=width](ii),
                             )
+
+                        vectorize[simd_width](n - j, rank2k_lower)
     else:
+        # Trans: rows of A^T and B^T are non-contiguous — scalar k reduction
         if upper:
             for j in range(n):
                 for i in range(j + 1):
