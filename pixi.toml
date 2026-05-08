@@ -26,13 +26,13 @@ backend = { name = "pixi-build-mojo", version = "0.*", channels = [
 name = "mojoBLAS"
 
 [package.host-dependencies]
-mojo = "0.26.2.*"
+mojo = "==1.0.0b1"
 
 [package.build-dependencies]
-mojo = "0.26.2.*"
+mojo = "==1.0.0b1"
 
 [package.run-dependencies]
-mojo = "0.26.2.*"
+mojo = "==1.0.0b1"
 
 [tasks]
 format = "mojo format ./src/ && mojo format ./tests/"
@@ -45,7 +45,7 @@ benchmark_level2 = "mojo run -I ./ ./benchmarks/benchmark_level2.mojo"
 benchmark_level3 = "mojo run -I ./ ./benchmarks/benchmark_level3.mojo"
 
 [dependencies]
-mojo = ">=0.26.2.0,<0.27"
+mojo = ">=1.0.0b1,<2"
 
 [feature.bench.dependencies]
 openblas = ">=0.3.32,<0.4"
