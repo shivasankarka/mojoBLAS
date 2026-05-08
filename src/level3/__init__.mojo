@@ -10,7 +10,6 @@
 """
 Level 3 BLAS Operations (`level3`)
 ============================================
-
 This module provides Level 3 BLAS (Basic Linear Algebra Subprograms) operations
 implemented in Mojo. Level 3 BLAS includes matrix-matrix operations
 such as general matrix multiplication, symmetric multiplication, and triangular solves.

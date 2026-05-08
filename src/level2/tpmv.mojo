@@ -10,7 +10,6 @@
 """
 Triangular Packed Matrix-Vector Operations (`level2.tpmv`)
 =============================================
-
 Provides triangular packed matrix-vector operations as defined in the BLAS library standard.
 """
 

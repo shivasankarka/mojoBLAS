@@ -10,7 +10,6 @@
 """
 Triangular Solve Operations (`level2.trsv`)
 =============================================
-
 Provides triangular solve operations as defined in the BLAS library standard.
 """
 

@@ -10,7 +10,6 @@
 """
 Triangular Band Matrix-Vector Operations (`level2.tbmv`)
 =============================================
-
 Provides triangular band matrix-vector operations as defined in the BLAS library standard.
 """
 

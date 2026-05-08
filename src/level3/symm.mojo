@@ -10,7 +10,6 @@
 """
 Symmetric Matrix-Matrix Operations (`level3.symm`)
 =============================================
-
 Provides symmetric matrix-matrix operations as defined in the BLAS library standard.
 """
 

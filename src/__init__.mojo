@@ -8,9 +8,8 @@
 # ===----------------------------------------------------------------------=== #
 
 """
-mojoBLAS: Mojo implementation of BLAS
+Mojo implementation of BLAS (mojoBLAS)
 =====================================
-
 A high-performance Mojo implementation of BLAS (Basic Linear Algebra Subprograms)
 library operations. This library provides Level 1, Level 2, and Level 3 BLAS
 routines implemented in the Mojo programming language.
@@ -19,7 +18,7 @@ Level 1: Vector-vector operations
 Level 2: Matrix-vector operations
 Level 3: Matrix-matrix operations
 
-For more information about BLAS, see: http://www.netlib.org/blas/
+For more information about BLAS, see: http://www.netlib.org/blas/.
 """
 
 from .type_aliases import BLASPtr

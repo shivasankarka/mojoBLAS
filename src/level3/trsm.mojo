@@ -10,7 +10,6 @@
 """
 Triangular Solve Operations (`level3.trsm`)
 =============================================
-
 Provides triangular solve operations as defined in the BLAS library standard.
 """
 

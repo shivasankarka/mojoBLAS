@@ -10,7 +10,6 @@
 """
 Level 2 BLAS Operations (`level2`)
 ============================================
-
 This module provides Level 2 BLAS (Basic Linear Algebra Subprograms) operations
 implemented in Mojo. Level 2 BLAS includes vector-matrix operations
 such as matrix-vector multiplication and triangular solving.

@@ -10,7 +10,6 @@
 """
 Symmetric Packed Rank-2 Operations (`level2.spr2`)
 =============================================
-
 Provides symmetric packed rank-2 operations as defined in the BLAS library standard.
 """
 

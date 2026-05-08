@@ -10,7 +10,6 @@
 """
 Triangular Matrix-Matrix Operations (`level3.trmm`)
 =============================================
-
 Provides triangular matrix-matrix operations as defined in the BLAS library standard.
 """
 

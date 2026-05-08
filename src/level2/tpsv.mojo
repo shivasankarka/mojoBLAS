@@ -10,7 +10,6 @@
 """
 Triangular Packed Solve Operations (`level2.tpsv`)
 =============================================
-
 Provides triangular packed solve operations as defined in the BLAS library standard.
 """
 

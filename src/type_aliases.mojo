@@ -9,7 +9,6 @@
 """
 Type Aliases (`type_aliases`)
 ============================================
-
 Provides type aliases for BLAS operations with memory origin tracking.
 """
 

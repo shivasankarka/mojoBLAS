@@ -10,7 +10,6 @@
 """
 Vector Alpha Plus Operations (`level1.axpy`)
 ============================================
-
 Provides vector alpha plus operations as defined in the BLAS library standard.
 """
 
