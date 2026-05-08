@@ -146,9 +146,13 @@ def gemv[
                     var aj = a + j * lda
 
                     @parameter
-                    def axpy_col[width: Int](i: Int) unified {mut y, read aj, read temp}:
+                    def axpy_col[
+                        width: Int
+                    ](i: Int) unified {mut y, read aj, read temp}:
                         y.store[width=width](
-                            i, y.load[width=width](i) + temp * aj.load[width=width](i)
+                            i,
+                            y.load[width=width](i)
+                            + temp * aj.load[width=width](i),
                         )
 
                     vectorize[simd_width](m, axpy_col)
@@ -160,9 +164,13 @@ def gemv[
                     var aj = a + j * lda
 
                     @parameter
-                    def axpy_col_sx[width: Int](i: Int) unified {mut y, read aj, read temp}:
+                    def axpy_col_sx[
+                        width: Int
+                    ](i: Int) unified {mut y, read aj, read temp}:
                         y.store[width=width](
-                            i, y.load[width=width](i) + temp * aj.load[width=width](i)
+                            i,
+                            y.load[width=width](i)
+                            + temp * aj.load[width=width](i),
                         )
 
                     vectorize[simd_width](m, axpy_col_sx)
@@ -187,8 +195,12 @@ def gemv[
                 var aj = a + j * lda
 
                 @parameter
-                def dot_col[width: Int](i: Int) unified {mut temp, read aj, read x}:
-                    temp += (aj.load[width=width](i) * x.load[width=width](i)).reduce_add()
+                def dot_col[
+                    width: Int
+                ](i: Int) unified {mut temp, read aj, read x}:
+                    temp += (
+                        aj.load[width=width](i) * x.load[width=width](i)
+                    ).reduce_add()
 
                 vectorize[simd_width](m, dot_col)
                 if temp != 0:

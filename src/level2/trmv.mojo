@@ -102,9 +102,13 @@ def trmv[
                         var aj = a + j * lda
 
                         @parameter
-                        def axpy_upper[width: Int](i: Int) unified {mut x, read aj, read temp}:
+                        def axpy_upper[
+                            width: Int
+                        ](i: Int) unified {mut x, read aj, read temp}:
                             x.store[width=width](
-                                i, x.load[width=width](i) + temp * aj.load[width=width](i)
+                                i,
+                                x.load[width=width](i)
+                                + temp * aj.load[width=width](i),
                             )
 
                         vectorize[simd_width](j, axpy_upper)
@@ -130,10 +134,14 @@ def trmv[
                         var aj = a + j * lda
 
                         @parameter
-                        def axpy_lower[width: Int](i: Int) unified {mut x, read aj, read temp, read j}:
+                        def axpy_lower[
+                            width: Int
+                        ](i: Int) unified {mut x, read aj, read temp, read j}:
                             var ii = j + 1 + i
                             x.store[width=width](
-                                ii, x.load[width=width](ii) + temp * aj.load[width=width](ii)
+                                ii,
+                                x.load[width=width](ii)
+                                + temp * aj.load[width=width](ii),
                             )
 
                         vectorize[simd_width](n - j - 1, axpy_lower)
@@ -162,8 +170,12 @@ def trmv[
                     var aj = a + j * lda
 
                     @parameter
-                    def dot_upper[width: Int](i: Int) unified {mut temp, read aj, read x}:
-                        temp += (aj.load[width=width](i) * x.load[width=width](i)).reduce_add()
+                    def dot_upper[
+                        width: Int
+                    ](i: Int) unified {mut temp, read aj, read x}:
+                        temp += (
+                            aj.load[width=width](i) * x.load[width=width](i)
+                        ).reduce_add()
 
                     vectorize[simd_width](j, dot_upper)
                     x[j] = temp
@@ -188,9 +200,13 @@ def trmv[
                     var aj = a + j * lda
 
                     @parameter
-                    def dot_lower[width: Int](i: Int) unified {mut temp, read aj, read x, read j}:
+                    def dot_lower[
+                        width: Int
+                    ](i: Int) unified {mut temp, read aj, read x, read j}:
                         var ii = j + 1 + i
-                        temp += (aj.load[width=width](ii) * x.load[width=width](ii)).reduce_add()
+                        temp += (
+                            aj.load[width=width](ii) * x.load[width=width](ii)
+                        ).reduce_add()
 
                     vectorize[simd_width](n - j - 1, dot_lower)
                     x[j] = temp

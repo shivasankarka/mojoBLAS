@@ -84,9 +84,13 @@ def syr[
                     var aj = a + j * lda
 
                     @parameter
-                    def axpy_upper[width: Int](i: Int) unified {mut aj, read x, read temp, read j}:
+                    def axpy_upper[
+                        width: Int
+                    ](i: Int) unified {mut aj, read x, read temp, read j}:
                         aj.store[width=width](
-                            i, aj.load[width=width](i) + x.load[width=width](i) * temp
+                            i,
+                            aj.load[width=width](i)
+                            + x.load[width=width](i) * temp,
                         )
 
                     vectorize[simd_width](j + 1, axpy_upper)
@@ -108,10 +112,14 @@ def syr[
                     var aj = a + j * lda
 
                     @parameter
-                    def axpy_lower[width: Int](i: Int) unified {mut aj, read x, read temp, read j}:
+                    def axpy_lower[
+                        width: Int
+                    ](i: Int) unified {mut aj, read x, read temp, read j}:
                         var ii = j + i
                         aj.store[width=width](
-                            ii, aj.load[width=width](ii) + x.load[width=width](ii) * temp
+                            ii,
+                            aj.load[width=width](ii)
+                            + x.load[width=width](ii) * temp,
                         )
 
                     vectorize[simd_width](n - j, axpy_lower)

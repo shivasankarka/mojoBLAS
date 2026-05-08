@@ -143,14 +143,20 @@ def gemm[
             def gemm_nn_col(j: Int):
                 var cj = c + j * ldc
                 if beta == 0:
+
                     @parameter
                     def zero_nn[width: Int](i: Int) unified {mut cj}:
                         cj.store[width=width](i, SIMD[dtype, width](0))
+
                     vectorize[simd_width](m, zero_nn)
                 elif beta != 1:
+
                     @parameter
-                    def scale_nn[width: Int](i: Int) unified {mut cj, read beta}:
+                    def scale_nn[
+                        width: Int
+                    ](i: Int) unified {mut cj, read beta}:
                         cj.store[width=width](i, beta * cj.load[width=width](i))
+
                     vectorize[simd_width](m, scale_nn)
                 for l in range(k):
                     if b[l + j * ldb] != 0:
@@ -158,9 +164,13 @@ def gemm[
                         var al = a + l * lda
 
                         @parameter
-                        def axpy_nn[width: Int](i: Int) unified {mut cj, read al, read temp}:
+                        def axpy_nn[
+                            width: Int
+                        ](i: Int) unified {mut cj, read al, read temp}:
                             cj.store[width=width](
-                                i, cj.load[width=width](i) + temp * al.load[width=width](i)
+                                i,
+                                cj.load[width=width](i)
+                                + temp * al.load[width=width](i),
                             )
 
                         vectorize[simd_width](m, axpy_nn)
@@ -176,14 +186,20 @@ def gemm[
             def gemm_nt_col(j: Int):
                 var cj = c + j * ldc
                 if beta == 0:
+
                     @parameter
                     def zero_nt[width: Int](i: Int) unified {mut cj}:
                         cj.store[width=width](i, SIMD[dtype, width](0))
+
                     vectorize[simd_width](m, zero_nt)
                 elif beta != 1:
+
                     @parameter
-                    def scale_nt[width: Int](i: Int) unified {mut cj, read beta}:
+                    def scale_nt[
+                        width: Int
+                    ](i: Int) unified {mut cj, read beta}:
                         cj.store[width=width](i, beta * cj.load[width=width](i))
+
                     vectorize[simd_width](m, scale_nt)
                 for l in range(k):
                     if b[j + l * ldb] != 0:
@@ -191,9 +207,13 @@ def gemm[
                         var al = a + l * lda
 
                         @parameter
-                        def axpy_nt[width: Int](i: Int) unified {mut cj, read al, read temp}:
+                        def axpy_nt[
+                            width: Int
+                        ](i: Int) unified {mut cj, read al, read temp}:
                             cj.store[width=width](
-                                i, cj.load[width=width](i) + temp * al.load[width=width](i)
+                                i,
+                                cj.load[width=width](i)
+                                + temp * al.load[width=width](i),
                             )
 
                         vectorize[simd_width](m, axpy_nt)
@@ -210,14 +230,20 @@ def gemm[
             def gemm_tn_col(j: Int):
                 var cj = c + j * ldc
                 if beta == 0:
+
                     @parameter
                     def zero_tn[width: Int](i: Int) unified {mut cj}:
                         cj.store[width=width](i, SIMD[dtype, width](0))
+
                     vectorize[simd_width](m, zero_tn)
                 elif beta != 1:
+
                     @parameter
-                    def scale_tn[width: Int](i: Int) unified {mut cj, read beta}:
+                    def scale_tn[
+                        width: Int
+                    ](i: Int) unified {mut cj, read beta}:
                         cj.store[width=width](i, beta * cj.load[width=width](i))
+
                     vectorize[simd_width](m, scale_tn)
                 for l in range(k):
                     if b[l + j * ldb] != 0:
@@ -237,14 +263,20 @@ def gemm[
             def gemm_tt_col(j: Int):
                 var cj = c + j * ldc
                 if beta == 0:
+
                     @parameter
                     def zero_tt[width: Int](i: Int) unified {mut cj}:
                         cj.store[width=width](i, SIMD[dtype, width](0))
+
                     vectorize[simd_width](m, zero_tt)
                 elif beta != 1:
+
                     @parameter
-                    def scale_tt[width: Int](i: Int) unified {mut cj, read beta}:
+                    def scale_tt[
+                        width: Int
+                    ](i: Int) unified {mut cj, read beta}:
                         cj.store[width=width](i, beta * cj.load[width=width](i))
+
                     vectorize[simd_width](m, scale_tt)
                 for l in range(k):
                     if b[j + l * ldb] != 0:

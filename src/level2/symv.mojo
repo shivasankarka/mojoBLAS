@@ -94,9 +94,11 @@ def symv[
                 for i in range(leny):
                     y[i] = 0
             else:
+
                 @parameter
                 def scale_y[width: Int](i: Int) unified {mut y, read beta}:
                     y.store[width=width](i, beta * y.load[width=width](i))
+
                 vectorize[simd_width](leny, scale_y)
         else:
             var iy: Int = ky
@@ -128,9 +130,15 @@ def symv[
 
                     # Single vectorized pass: update y[0..j) and accumulate dot(a[:,j], x[0..j))
                     @parameter
-                    def fused_upper[width: Int](i: Int) unified {mut y, mut temp2, read aj, read x, read temp1}:
+                    def fused_upper[
+                        width: Int
+                    ](i: Int) unified {
+                        mut y, mut temp2, read aj, read x, read temp1
+                    }:
                         var av = aj.load[width=width](i)
-                        y.store[width=width](i, y.load[width=width](i) + temp1 * av)
+                        y.store[width=width](
+                            i, y.load[width=width](i) + temp1 * av
+                        )
                         temp2 += (av * x.load[width=width](i)).reduce_add()
 
                     vectorize[simd_width](j, fused_upper)
@@ -144,8 +152,12 @@ def symv[
                     var iy: Int = ky
 
                     @parameter
-                    def dot_upper_sx[width: Int](i: Int) unified {mut temp2, read aj, read x}:
-                        temp2 += (aj.load[width=width](i) * x.load[width=width](i)).reduce_add()
+                    def dot_upper_sx[
+                        width: Int
+                    ](i: Int) unified {mut temp2, read aj, read x}:
+                        temp2 += (
+                            aj.load[width=width](i) * x.load[width=width](i)
+                        ).reduce_add()
 
                     vectorize[simd_width](j, dot_upper_sx)
                     for i in range(j):
@@ -174,10 +186,16 @@ def symv[
                     var aj = a + j * lda
 
                     @parameter
-                    def fused_lower[width: Int](i: Int) unified {mut y, mut temp2, read aj, read x, read temp1, read j}:
+                    def fused_lower[
+                        width: Int
+                    ](i: Int) unified {
+                        mut y, mut temp2, read aj, read x, read temp1, read j
+                    }:
                         var ii = j + 1 + i
                         var av = aj.load[width=width](ii)
-                        y.store[width=width](ii, y.load[width=width](ii) + temp1 * av)
+                        y.store[width=width](
+                            ii, y.load[width=width](ii) + temp1 * av
+                        )
                         temp2 += (av * x.load[width=width](ii)).reduce_add()
 
                     vectorize[simd_width](n - j - 1, fused_lower)
@@ -191,9 +209,15 @@ def symv[
                     var iy: Int = ky + (j + 1) * incy
 
                     @parameter
-                    def dot_lower_sx[width: Int](i: Int) unified {mut temp2, read aj, read x, read temp1, read j}:
+                    def dot_lower_sx[
+                        width: Int
+                    ](i: Int) unified {
+                        mut temp2, read aj, read x, read temp1, read j
+                    }:
                         var ii = j + 1 + i
-                        temp2 += (aj.load[width=width](ii) * x.load[width=width](ii)).reduce_add()
+                        temp2 += (
+                            aj.load[width=width](ii) * x.load[width=width](ii)
+                        ).reduce_add()
 
                     vectorize[simd_width](n - j - 1, dot_lower_sx)
                     for i in range(j + 1, n):

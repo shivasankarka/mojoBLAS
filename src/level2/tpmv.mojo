@@ -93,12 +93,16 @@ def tpmv[
                 var sum: Scalar[dtype] = 0
                 if upper:
                     for j in range(i, n):
-                        var aij: Scalar[dtype] = 1 if (i == j and not no_unit) else ap[(j * (j + 1)) // 2 + i]
+                        var aij: Scalar[dtype] = 1 if (
+                            i == j and not no_unit
+                        ) else ap[(j * (j + 1)) // 2 + i]
                         sum = sum + aij * x_in[j]
                 else:
                     for j in range(i + 1):
                         var start = j * n - (j * (j - 1)) // 2
-                        var aij: Scalar[dtype] = 1 if (i == j and not no_unit) else ap[start + (i - j)]
+                        var aij: Scalar[dtype] = 1 if (
+                            i == j and not no_unit
+                        ) else ap[start + (i - j)]
                         sum = sum + aij * x_in[j]
                 x_out[i] = sum
         else:
@@ -106,12 +110,16 @@ def tpmv[
                 var sum: Scalar[dtype] = 0
                 if upper:
                     for j in range(i + 1):
-                        var aji: Scalar[dtype] = 1 if (i == j and not no_unit) else ap[(i * (i + 1)) // 2 + j]
+                        var aji: Scalar[dtype] = 1 if (
+                            i == j and not no_unit
+                        ) else ap[(i * (i + 1)) // 2 + j]
                         sum = sum + aji * x_in[j]
                 else:
                     for j in range(i, n):
                         var start = i * n - (i * (i - 1)) // 2
-                        var aji: Scalar[dtype] = 1 if (i == j and not no_unit) else ap[start + (j - i)]
+                        var aji: Scalar[dtype] = 1 if (
+                            i == j and not no_unit
+                        ) else ap[start + (j - i)]
                         sum = sum + aji * x_in[j]
                 x_out[i] = sum
 

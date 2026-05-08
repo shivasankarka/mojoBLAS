@@ -95,6 +95,7 @@ def symm[
     var upper = uplo == "U" or uplo == "u"
 
     if left_side:
+
         @parameter
         def symm_left_col(j: Int):
             var cj = c + j * ldc
@@ -103,9 +104,11 @@ def symm[
                 for i in range(m):
                     cj[i] = 0
             elif beta != 1:
+
                 @parameter
                 def scale_cj[width: Int](i: Int) unified {mut cj, read beta}:
                     cj.store[width=width](i, beta * cj.load[width=width](i))
+
                 vectorize[simd_width](m, scale_cj)
 
             if upper:
@@ -116,9 +119,15 @@ def symm[
                         var al = a + l * lda
 
                         @parameter
-                        def fused_upper[width: Int](i: Int) unified {mut cj, mut temp2, read al, read bj, read temp1}:
+                        def fused_upper[
+                            width: Int
+                        ](i: Int) unified {
+                            mut cj, mut temp2, read al, read bj, read temp1
+                        }:
                             var av = al.load[width=width](i)
-                            cj.store[width=width](i, cj.load[width=width](i) + temp1 * av)
+                            cj.store[width=width](
+                                i, cj.load[width=width](i) + temp1 * av
+                            )
                             temp2 += (av * bj.load[width=width](i)).reduce_add()
 
                         vectorize[simd_width](l, fused_upper)
@@ -131,11 +140,24 @@ def symm[
                         var al = a + l * lda
 
                         @parameter
-                        def fused_lower[width: Int](i: Int) unified {mut cj, mut temp2, read al, read bj, read temp1, read l}:
+                        def fused_lower[
+                            width: Int
+                        ](i: Int) unified {
+                            mut cj,
+                            mut temp2,
+                            read al,
+                            read bj,
+                            read temp1,
+                            read l,
+                        }:
                             var ii = l + 1 + i
                             var av = al.load[width=width](ii)
-                            cj.store[width=width](ii, cj.load[width=width](ii) + temp1 * av)
-                            temp2 += (av * bj.load[width=width](ii)).reduce_add()
+                            cj.store[width=width](
+                                ii, cj.load[width=width](ii) + temp1 * av
+                            )
+                            temp2 += (
+                                av * bj.load[width=width](ii)
+                            ).reduce_add()
 
                         vectorize[simd_width](m - l - 1, fused_lower)
                         cj[l] = cj[l] + temp1 * a[l + l * lda] + alpha * temp2
@@ -146,6 +168,7 @@ def symm[
             for j in range(n):
                 symm_left_col(j)
     else:
+
         @parameter
         def symm_right_col(j: Int):
             var cj = c + j * ldc
@@ -154,15 +177,25 @@ def symm[
                 for i in range(m):
                     cj[i] = 0
             elif beta != 1:
+
                 @parameter
                 def scale_cj_r[width: Int](i: Int) unified {mut cj, read beta}:
                     cj.store[width=width](i, beta * cj.load[width=width](i))
+
                 vectorize[simd_width](m, scale_cj_r)
 
             var temp_diag: Scalar[dtype] = alpha * a[j + j * lda]
+
             @parameter
-            def axpy_diag[width: Int](i: Int) unified {mut cj, read bj, read temp_diag}:
-                cj.store[width=width](i, cj.load[width=width](i) + temp_diag * bj.load[width=width](i))
+            def axpy_diag[
+                width: Int
+            ](i: Int) unified {mut cj, read bj, read temp_diag}:
+                cj.store[width=width](
+                    i,
+                    cj.load[width=width](i)
+                    + temp_diag * bj.load[width=width](i),
+                )
+
             vectorize[simd_width](m, axpy_diag)
 
             if upper:
@@ -171,8 +204,14 @@ def symm[
                     var bk = b + k * ldb
 
                     @parameter
-                    def axpy_upper_r[width: Int](i: Int) unified {mut cj, read bk, read temp_k}:
-                        cj.store[width=width](i, cj.load[width=width](i) + temp_k * bk.load[width=width](i))
+                    def axpy_upper_r[
+                        width: Int
+                    ](i: Int) unified {mut cj, read bk, read temp_k}:
+                        cj.store[width=width](
+                            i,
+                            cj.load[width=width](i)
+                            + temp_k * bk.load[width=width](i),
+                        )
 
                     vectorize[simd_width](m, axpy_upper_r)
                 for k in range(j + 1, n):
@@ -180,8 +219,14 @@ def symm[
                     var bk = b + k * ldb
 
                     @parameter
-                    def axpy_upper_r2[width: Int](i: Int) unified {mut cj, read bk, read temp_k}:
-                        cj.store[width=width](i, cj.load[width=width](i) + temp_k * bk.load[width=width](i))
+                    def axpy_upper_r2[
+                        width: Int
+                    ](i: Int) unified {mut cj, read bk, read temp_k}:
+                        cj.store[width=width](
+                            i,
+                            cj.load[width=width](i)
+                            + temp_k * bk.load[width=width](i),
+                        )
 
                     vectorize[simd_width](m, axpy_upper_r2)
             else:
@@ -190,8 +235,14 @@ def symm[
                     var bk = b + k * ldb
 
                     @parameter
-                    def axpy_lower_r[width: Int](i: Int) unified {mut cj, read bk, read temp_k}:
-                        cj.store[width=width](i, cj.load[width=width](i) + temp_k * bk.load[width=width](i))
+                    def axpy_lower_r[
+                        width: Int
+                    ](i: Int) unified {mut cj, read bk, read temp_k}:
+                        cj.store[width=width](
+                            i,
+                            cj.load[width=width](i)
+                            + temp_k * bk.load[width=width](i),
+                        )
 
                     vectorize[simd_width](m, axpy_lower_r)
                 for k in range(j + 1, n):
@@ -199,8 +250,14 @@ def symm[
                     var bk = b + k * ldb
 
                     @parameter
-                    def axpy_lower_r2[width: Int](i: Int) unified {mut cj, read bk, read temp_k}:
-                        cj.store[width=width](i, cj.load[width=width](i) + temp_k * bk.load[width=width](i))
+                    def axpy_lower_r2[
+                        width: Int
+                    ](i: Int) unified {mut cj, read bk, read temp_k}:
+                        cj.store[width=width](
+                            i,
+                            cj.load[width=width](i)
+                            + temp_k * bk.load[width=width](i),
+                        )
 
                     vectorize[simd_width](m, axpy_lower_r2)
 

@@ -135,7 +135,11 @@ def syr2k[
                         var bl = b + l * ldb
 
                         @parameter
-                        def rank2k_upper[width: Int](i: Int) unified {mut cj, read al, read bl, read temp1, read temp2}:
+                        def rank2k_upper[
+                            width: Int
+                        ](i: Int) unified {
+                            mut cj, read al, read bl, read temp1, read temp2
+                        }:
                             cj.store[width=width](
                                 i,
                                 cj.load[width=width](i)
@@ -155,7 +159,16 @@ def syr2k[
                         var bl = b + l * ldb
 
                         @parameter
-                        def rank2k_lower[width: Int](i: Int) unified {mut cj, read al, read bl, read temp1, read temp2, read j}:
+                        def rank2k_lower[
+                            width: Int
+                        ](i: Int) unified {
+                            mut cj,
+                            read al,
+                            read bl,
+                            read temp1,
+                            read temp2,
+                            read j,
+                        }:
                             var ii = j + i
                             cj.store[width=width](
                                 ii,

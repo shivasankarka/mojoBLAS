@@ -99,7 +99,11 @@ def syr2[
                     var aj = a + j * lda
 
                     @parameter
-                    def rank2_upper[width: Int](i: Int) unified {mut aj, read x, read y, read temp1, read temp2}:
+                    def rank2_upper[
+                        width: Int
+                    ](i: Int) unified {
+                        mut aj, read x, read y, read temp1, read temp2
+                    }:
                         aj.store[width=width](
                             i,
                             aj.load[width=width](i)
@@ -136,7 +140,11 @@ def syr2[
                     var aj = a + j * lda
 
                     @parameter
-                    def rank2_lower[width: Int](i: Int) unified {mut aj, read x, read y, read temp1, read temp2, read j}:
+                    def rank2_lower[
+                        width: Int
+                    ](i: Int) unified {
+                        mut aj, read x, read y, read temp1, read temp2, read j
+                    }:
                         var ii = j + i
                         aj.store[width=width](
                             ii,

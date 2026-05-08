@@ -117,6 +117,7 @@ def syrk[
 
     if no_trans:
         if upper:
+
             @parameter
             def syrk_nt_upper(j: Int):
                 var cj = c + j * ldc
@@ -126,9 +127,13 @@ def syrk[
                         var al = a + l * lda
 
                         @parameter
-                        def axpy_upper[width: Int](i: Int) unified {mut cj, read al, read temp}:
+                        def axpy_upper[
+                            width: Int
+                        ](i: Int) unified {mut cj, read al, read temp}:
                             cj.store[width=width](
-                                i, cj.load[width=width](i) + temp * al.load[width=width](i)
+                                i,
+                                cj.load[width=width](i)
+                                + temp * al.load[width=width](i),
                             )
 
                         vectorize[simd_width](j + 1, axpy_upper)
@@ -139,6 +144,7 @@ def syrk[
                 for j in range(n):
                     syrk_nt_upper(j)
         else:
+
             @parameter
             def syrk_nt_lower(j: Int):
                 var cj = c + j * ldc
@@ -148,10 +154,14 @@ def syrk[
                         var al = a + l * lda
 
                         @parameter
-                        def axpy_lower[width: Int](i: Int) unified {mut cj, read al, read temp, read j}:
+                        def axpy_lower[
+                            width: Int
+                        ](i: Int) unified {mut cj, read al, read temp, read j}:
                             var ii = j + i
                             cj.store[width=width](
-                                ii, cj.load[width=width](ii) + temp * al.load[width=width](ii)
+                                ii,
+                                cj.load[width=width](ii)
+                                + temp * al.load[width=width](ii),
                             )
 
                         vectorize[simd_width](n - j, axpy_lower)
@@ -164,6 +174,7 @@ def syrk[
     else:
         # Trans: rows of A^T are non-contiguous — scalar k reduction per (i,j)
         if upper:
+
             @parameter
             def syrk_t_upper(j: Int):
                 for i in range(j + 1):
@@ -178,6 +189,7 @@ def syrk[
                 for j in range(n):
                     syrk_t_upper(j)
         else:
+
             @parameter
             def syrk_t_lower(j: Int):
                 for i in range(j, n):
