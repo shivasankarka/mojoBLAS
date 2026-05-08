@@ -10,8 +10,7 @@
 """
 Index of Maximum Absolute Value (`level1.iamax`)
 ============================================
-
- Provides index of maximum absolute value operations as defined in the BLAS library standard.
+Provides index of maximum absolute value operations as defined in the BLAS library standard.
 """
 
 from std.algorithm.functional import vectorize

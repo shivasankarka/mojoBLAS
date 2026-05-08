@@ -10,7 +10,6 @@
 """
 Vector Scale Operations (`level1.scal`)
 ============================================
-
 Provides vector scale operations as defined in the BLAS library standard.
 """
 

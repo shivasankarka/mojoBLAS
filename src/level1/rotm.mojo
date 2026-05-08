@@ -10,7 +10,6 @@
 """
 Modified Givens Rotation Operations (`level1.rotm`)
 ============================================
-
 Provides modified Givens rotation operations as defined in the BLAS library standard.
 """
 

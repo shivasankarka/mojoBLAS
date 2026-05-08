@@ -10,7 +10,6 @@
 """
 Givens Rotation Operations (`level1.rotg`)
 ============================================
-
 Provides Givens rotation operations as defined in the BLAS library standard.
 """
 

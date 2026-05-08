@@ -10,7 +10,6 @@
 """
 Absolute Sum Operations (`level1.asum`)
 ============================================
-
 Provides absolute sum operations as defined in the BLAS library standard.
 """
 
@@ -48,7 +47,6 @@ def asum[
     if incx == 1:
         comptime simd_width: Int = simd_width_of[dtype]()
 
-        @parameter
         def closure[width: Int](i: Int) unified {mut result, read dx}:
             result += abs(dx.load[width=width](i)).reduce_add()
 
