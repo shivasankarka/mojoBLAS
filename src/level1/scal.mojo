@@ -41,7 +41,7 @@ def scal[
     if incx == 1:
 
         @parameter
-        def closure[width: Int](i: Int) unified {mut dx, read alpha}:
+        def closure[width: Int](i: Int) {mut dx, read alpha}:
             dx.store[width=width](i, alpha * dx.load[width=width](i))
 
         vectorize[simd_width](n, closure)

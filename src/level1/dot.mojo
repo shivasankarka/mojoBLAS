@@ -61,7 +61,7 @@ def dot[
     if incx == 1 and incy == 1:
 
         @parameter
-        def closure[width: Int](i: Int) unified {mut result, read dx, read dy}:
+        def closure[width: Int](i: Int) {mut result, read dx, read dy}:
             result += (
                 dx.load[width=width](i) * dy.load[width=width](i)
             ).reduce_add()

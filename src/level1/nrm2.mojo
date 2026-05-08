@@ -48,7 +48,7 @@ def nrm2[
     if incx == 1:
 
         @parameter
-        def closure[width: Int](i: Int) unified {mut result, read x}:
+        def closure[width: Int](i: Int) {mut result, read x}:
             result += (
                 x.load[width=width](i) * x.load[width=width](i)
             ).reduce_add()

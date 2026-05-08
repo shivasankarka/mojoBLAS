@@ -53,7 +53,7 @@ def axpy[
     if incx == 1 and incy == 1:
 
         @parameter
-        def closure[width: Int](i: Int) unified {mut dy, read dx, read da}:
+        def closure[width: Int](i: Int) {mut dy, read dx, read da}:
             dy.store[width=width](
                 i, da * dx.load[width=width](i) + dy.load[width=width](i)
             )

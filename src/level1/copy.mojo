@@ -48,8 +48,9 @@ def copy[
 
     comptime simd_width: Int = simd_width_of[dtype]()
     if incx == 1 and incy == 1:
+
         @parameter
-        def closure[width: Int](i: Int) unified {mut dy, read dx}:
+        def closure[width: Int](i: Int) {mut dy, read dx}:
             dy.store[width=width](i, dx.load[width=width](i))
 
         vectorize[simd_width](n, closure)
