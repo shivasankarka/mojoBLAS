@@ -147,9 +147,7 @@ def symv[
                     var aj = a + j * lda
                     var iy: Int = ky
 
-                    def dot_upper_sx[
-                        width: Int
-                    ](i: Int) {mut temp2, aj, x}:
+                    def dot_upper_sx[width: Int](i: Int) {mut temp2, aj, x}:
                         temp2 += (
                             aj.load[width=width](i) * x.load[width=width](i)
                         ).reduce_add()
@@ -200,9 +198,7 @@ def symv[
                     var aj = a + j * lda
                     var iy: Int = ky + (j + 1) * incy
 
-                    def dot_lower_sx[
-                        width: Int
-                    ](i: Int) {mut temp2, aj, x, j}:
+                    def dot_lower_sx[width: Int](i: Int) {mut temp2, aj, x, j}:
                         var ii = j + 1 + i
                         temp2 += (
                             aj.load[width=width](ii) * x.load[width=width](ii)

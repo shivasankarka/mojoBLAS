@@ -126,10 +126,7 @@ def syrk[
                         var temp: Scalar[dtype] = alpha * a[j + l * lda]
                         var al = a + l * lda
 
-                        @parameter
-                        def axpy_upper[
-                            width: Int
-                        ](i: Int) unified {mut cj, read al, read temp}:
+                        def axpy_upper[width: Int](i: Int) {cj, al, temp}:
                             cj.store[width=width](
                                 i,
                                 cj.load[width=width](i)
@@ -153,10 +150,7 @@ def syrk[
                         var temp: Scalar[dtype] = alpha * a[j + l * lda]
                         var al = a + l * lda
 
-                        @parameter
-                        def axpy_lower[
-                            width: Int
-                        ](i: Int) unified {mut cj, read al, read temp, read j}:
+                        def axpy_lower[width: Int](i: Int) {cj, al, temp, j}:
                             var ii = j + i
                             cj.store[width=width](
                                 ii,

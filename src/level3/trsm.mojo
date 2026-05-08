@@ -98,8 +98,7 @@ def trsm[
         for j in range(n):
             var bj = b + j * ldb
 
-            @parameter
-            def scale_init[width: Int](i: Int) unified {mut bj, read alpha}:
+            def scale_init[width: Int](i: Int) {bj, alpha}:
                 bj.store[width=width](i, alpha * bj.load[width=width](i))
 
             vectorize[simd_width](m, scale_init)
@@ -121,10 +120,7 @@ def trsm[
                             var pivot: Scalar[dtype] = bj[l]
                             var al = a + l * lda
 
-                            @parameter
-                            def axpy_lu[
-                                width: Int
-                            ](i: Int) unified {mut bj, read al, read pivot}:
+                            def axpy_lu[width: Int](i: Int) {bj, al, pivot}:
                                 bj.store[width=width](
                                     i,
                                     bj.load[width=width](i)
@@ -142,12 +138,7 @@ def trsm[
                             var pivot: Scalar[dtype] = bj[l]
                             var al = a + l * lda
 
-                            @parameter
-                            def axpy_ll[
-                                width: Int
-                            ](i: Int) unified {
-                                mut bj, read al, read pivot, read l
-                            }:
+                            def axpy_ll[width: Int](i: Int) {bj, al, pivot, l}:
                                 var ii = l + 1 + i
                                 bj.store[width=width](
                                     ii,
@@ -187,10 +178,7 @@ def trsm[
                         var bl = b + l * ldb
                         var alj: Scalar[dtype] = a[l + j * lda]
 
-                        @parameter
-                        def axpy_ru[
-                            width: Int
-                        ](i: Int) unified {mut bj, read bl, read alj}:
+                        def axpy_ru[width: Int](i: Int) {bj, bl, alj}:
                             bj.store[width=width](
                                 i,
                                 bj.load[width=width](i)
@@ -201,10 +189,7 @@ def trsm[
                     if no_unit:
                         var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
 
-                        @parameter
-                        def scale_u[
-                            width: Int
-                        ](i: Int) unified {mut bj, read inv_diag}:
+                        def scale_u[width: Int](i: Int) {bj, inv_diag}:
                             bj.store[width=width](
                                 i, bj.load[width=width](i) * inv_diag
                             )
@@ -219,10 +204,7 @@ def trsm[
                         var bl = b + l * ldb
                         var alj: Scalar[dtype] = a[l + j * lda]
 
-                        @parameter
-                        def axpy_rl[
-                            width: Int
-                        ](i: Int) unified {mut bj, read bl, read alj}:
+                        def axpy_rl[width: Int](i: Int) {bj, bl, alj}:
                             bj.store[width=width](
                                 i,
                                 bj.load[width=width](i)
@@ -233,10 +215,7 @@ def trsm[
                     if no_unit:
                         var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
 
-                        @parameter
-                        def scale_l[
-                            width: Int
-                        ](i: Int) unified {mut bj, read inv_diag}:
+                        def scale_l[width: Int](i: Int) {bj, inv_diag}:
                             bj.store[width=width](
                                 i, bj.load[width=width](i) * inv_diag
                             )
@@ -251,10 +230,7 @@ def trsm[
                         var bl = b + l * ldb
                         var alj: Scalar[dtype] = a[l + j * lda]
 
-                        @parameter
-                        def axpy_rtu[
-                            width: Int
-                        ](i: Int) unified {mut bj, read bl, read alj}:
+                        def axpy_rtu[width: Int](i: Int) {bj, bl, alj}:
                             bj.store[width=width](
                                 i,
                                 bj.load[width=width](i)
@@ -265,10 +241,7 @@ def trsm[
                     if no_unit:
                         var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
 
-                        @parameter
-                        def scale_rtu[
-                            width: Int
-                        ](i: Int) unified {mut bj, read inv_diag}:
+                        def scale_rtu[width: Int](i: Int) {bj, inv_diag}:
                             bj.store[width=width](
                                 i, bj.load[width=width](i) * inv_diag
                             )
@@ -282,10 +255,7 @@ def trsm[
                         var bl = b + l * ldb
                         var alj: Scalar[dtype] = a[l + j * lda]
 
-                        @parameter
-                        def axpy_rtl[
-                            width: Int
-                        ](i: Int) unified {mut bj, read bl, read alj}:
+                        def axpy_rtl[width: Int](i: Int) {bj, bl, alj}:
                             bj.store[width=width](
                                 i,
                                 bj.load[width=width](i)
@@ -296,10 +266,7 @@ def trsm[
                     if no_unit:
                         var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
 
-                        @parameter
-                        def scale_rtl[
-                            width: Int
-                        ](i: Int) unified {mut bj, read inv_diag}:
+                        def scale_rtl[width: Int](i: Int) {bj, inv_diag}:
                             bj.store[width=width](
                                 i, bj.load[width=width](i) * inv_diag
                             )

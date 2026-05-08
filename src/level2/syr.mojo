@@ -83,9 +83,7 @@ def syr[
                     var temp: Scalar[dtype] = alpha * x[j]
                     var aj = a + j * lda
 
-                    def axpy_upper[
-                        width: Int
-                    ](i: Int) {aj, x, temp}:
+                    def axpy_upper[width: Int](i: Int) {aj, x, temp}:
                         aj.store[width=width](
                             i,
                             aj.load[width=width](i)
@@ -110,9 +108,7 @@ def syr[
                     var temp: Scalar[dtype] = alpha * x[j]
                     var aj = a + j * lda
 
-                    def axpy_lower[
-                        width: Int
-                    ](i: Int) {aj, x, temp, j}:
+                    def axpy_lower[width: Int](i: Int) {aj, x, temp, j}:
                         var ii = j + i
                         aj.store[width=width](
                             ii,

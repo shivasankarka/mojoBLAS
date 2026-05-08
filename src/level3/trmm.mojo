@@ -115,10 +115,7 @@ def trmm[
                             var temp: Scalar[dtype] = alpha * bj[k]
                             var ak = a + k * lda
 
-                            @parameter
-                            def axpy_lu[
-                                width: Int
-                            ](i: Int) unified {mut bj, read ak, read temp}:
+                            def axpy_lu[width: Int](i: Int) {bj, ak, temp}:
                                 bj.store[width=width](
                                     i,
                                     bj.load[width=width](i)
@@ -140,12 +137,7 @@ def trmm[
                                 bj[k] = bj[k] * a[k + k * lda]
                             var ak = a + k * lda
 
-                            @parameter
-                            def axpy_ll[
-                                width: Int
-                            ](i: Int) unified {
-                                mut bj, read ak, read temp, read k
-                            }:
+                            def axpy_ll[width: Int](i: Int) {bj, ak, temp, k}:
                                 var ii = k + 1 + i
                                 bj.store[width=width](
                                     ii,
@@ -204,10 +196,7 @@ def trmm[
                     if no_unit:
                         temp = temp * a[j + j * lda]
 
-                    @parameter
-                    def scale_bj_u[
-                        width: Int
-                    ](i: Int) unified {mut bj, read temp}:
+                    def scale_bj_u[width: Int](i: Int) {bj, temp}:
                         bj.store[width=width](i, temp * bj.load[width=width](i))
 
                     vectorize[simd_width](m, scale_bj_u)
@@ -216,10 +205,7 @@ def trmm[
                             temp = alpha * a[kk + j * lda]
                             var bk = b + kk * ldb
 
-                            @parameter
-                            def axpy_ru[
-                                width: Int
-                            ](i: Int) unified {mut bj, read bk, read temp}:
+                            def axpy_ru[width: Int](i: Int) {bj, bk, temp}:
                                 bj.store[width=width](
                                     i,
                                     bj.load[width=width](i)
@@ -240,10 +226,7 @@ def trmm[
                     if no_unit:
                         temp = temp * a[j + j * lda]
 
-                    @parameter
-                    def scale_bj_l[
-                        width: Int
-                    ](i: Int) unified {mut bj, read temp}:
+                    def scale_bj_l[width: Int](i: Int) {bj, temp}:
                         bj.store[width=width](i, temp * bj.load[width=width](i))
 
                     vectorize[simd_width](m, scale_bj_l)
@@ -252,10 +235,7 @@ def trmm[
                             temp = alpha * a[kk + j * lda]
                             var bk = b + kk * ldb
 
-                            @parameter
-                            def axpy_rl[
-                                width: Int
-                            ](i: Int) unified {mut bj, read bk, read temp}:
+                            def axpy_rl[width: Int](i: Int) {bj, bk, temp}:
                                 bj.store[width=width](
                                     i,
                                     bj.load[width=width](i)
@@ -276,10 +256,7 @@ def trmm[
                             var temp: Scalar[dtype] = alpha * a[j + k * lda]
                             var bj = b + j * ldb
 
-                            @parameter
-                            def axpy_rtu[
-                                width: Int
-                            ](i: Int) unified {mut bj, read bk, read temp}:
+                            def axpy_rtu[width: Int](i: Int) {bj, bk, temp}:
                                 bj.store[width=width](
                                     i,
                                     bj.load[width=width](i)
@@ -292,10 +269,7 @@ def trmm[
                         temp = temp * a[k + k * lda]
                     if temp != 1:
 
-                        @parameter
-                        def scale_bk_u[
-                            width: Int
-                        ](i: Int) unified {mut bk, read temp}:
+                        def scale_bk_u[width: Int](i: Int) {bk, temp}:
                             bk.store[width=width](
                                 i, temp * bk.load[width=width](i)
                             )
@@ -309,10 +283,7 @@ def trmm[
                             var temp: Scalar[dtype] = alpha * a[j + k * lda]
                             var bj = b + j * ldb
 
-                            @parameter
-                            def axpy_rtl[
-                                width: Int
-                            ](i: Int) unified {mut bj, read bk, read temp}:
+                            def axpy_rtl[width: Int](i: Int) {bj, bk, temp}:
                                 bj.store[width=width](
                                     i,
                                     bj.load[width=width](i)
@@ -325,10 +296,7 @@ def trmm[
                         temp = temp * a[k + k * lda]
                     if temp != 1:
 
-                        @parameter
-                        def scale_bk_l[
-                            width: Int
-                        ](i: Int) unified {mut bk, read temp}:
+                        def scale_bk_l[width: Int](i: Int) {bk, temp}:
                             bk.store[width=width](
                                 i, temp * bk.load[width=width](i)
                             )

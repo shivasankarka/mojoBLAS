@@ -105,9 +105,7 @@ def trsv[
                         var temp: Scalar[dtype] = x[j]
                         var aj = a + j * lda
 
-                        def axpy_upper[
-                            width: Int
-                        ](i: Int) {x, aj, temp}:
+                        def axpy_upper[width: Int](i: Int) {x, aj, temp}:
                             x.store[width=width](
                                 i,
                                 x.load[width=width](i)
@@ -137,9 +135,7 @@ def trsv[
                         var temp: Scalar[dtype] = x[j]
                         var aj = a + j * lda
 
-                        def axpy_lower[
-                            width: Int
-                        ](i: Int) {x, aj, temp, j}:
+                        def axpy_lower[width: Int](i: Int) {x, aj, temp, j}:
                             var ii = j + 1 + i
                             x.store[width=width](
                                 ii,
@@ -168,9 +164,7 @@ def trsv[
                     var temp: Scalar[dtype] = x[j]
                     var aj = a + j * lda
 
-                    def dot_upper[
-                        width: Int
-                    ](i: Int) {mut temp, aj, x}:
+                    def dot_upper[width: Int](i: Int) {mut temp, aj, x}:
                         temp -= (
                             aj.load[width=width](i) * x.load[width=width](i)
                         ).reduce_add()
@@ -197,9 +191,7 @@ def trsv[
                     var temp: Scalar[dtype] = x[j]
                     var aj = a + j * lda
 
-                    def dot_lower[
-                        width: Int
-                    ](i: Int) {mut temp, aj, x, j}:
+                    def dot_lower[width: Int](i: Int) {mut temp, aj, x, j}:
                         var ii = j + 1 + i
                         temp -= (
                             aj.load[width=width](ii) * x.load[width=width](ii)

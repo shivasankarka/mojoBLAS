@@ -143,9 +143,7 @@ def gemv[
                     var temp: Scalar[dtype] = alpha * xj
                     var aj = a + j * lda
 
-                    def axpy_col[
-                        width: Int
-                    ](i: Int) {y, aj, temp}:
+                    def axpy_col[width: Int](i: Int) {y, aj, temp}:
                         y.store[width=width](
                             i,
                             y.load[width=width](i)
@@ -160,9 +158,7 @@ def gemv[
                     var temp: Scalar[dtype] = alpha * xj
                     var aj = a + j * lda
 
-                    def axpy_col_sx[
-                        width: Int
-                    ](i: Int) {y, aj, temp}:
+                    def axpy_col_sx[width: Int](i: Int) {y, aj, temp}:
                         y.store[width=width](
                             i,
                             y.load[width=width](i)
@@ -190,9 +186,7 @@ def gemv[
                 var temp: Scalar[dtype] = 0
                 var aj = a + j * lda
 
-                def dot_col[
-                    width: Int
-                ](i: Int) {mut temp, aj, x}:
+                def dot_col[width: Int](i: Int) {mut temp, aj, x}:
                     temp += (
                         aj.load[width=width](i) * x.load[width=width](i)
                     ).reduce_add()

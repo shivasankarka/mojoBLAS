@@ -98,9 +98,7 @@ def ger[
                 var temp: Scalar[dtype] = alpha * y[j]
                 var aj = a + j * lda
 
-                def axpy_col[
-                    width: Int
-                ](i: Int) {mut aj, x, temp}:
+                def axpy_col[width: Int](i: Int) {mut aj, x, temp}:
                     aj.store[width=width](
                         i,
                         aj.load[width=width](i) + x.load[width=width](i) * temp,
