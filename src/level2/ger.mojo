@@ -98,10 +98,9 @@ def ger[
                 var temp: Scalar[dtype] = alpha * y[j]
                 var aj = a + j * lda
 
-                @parameter
                 def axpy_col[
                     width: Int
-                ](i: Int) unified {mut aj, read x, read temp}:
+                ](i: Int) {mut aj, x, temp}:
                     aj.store[width=width](
                         i,
                         aj.load[width=width](i) + x.load[width=width](i) * temp,

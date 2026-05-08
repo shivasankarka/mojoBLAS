@@ -138,8 +138,7 @@ def tpmv[
         x_in[i] = x[ix]
         ix += incx
 
-    @parameter
-    def a_at(i: Int, j: Int) -> Scalar[dtype]:
+    def a_at(i: Int, j: Int) {read no_unit, read upper, read ap, read n} -> Scalar[dtype]:
         if i == j and not no_unit:
             return 1
         if upper:

@@ -10,7 +10,6 @@
 """
 General Matrix-Vector Operations (`level2.gemv`)
 =============================================
-
 Provides general matrix-vector operations as defined in the BLAS library standard.
 
 This module implements the gemv operation for matrix-vector multiplication
@@ -115,8 +114,7 @@ def gemv[
                     y[i] = 0
             else:
 
-                @parameter
-                def closure[width: Int](i: Int) unified {mut y, read beta}:
+                def closure[width: Int](i: Int) {y, beta}:
                     y.store[width=width](i, beta * y.load[width=width](i))
 
                 vectorize[simd_width](leny, closure)
@@ -145,10 +143,9 @@ def gemv[
                     var temp: Scalar[dtype] = alpha * xj
                     var aj = a + j * lda
 
-                    @parameter
                     def axpy_col[
                         width: Int
-                    ](i: Int) unified {mut y, read aj, read temp}:
+                    ](i: Int) {y, aj, temp}:
                         y.store[width=width](
                             i,
                             y.load[width=width](i)
@@ -163,10 +160,9 @@ def gemv[
                     var temp: Scalar[dtype] = alpha * xj
                     var aj = a + j * lda
 
-                    @parameter
                     def axpy_col_sx[
                         width: Int
-                    ](i: Int) unified {mut y, read aj, read temp}:
+                    ](i: Int) {y, aj, temp}:
                         y.store[width=width](
                             i,
                             y.load[width=width](i)
@@ -194,10 +190,9 @@ def gemv[
                 var temp: Scalar[dtype] = 0
                 var aj = a + j * lda
 
-                @parameter
                 def dot_col[
                     width: Int
-                ](i: Int) unified {mut temp, read aj, read x}:
+                ](i: Int) {mut temp, aj, x}:
                     temp += (
                         aj.load[width=width](i) * x.load[width=width](i)
                     ).reduce_add()

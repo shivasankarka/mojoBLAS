@@ -98,12 +98,9 @@ def syr2[
                     var temp2: Scalar[dtype] = alpha * x[j]
                     var aj = a + j * lda
 
-                    @parameter
                     def rank2_upper[
                         width: Int
-                    ](i: Int) unified {
-                        mut aj, read x, read y, read temp1, read temp2
-                    }:
+                    ](i: Int) {aj, x, y, temp1, temp2}:
                         aj.store[width=width](
                             i,
                             aj.load[width=width](i)
@@ -139,12 +136,9 @@ def syr2[
                     var temp2: Scalar[dtype] = alpha * x[j]
                     var aj = a + j * lda
 
-                    @parameter
                     def rank2_lower[
                         width: Int
-                    ](i: Int) unified {
-                        mut aj, read x, read y, read temp1, read temp2, read j
-                    }:
+                    ](i: Int) {aj, x, y, temp1, temp2, j}:
                         var ii = j + i
                         aj.store[width=width](
                             ii,

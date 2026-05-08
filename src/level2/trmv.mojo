@@ -101,10 +101,9 @@ def trmv[
                         var temp: Scalar[dtype] = x[j]
                         var aj = a + j * lda
 
-                        @parameter
                         def axpy_upper[
                             width: Int
-                        ](i: Int) unified {mut x, read aj, read temp}:
+                        ](i: Int) {x, aj, temp}:
                             x.store[width=width](
                                 i,
                                 x.load[width=width](i)
@@ -133,10 +132,9 @@ def trmv[
                         var temp: Scalar[dtype] = x[j]
                         var aj = a + j * lda
 
-                        @parameter
                         def axpy_lower[
                             width: Int
-                        ](i: Int) unified {mut x, read aj, read temp, read j}:
+                        ](i: Int) {x, aj, temp, j}:
                             var ii = j + 1 + i
                             x.store[width=width](
                                 ii,
@@ -169,10 +167,9 @@ def trmv[
                         temp = temp * a[j + j * lda]
                     var aj = a + j * lda
 
-                    @parameter
                     def dot_upper[
                         width: Int
-                    ](i: Int) unified {mut temp, read aj, read x}:
+                    ](i: Int) {mut temp, aj, x}:
                         temp += (
                             aj.load[width=width](i) * x.load[width=width](i)
                         ).reduce_add()
@@ -199,10 +196,9 @@ def trmv[
                         temp = temp * a[j + j * lda]
                     var aj = a + j * lda
 
-                    @parameter
                     def dot_lower[
                         width: Int
-                    ](i: Int) unified {mut temp, read aj, read x, read j}:
+                    ](i: Int) {mut temp, aj, x, j}:
                         var ii = j + 1 + i
                         temp += (
                             aj.load[width=width](ii) * x.load[width=width](ii)
