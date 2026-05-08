@@ -10,7 +10,6 @@
 """
 Symmetric Rank-k Operations (`level3.syrk`)
 =============================================
-
 Provides symmetric rank-k operations as defined in the BLAS library standard.
 """
 

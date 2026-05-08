@@ -10,7 +10,6 @@
 """
 Symmetric Rank-2 Operations (`level2.syr2`)
 =============================================
-
 Provides symmetric rank-2 operations as defined in the BLAS library standard.
 """
 

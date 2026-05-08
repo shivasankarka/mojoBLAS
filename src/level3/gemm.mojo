@@ -10,7 +10,6 @@
 """
 General Matrix-Matrix Operations (`level3.gemm`)
 =============================================
-
 Provides general matrix-matrix operations as defined in the BLAS library standard.
 """
 

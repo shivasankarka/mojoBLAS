@@ -10,7 +10,6 @@
 """
 Triangular Band Solve Operations (`level2.tbsv`)
 =============================================
-
 Provides triangular band solve operations as defined in the BLAS library standard.
 """
 

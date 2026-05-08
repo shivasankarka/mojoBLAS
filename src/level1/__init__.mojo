@@ -10,7 +10,6 @@
 """
 Level 1 BLAS Operations (`level1`)
 ============================================
-
 This module provides Level 1 BLAS (Basic Linear Algebra Subprograms) operations
 implemented in Mojo. Level 1 BLAS includes vector-vector operations
 such as dot products, norms, and rotations.

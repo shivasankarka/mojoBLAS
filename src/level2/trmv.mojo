@@ -10,7 +10,6 @@
 """
 Triangular Matrix-Vector Operations (`level2trmv`)
 =============================================
-
 Provides triangular matrix-vector operations as defined in the BLAS library standard.
 """
 
