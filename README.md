@@ -14,7 +14,7 @@ This project started as an attempt to implement BLAS backend for math operations
 
 ### Prerequisites
 
-- Currently works on latest **Mojo** version `>=0.26.2.0,<0.27` (see [Mojo installation guide](https://docs.modular.com/mojo/manual/get-started/))
+- Currently works on latest **Mojo** version `>=1.0.0b1,<2` (see [Mojo installation guide](https://docs.modular.com/mojo/manual/get-started/))
 
 ### Setup
 
@@ -26,7 +26,7 @@ This project started as an attempt to implement BLAS backend for math operations
 preview = ["pixi-build"]
 
 [dependencies]
-mojo = ">=0.26.2.0,<0.27"
+mojo = ">=1.0.0b1,<2" 
 mojoblas = { git = "https://github.com/shivasankarka/mojoBLAS.git", branch = "main"}
 ```
 
@@ -201,7 +201,7 @@ mojoBLAS/
 - [x] **Benchmarking Suite**: Comparison against Accelerate and OpenBLAS.
 
 ### Future goals (In the order):
-- [ ] **Performance Optimizations**: SIMD vectorization, parallel execution.
+- [x] **Performance Optimizations**: SIMD vectorization, parallel execution.
 - [ ] **Complex Number Support**: Complex BLAS operations
 - [ ] **GPU Acceleration**: CUDA/ROCm backend support
 
