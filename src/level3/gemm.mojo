@@ -267,3 +267,166 @@ def gemm[
                     gemm_tt_col(j)
 
     return
+
+
+# ── gemm_v2 ─────────────────────────────────────
+#
+#   Improvement over gemm (No-trans/No-trans, col-major):
+#
+#   Register tiling — group NR=4 output columns together. For each group of NR cols
+#   and MR rows, accumulate MR×NR SIMD register accumulators across ALL k before
+#   writing C back once. This eliminates repeated C load/store in the inner loop
+#   (gemm does one load + one store per k-step per element; gemm_v2 does one load +
+#   one store total per element regardless of k).
+#
+#   MR=simd_width fills one full register per row.
+#   NR=4 keeps 4 columns of accumulators in registers.
+#
+#   Only the NN (No-trans A, No-trans B) path is optimized.
+#   Other variants fall through to original gemm.
+#   Parallelized over groups of NR output columns, same as gemm.
+
+
+def gemm_v2[
+    mut_a: Bool,
+    mut_b: Bool,
+    origin_a: Origin[mut=mut_a],
+    origin_b: Origin[mut=mut_b],
+    origin_c: MutOrigin,
+    //,
+    dtype: DType,
+](
+    trans_a: String,
+    trans_b: String,
+    m: Int,
+    n: Int,
+    k: Int,
+    alpha: Scalar[dtype],
+    a: BLASPtr[dtype, origin_a],
+    lda: Int,
+    b: BLASPtr[dtype, origin_b],
+    ldb: Int,
+    beta: Scalar[dtype],
+    c: BLASPtr[dtype, origin_c],
+    ldc: Int,
+):
+    """
+    Register-tiled GEMM: C := alpha*A*B + beta*C.
+
+    Optimization over gemm (NN path only):
+      MR×NR = simd_width×4 register micro-kernel - accumulates MR×NR SIMD
+      register accumulators across ALL k before writing C back once.
+      Eliminates repeated C load/store in the inner loop of gemm.
+      Parallelized over groups of NR=4 output columns.
+
+    Falls through to gemm for transposed variants.
+    Same API as gemm.
+    """
+    var info: Int = 0
+    if (
+        trans_a != "N" and trans_a != "n"
+        and trans_a != "T" and trans_a != "t"
+        and trans_a != "C" and trans_a != "c"
+    ):
+        info = 1
+    elif (
+        trans_b != "N" and trans_b != "n"
+        and trans_b != "T" and trans_b != "t"
+        and trans_b != "C" and trans_b != "c"
+    ):
+        info = 2
+    elif m < 0: info = 3
+    elif n < 0: info = 4
+    elif k < 0: info = 5
+    elif lda < max(1, m if (trans_a == "N" or trans_a == "n") else k): info = 8
+    elif ldb < max(1, k if (trans_b == "N" or trans_b == "n") else n): info = 10
+    elif ldc < max(1, m): info = 13
+    if info != 0:
+        print("gemm_v2: Info", info)
+        return
+
+    if m == 0 or n == 0:
+        return
+
+    var no_trans_a = trans_a == "N" or trans_a == "n"
+    var no_trans_b = trans_b == "N" or trans_b == "n"
+    if not no_trans_a or not no_trans_b:
+        gemm[dtype](trans_a, trans_b, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
+        return
+
+    comptime simd_width: Int = simd_width_of[dtype]()
+    comptime NR: Int = 4
+    comptime MR: Int = simd_width
+    comptime PAR_THRESHOLD: Int = 16
+
+    if beta == 0:
+        for j in range(n):
+            var cj = c + j * ldc
+
+            def zero_v2[width: Int](i: Int) {cj}:
+                cj.store[width=width](i, SIMD[dtype, width](0))
+
+            vectorize[simd_width](m, zero_v2)
+    elif beta != 1:
+        for j in range(n):
+            var cj = c + j * ldc
+
+            def scale_v2[width: Int](i: Int) {cj, beta}:
+                cj.store[width=width](i, beta * cj.load[width=width](i))
+
+            vectorize[simd_width](m, scale_v2)
+
+    if alpha == 0 or k == 0:
+        return
+
+    @parameter
+    def col_group(jr_block: Int):
+        var j0 = jr_block * NR
+        if j0 >= n:
+            return
+        var jlen = min(NR, n - j0)
+
+        var ir = 0
+        while ir + MR <= m:
+            # MR×jlen register accumulators
+            var acc0 = SIMD[dtype, MR](0)
+            var acc1 = SIMD[dtype, MR](0)
+            var acc2 = SIMD[dtype, MR](0)
+            var acc3 = SIMD[dtype, MR](0)
+
+            for l in range(k):
+                var av = alpha * (a + l * lda + ir).load[width=MR]()
+                acc0 = av * b[l + (j0 + 0) * ldb] + acc0
+                if jlen > 1: acc1 = av * b[l + (j0 + 1) * ldb] + acc1
+                if jlen > 2: acc2 = av * b[l + (j0 + 2) * ldb] + acc2
+                if jlen > 3: acc3 = av * b[l + (j0 + 3) * ldb] + acc3
+
+            var cp0 = c + (j0 + 0) * ldc + ir
+            cp0.store[width=MR](acc0 + cp0.load[width=MR]())
+            if jlen > 1:
+                var cp1 = c + (j0 + 1) * ldc + ir
+                cp1.store[width=MR](acc1 + cp1.load[width=MR]())
+            if jlen > 2:
+                var cp2 = c + (j0 + 2) * ldc + ir
+                cp2.store[width=MR](acc2 + cp2.load[width=MR]())
+            if jlen > 3:
+                var cp3 = c + (j0 + 3) * ldc + ir
+                cp3.store[width=MR](acc3 + cp3.load[width=MR]())
+            ir += MR
+
+        while ir < m:
+            for jc in range(jlen):
+                var sum: Scalar[dtype] = 0
+                for l in range(k):
+                    sum += a[ir + l * lda] * b[l + (j0 + jc) * ldb]
+                c[ir + (j0 + jc) * ldc] += alpha * sum
+            ir += 1
+
+    var n_groups = (n + NR - 1) // NR
+    if n_groups >= PAR_THRESHOLD:
+        parallelize[col_group](n_groups)
+    else:
+        for jg in range(n_groups):
+            col_group(jg)
+
+
