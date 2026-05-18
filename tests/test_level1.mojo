@@ -1,6 +1,5 @@
-from std.memory import UnsafePointer
 from std.testing import TestSuite
-from std.testing import assert_true, assert_equal, assert_almost_equal
+from std.testing import assert_true, assert_almost_equal
 
 from src.level1 import (
     axpy,
@@ -90,7 +89,6 @@ def test_axpy() raises:
     y[0], y[1], y[2] = 4.0, 5.0, 6.0
 
     axpy(3, Float32(2.0), x, 1, y, 1)
-
     # y = 2*x + y → [6, 9, 12]
     assert_true(y[0] == 6.0, "axpy failed at index 0")
     assert_true(y[1] == 9.0, "axpy failed at index 1")
@@ -180,6 +178,71 @@ def test_asum() raises:
     assert_true(result == 10.0, "asum incorrect")
 
     x.free()
+
+
+def test_asum_negative_increment() raises:
+    var x = alloc[Scalar[DType.float32]](4)
+    x[0], x[1], x[2], x[3] = 1.0, -2.0, 3.0, -4.0
+
+    var result = asum(4, x, -1)
+
+    assert_true(result == 10.0, "asum with negative increment incorrect")
+
+    x.free()
+
+
+def test_axpy_negative_increment() raises:
+    var x = alloc[Scalar[DType.float32]](3)
+    var y = alloc[Scalar[DType.float32]](3)
+    x[0], x[1], x[2] = 1.0, 2.0, 3.0
+    y[0], y[1], y[2] = 10.0, 20.0, 30.0
+
+    # Negative increments are handled from base pointer via internal offset.
+    axpy(3, Float32(2.0), x, -1, y, -1)
+
+    assert_true(
+        y[0] == 12.0 and y[1] == 24.0 and y[2] == 36.0,
+        "axpy negative increment incorrect",
+    )
+
+    x.free()
+    y.free()
+
+
+def test_dot_negative_increment() raises:
+    var x = alloc[Scalar[DType.float32]](3)
+    var y = alloc[Scalar[DType.float32]](3)
+    x[0], x[1], x[2] = 1.0, 2.0, 3.0
+    y[0], y[1], y[2] = 4.0, 5.0, 6.0
+
+    var result = dot(3, x, -1, y, -1)
+    assert_true(result == 32.0, "dot negative increment incorrect")
+
+    x.free()
+    y.free()
+
+
+def test_n_le_zero_noop_paths() raises:
+    var x = alloc[Scalar[DType.float32]](2)
+    var y = alloc[Scalar[DType.float32]](2)
+    x[0], x[1] = 1.0, 2.0
+    y[0], y[1] = 3.0, 4.0
+
+    copy(0, x, 1, y, 1)
+    scal(0, Float32(2.0), x, 1)
+    axpy(0, Float32(2.0), x, 1, y, 1)
+    vswap(0, x, 1, y, 1)
+    rot(0, x, 1, y, 1, Float32(1.0), Float32(0.0))
+
+    assert_true(x[0] == 1.0 and x[1] == 2.0, "n<=0 should be no-op for x")
+    assert_true(y[0] == 3.0 and y[1] == 4.0, "n<=0 should be no-op for y")
+    assert_true(dot(0, x, 1, y, 1) == 0.0, "dot n<=0 should return 0")
+    assert_true(nrm2(0, x, 1) == 0.0, "nrm2 n<=0 should return 0")
+    assert_true(asum(0, x, 1) == 0.0, "asum n<=0 should return 0")
+    assert_true(iamax(0, x, 1) == 0, "iamax n<=0 should return 0")
+
+    x.free()
+    y.free()
 
 
 def test_swap() raises:
