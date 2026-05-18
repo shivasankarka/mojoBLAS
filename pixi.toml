@@ -13,7 +13,7 @@ preview = ["pixi-build"]
 license = "MIT"
 
 [package]
-name = "mojoBLAS"
+name = "mojoblas"
 version = "0.1.0"
 
 [package.build]
@@ -23,7 +23,7 @@ backend = { name = "pixi-build-mojo", version = "0.*", channels = [
 ] }
 
 [package.build.config.pkg]
-name = "mojoBLAS"
+name = "mojoblas"
 
 [package.host-dependencies]
 mojo = "==1.0.0b1"
