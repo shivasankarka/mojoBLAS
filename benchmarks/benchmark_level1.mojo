@@ -1,10 +1,20 @@
-from std.memory import UnsafePointer, memset_zero
-from std.time import sleep
 import std.benchmark as benchmark
 from std.benchmark import keep
 
-from src.level1 import *
-
+from src.level1 import (
+    axpy,
+    copy,
+    scal,
+    dot,
+    nrm2,
+    asum,
+    vswap,
+    iamax,
+    rotg,
+    rot,
+    rotm,
+    rotmg,
+)
 comptime f64 = DType.float64
 
 def bench_daxpy[current_size: Int]() raises -> Float64:
@@ -17,6 +27,8 @@ def bench_daxpy[current_size: Int]() raises -> Float64:
     @parameter
     def daxpy_only() -> None:
         axpy[f64](current_size, Float64(2.0), x, 1, y, 1)
+        keep(y) # to prevent compiler optimization while doing parallelization
+        # (idk why it happens only with parallelization.)
 
     var report = benchmark.run[daxpy_only](max_runtime_secs=1)
 
@@ -26,6 +38,7 @@ def bench_daxpy[current_size: Int]() raises -> Float64:
     y.free()
 
     return report.mean("ns")
+
 
 def bench_dcopy[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[f64]](current_size)
@@ -280,6 +293,7 @@ def benchmark_axpy() raises -> List[Float64]:
         times.append(bench_daxpy[size]())
     return times^
 
+
 def benchmark_copy() raises -> List[Float64]:
     var times: List[Float64] = []
     comptime for size in materialize[sizes]():
@@ -359,7 +373,8 @@ def benchmark_rotmg() raises -> List[Float64]:
 
 def main() raises:
     var min_n: Int = 256
-    var max_n: Int = 262144
+    # var max_n: Int = 262144
+    var max_n: Int = 65536
     var step: Int = 2
     var first = True
     var axpy_ns = benchmark_axpy()
