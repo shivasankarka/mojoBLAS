@@ -15,7 +15,7 @@ Provides absolute sum operations as defined in the BLAS library standard.
 
 from std.algorithm.functional import parallelize
 from std.sys.info import simd_width_of
-from ._tuning import ASUM_N_THREADS, ASUM_PAR_THRESHOLD, ASUM_UNROLL, ASUM_N_ACC
+from ._tuning import ASUM_N_THREADS, ASUM_PAR_THRESHOLD, ASUM_N_ACC
 
 
 def _asum_serial[
@@ -59,7 +59,6 @@ def asum[
     *,
     n_threads: Int = ASUM_N_THREADS,
     par_threshold: Int = ASUM_PAR_THRESHOLD,
-    unroll_factor: Int = ASUM_UNROLL,
     n_acc: Int = ASUM_N_ACC,
 ](n: Int, dx: BLASPtr[dtype, origin], incx: Int,) -> Scalar[dtype]:
     """
@@ -71,7 +70,6 @@ def asum[
         dtype: Data type of the elements in vector X.
         n_threads: Number of threads for parallel execution.
         par_threshold: Minimum n to switch to parallel execution.
-        unroll_factor: Unroll factor (unused; kept for API consistency with tuner).
         n_acc: Number of independent SIMD accumulators in the inner kernel.
 
     Args:

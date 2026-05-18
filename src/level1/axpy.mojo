@@ -19,7 +19,6 @@ from ._tuning import (
     AXPY_N_THREADS,
     AXPY_PAR_THRESHOLD,
     AXPY_MIN_CHUNK_PER_THREAD,
-    AXPY_UNROLL,
     AXPY_N_ACC,
 )
 
@@ -117,7 +116,6 @@ def axpy[
     n_threads: Int = AXPY_N_THREADS,
     par_threshold: Int = AXPY_PAR_THRESHOLD,
     min_chunk: Int = AXPY_MIN_CHUNK_PER_THREAD,
-    unroll_factor: Int = AXPY_UNROLL,
     n_acc: Int = AXPY_N_ACC,
 ](
     n: Int,
@@ -151,7 +149,6 @@ def axpy[
         min_chunk: Minimum elements per thread; caps active thread count so
                    nt = min(n_threads, n // min_chunk). Parallel path is skipped
                    entirely when nt < 2.
-        unroll_factor: Reserved for future use.
         n_acc: Number of independent SIMD streams in the inner kernel (default 4).
 
     Args:
