@@ -13,12 +13,21 @@ Vector Copy Operations (`level1.copy`)
 Provides vector copy operations as defined in the BLAS library standard.
 """
 
-from std.algorithm.functional import vectorize
+from std.algorithm.functional import vectorize, parallelize
 from std.sys.info import simd_width_of
+from ._tuning import COPY_N_THREADS, COPY_PAR_THRESHOLD, COPY_UNROLL
 
 
 def copy[
-    mut: Bool, origin_x: Origin[mut=mut], origin_y: MutOrigin, //, dtype: DType
+    mut: Bool,
+    origin_x: Origin[mut=mut],
+    origin_y: MutOrigin,
+    //,
+    dtype: DType,
+    *,
+    n_threads: Int = COPY_N_THREADS,
+    par_threshold: Int = COPY_PAR_THRESHOLD,
+    unroll_factor: Int = COPY_UNROLL,
 ](
     n: Int,
     dx: BLASPtr[dtype, origin_x],
@@ -34,6 +43,9 @@ def copy[
         origin_x: Memory origin of the pointer to vector X.
         origin_y: Memory origin of the pointer to vector Y.
         dtype: Data type of the elements in vectors X and Y.
+        n_threads: Number of threads for parallel execution.
+        par_threshold: Minimum n to switch to parallel execution.
+        unroll_factor: Unroll factor for vectorized loops.
 
     Args:
         n: Number of elements in vectors X and Y.
@@ -47,11 +59,33 @@ def copy[
 
     comptime simd_width: Int = simd_width_of[dtype]()
     if incx == 1 and incy == 1:
+        if n > par_threshold:
+            var chunk_size = (n + n_threads - 1) // n_threads
+
+            @parameter
+            def worker(tid: Int):
+                var start = tid * chunk_size
+                var end = min(start + chunk_size, n)
+                var length = end - start
+                if length <= 0:
+                    return
+                var xc = dx + start
+                var yc = dy + start
+
+                def closure_p[width: Int](i: Int) {yc, xc}:
+                    yc.store[width=width](i, xc.load[width=width](i))
+
+                vectorize[simd_width, unroll_factor=unroll_factor](
+                    length, closure_p
+                )
+
+            parallelize[worker](n_threads)
+            return
 
         def closure[width: Int](i: Int) {dy, dx}:
             dy.store[width=width](i, dx.load[width=width](i))
 
-        vectorize[simd_width](n, closure)
+        vectorize[simd_width, unroll_factor=unroll_factor](n, closure)
         return
 
     var ix: Int = 0
