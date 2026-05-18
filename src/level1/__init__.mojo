@@ -14,9 +14,6 @@ This module provides Level 1 BLAS (Basic Linear Algebra Subprograms) operations
 implemented in Mojo. Level 1 BLAS includes vector-vector operations
 such as dot products, norms, and rotations.
 """
-# TODO: Add vectorized/parallelized operations.
-# Add benchmark against BLAS operations.
-# Add support for Complex data types.
 
 from .copy import copy
 from .scal import scal
