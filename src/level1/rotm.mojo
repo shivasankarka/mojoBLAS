@@ -13,6 +13,10 @@ Modified Givens Rotation Operations (`level1.rotm`)
 Provides modified Givens rotation operations as defined in the BLAS library standard.
 """
 
+from std.algorithm.functional import vectorize, parallelize
+from std.sys.info import simd_width_of
+from ._tuning import ROTM_N_THREADS, ROTM_PAR_THRESHOLD, ROTM_UNROLL
+
 
 def rotm[
     origin_x: MutOrigin,
@@ -21,6 +25,10 @@ def rotm[
     origin_param: Origin[mut=mut_param],
     //,
     dtype: DType,
+    *,
+    n_threads: Int = ROTM_N_THREADS,
+    par_threshold: Int = ROTM_PAR_THRESHOLD,
+    unroll_factor: Int = ROTM_UNROLL,
 ](
     n: Int,
     x: BLASPtr[dtype, origin_x],
@@ -53,36 +61,151 @@ def rotm[
         h11 = param[1]
         h22 = param[4]
 
-    if incx == incy and incx > 0:
-        var nsteps = n * incx
-        for i in range(0, nsteps, incx):
-            var w = x[i]
-            var z = y[i]
-            if flag < 0:
-                x[i] = w * h11 + z * h12
-                y[i] = w * h21 + z * h22
-            elif flag == 0:
-                x[i] = w + z * h12
-                y[i] = w * h21 + z
+    if incx == 1 and incy == 1:
+        comptime simd_width: Int = simd_width_of[dtype]()
+
+        if flag < 0:
+            # x[i] = h11*x[i] + h12*y[i]
+            # y[i] = h21*x[i] + h22*y[i]
+            if n > par_threshold:
+                var chunk_size = (n + n_threads - 1) // n_threads
+
+                @parameter
+                def worker_neg(tid: Int):
+                    var start = tid * chunk_size
+                    var end = min(start + chunk_size, n)
+                    var length = end - start
+                    if length <= 0:
+                        return
+                    var xc = x + start
+                    var yc = y + start
+
+                    def closure[
+                        width: Int
+                    ](i: Int) {xc, yc, h11, h12, h21, h22}:
+                        var xv = xc.load[width=width](i)
+                        var yv = yc.load[width=width](i)
+                        xc.store[width=width](i, h11 * xv + h12 * yv)
+                        yc.store[width=width](i, h21 * xv + h22 * yv)
+
+                    vectorize[simd_width, unroll_factor=unroll_factor](
+                        length, closure
+                    )
+
+                parallelize[worker_neg](n_threads)
             else:
-                x[i] = w * h11 + z
-                y[i] = -w + h22 * z
+
+                def closure_neg[width: Int](i: Int) {x, y, h11, h12, h21, h22}:
+                    var xv = x.load[width=width](i)
+                    var yv = y.load[width=width](i)
+                    x.store[width=width](i, h11 * xv + h12 * yv)
+                    y.store[width=width](i, h21 * xv + h22 * yv)
+
+                vectorize[simd_width, unroll_factor=unroll_factor](
+                    n, closure_neg
+                )
+
+        elif flag == 0:
+            # x[i] = x[i] + h12*y[i], y[i] = h21*x[i] + y[i]
+            if n > par_threshold:
+                var chunk_size = (n + n_threads - 1) // n_threads
+
+                @parameter
+                def worker_zero(tid: Int):
+                    var start = tid * chunk_size
+                    var end = min(start + chunk_size, n)
+                    var length = end - start
+                    if length <= 0:
+                        return
+                    var xc = x + start
+                    var yc = y + start
+
+                    def closure[width: Int](i: Int) {xc, yc, h12, h21}:
+                        var xv = xc.load[width=width](i)
+                        var yv = yc.load[width=width](i)
+                        xc.store[width=width](i, xv + h12 * yv)
+                        yc.store[width=width](i, h21 * xv + yv)
+
+                    vectorize[simd_width, unroll_factor=unroll_factor](
+                        length, closure
+                    )
+
+                parallelize[worker_zero](n_threads)
+            else:
+
+                def closure_zero[width: Int](i: Int) {x, y, h12, h21}:
+                    var xv = x.load[width=width](i)
+                    var yv = y.load[width=width](i)
+                    x.store[width=width](i, xv + h12 * yv)
+                    y.store[width=width](i, h21 * xv + yv)
+
+                vectorize[simd_width, unroll_factor=unroll_factor](
+                    n, closure_zero
+                )
+
+        else:
+            # flag > 0: h12 = h21 = implied (-1/+1); x[i] = h11*x[i] + y[i], y[i] = -x[i] + h22*y[i]
+            if n > par_threshold:
+                var chunk_size = (n + n_threads - 1) // n_threads
+
+                @parameter
+                def worker_pos(tid: Int):
+                    var start = tid * chunk_size
+                    var end = min(start + chunk_size, n)
+                    var length = end - start
+                    if length <= 0:
+                        return
+                    var xc = x + start
+                    var yc = y + start
+
+                    def closure[width: Int](i: Int) {xc, yc, h11, h22}:
+                        var xv = xc.load[width=width](i)
+                        var yv = yc.load[width=width](i)
+                        xc.store[width=width](i, h11 * xv + yv)
+                        yc.store[width=width](i, -xv + h22 * yv)
+
+                    vectorize[simd_width, unroll_factor=unroll_factor](
+                        length, closure
+                    )
+
+                parallelize[worker_pos](n_threads)
+            else:
+
+                def closure_pos[width: Int](i: Int) {x, y, h11, h22}:
+                    var xv = x.load[width=width](i)
+                    var yv = y.load[width=width](i)
+                    x.store[width=width](i, h11 * xv + yv)
+                    y.store[width=width](i, -xv + h22 * yv)
+
+                vectorize[simd_width, unroll_factor=unroll_factor](
+                    n, closure_pos
+                )
+
         return
 
     var kx = 0 if incx > 0 else (1 - n) * incx
     var ky = 0 if incy > 0 else (1 - n) * incy
-    for _ in range(n):
-        var w = x[kx]
-        var z = y[ky]
-        if flag < 0:
+    if flag < 0:
+        for _ in range(n):
+            var w = x[kx]
+            var z = y[ky]
             x[kx] = w * h11 + z * h12
             y[ky] = w * h21 + z * h22
-        elif flag == 0:
+            kx += incx
+            ky += incy
+    elif flag == 0:
+        for _ in range(n):
+            var w = x[kx]
+            var z = y[ky]
             x[kx] = w + z * h12
             y[ky] = w * h21 + z
-        else:
+            kx += incx
+            ky += incy
+    else:
+        for _ in range(n):
+            var w = x[kx]
+            var z = y[ky]
             x[kx] = w * h11 + z
             y[ky] = -w + h22 * z
-
-        kx += incx
-        ky += incy
+            kx += incx
+            ky += incy
