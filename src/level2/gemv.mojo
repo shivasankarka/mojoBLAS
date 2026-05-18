@@ -136,7 +136,7 @@ def gemv[
     if no_trans:
         var jx: Int = kx
         if incx == 1 and incy == 1:
-            # Fast path: both vectors contiguous — vectorize the inner column axpy
+            # Fast path: both vectors contiguous - vectorize inner column axpy
             for j in range(n):
                 var xj = x[j]
                 if xj != 0:
@@ -180,7 +180,7 @@ def gemv[
     else:
         comptime PAR_THRESHOLD: Int = 256
         if incx == 1:
-            # Trans + contiguous x: each j writes to independent y[ky-1 + j*incy] — safe to parallelize
+            # Trans + contiguous x: each j writes to independent y[ky-1 + j*incy] - safe to parallelize
             @parameter
             def gemv_trans_col(j: Int):
                 var temp: Scalar[dtype] = 0
