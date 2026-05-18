@@ -67,6 +67,7 @@ def rot[
     var iy: Int = 0
     comptime simd_width: Int = simd_width_of[dtype]()
 
+    # TODO: test if I can implement a accumulator alg here.
     if incx == 1 and incy == 1:
         if n > par_threshold:
             var chunk_size = (n + n_threads - 1) // n_threads
