@@ -24,7 +24,7 @@ def bench_dgemm[current_size: Int]() raises -> Float64:
 
     @parameter
     def dgemm_only()  -> None:
-        gemm_v7[f64]("N", "N", m, n, k, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc)
+        gemm[f64]("N", "N", m, n, k, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc)
 
     var report = benchmark.run[dgemm_only](max_runtime_secs=1)
 
