@@ -1,61 +1,85 @@
 # mojoBLAS
+<!-- omit from toc -->
 
-A high-performance **BLAS (Basic Linear Algebra Subprograms)** implementation written in [Mojo](https://modular.com/mojo), leveraging Mojo's powerful systems programming capabilities and zero-cost abstractions for maximum performance.
+A high-performance **BLAS (Basic Linear Algebra Subprograms)** implementation written in [Mojo](https://modular.com/mojo).
 
-## Motivation
+[![Mojo](https://img.shields.io/badge/mojo-1.0.0b1-orange)](https://docs.modular.com/mojo/manual/)
+[![Tests](https://img.shields.io/badge/tests-level1%2F2%2F3-brightgreen)]()
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-This project started as an attempt to implement BLAS backend for math operations in [NuMojo](https://github.com/Mojo-Numerics-and-Algorithms-group/NuMojo). Then I thought why not try implementing the full BLAS in pure Mojo (We have all been there 😉). It's just fun to dive into coding these operations and go down the rabbit hole of optimizations (I've barely scratched the surface xD). Here's what I have so far:
+## Overview
 
-- **Complete Real BLAS Implementation**: All 34 standard real BLAS routines (Level 1/2/3) implemented.
-- **Generic Implementation**: Supports all real datatypes (through DType) in existing BLAS routines.
-- **Comprehensive Testing**: Almost full test coverage for all three BLAS levels (with openblas reference values).
+`mojoBLAS` is a pure-Mojo BLAS implementation focused on performance. It currently includes:
 
-## 📦 Installation
+- **Level 1 BLAS**: vector-vector operations such as `dot`, `axpy`, `nrm2`, `scal`, and more.
+- **Level 2 BLAS**: matrix-vector operations such as `gemv`, `ger`, triangular and packed matrix-vector routines.
+- **Level 3 BLAS**: matrix-matrix operations such as `gemm`, `syrk`, `syr2k`, `symm`, `trmm`, and `trsm`.
+- **Benchmarking suite**: comparison against reference/system BLAS implementations.
+
+The codebase is currently optimized for real scalar data types through Mojo `DType` support.
+
+## Installation
 
 ### Prerequisites
 
-- Currently works on latest **Mojo** version `>=1.0.0b1,<2` (see [Mojo installation guide](https://docs.modular.com/mojo/manual/get-started/))
+- Pixi
+- Mojo `>=1.0.0b1,<2`
 
-### Setup
+### Modular community
+`mojoBLAS` is available in the modular-community `https://repo.prefix.dev/modular-community` package repository. Add the following to your `channels` list in your `pixi.toml` file:
 
-#### Method 1: As a dependency
+```toml
+channels = ["https://conda.modular.com/max", "https://repo.prefix.dev/modular-community", "conda-forge"]
+```
 
-1) Add to pixi.toml
+Then, you can install `mojoBLAS` using any of these methods:
+
+1. From the `pixi` CLI, run the command ```pixi add mojoblas```.
+
+2. In the `pixi.toml` file of your project, add the following dependency:
+    ```toml
+    mojoblas = "==0.1.0"
+    ```
+Then run `pixi install` to download and install the package.
+
+### Use as a dependency
+
+Add the repository to your `pixi.toml`:
+
 ```toml
 [workspace]
 preview = ["pixi-build"]
 
 [dependencies]
-mojo = ">=1.0.0b1,<2" 
-mojoblas = { git = "https://github.com/shivasankarka/mojoBLAS.git", branch = "main"}
+mojo = ">=1.0.0b1,<2"
+mojoblas = { git = "https://github.com/shivasankarka/mojoBLAS.git", branch = "main" }
 ```
 
-#### Method 2: Clone and develop
+Then run:
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/shivasankarka/mojoBLAS.git
-   cd mojoBLAS
-   ```
+```bash
+pixi install
+```
 
-2. **Install dependencies:**
-   ```bash
-   pixi install
-   ```
+### Clone locally
 
-## 🔧 Usage
+```bash
+git clone https://github.com/shivasankarka/mojoBLAS.git
+cd mojoBLAS
+pixi install
+```
 
-### Basic Example
+## Usage
+
+### Basic example
 
 ```mojo
 from mojoblas.src.level1 import dot, axpy, nrm2
 
 fn main():
-    # Create vectors
     var x = alloc[Float32](3)
     var y = alloc[Float32](3)
 
-    # Initialize data
     x[0] = 1.0
     x[1] = 2.0
     x[2] = 3.0
@@ -63,172 +87,79 @@ fn main():
     y[1] = 5.0
     y[2] = 6.0
 
-    # Compute dot product: x · y
-    var result = dot(3, x, 1, y, 1)
-    print("Dot product:", result)  # Output: 32.0
-
-    # Perform AXPY: y = α*x + y
+    print(dot(3, x, 1, y, 1))
     axpy(3, 2.0, x, 1, y, 1)
-    print("After AXPY:", y[0], y[1], y[2])  # Output: 6.0, 9.0, 12.0
+    print(y[0], y[1], y[2])
+    print(nrm2(3, x, 1))
 
-    # Compute Euclidean norm
-    var norm = nrm2(3, x, 1)
-    print("Euclidean norm:", norm)
-
-    # Clean up
     x.free()
     y.free()
 ```
 
-### Available Functions
+### Available routines
 
-See [docs/reference.md](docs/reference.md) for the complete list of available functions and their signatures.
+- **Level 1**: `asum`, `axpy`, `copy`, `dot`, `iamax`, `nrm2`, `rot`, `rotg`, `rotm`, `rotmg`, `scal`, `swap`
+- **Level 2**: `gbmv`, `gemv`, `ger`, `sbmv`, `spmv`, `spr`, `spr2`, `symv`, `syr`, `syr2`, `tbmv`, `tbsv`, `tpmv`, `tpsv`, `trmv`, `trsv`
+- **Level 3**: `gemm`, `symm`, `syrk`, `syr2k`, `trmm`, `trsm`
 
 ## Testing
 
-Run the test suite to verify all implementations:
+Run the test suites with Pixi:
 
 ```bash
-# Level 1 tests
 pixi run test_level1
-
-# Level 2 tests
 pixi run test_level2
-
-# Level 3 tests
 pixi run test_level3
 ```
 
 ## Benchmarking
 
-The project includes a comprehensive benchmarking suite that compares mojoBLAS against system BLAS (OpenBLAS, Accelerate on macOS, OpenBLAS on Linux) across all three BLAS levels.
-
-### Running Benchmarks
-
-The benchmark environment is isolated from the main dependencies to keep the core environment lightweight. Install and run benchmarks using:
+The repository includes benchmark scripts. This benchmark compares mojoblas against general openblas and Accelerate (on Apple M chips) routines. To run the full benchmarks and generate plots, run the following command
 
 ```bash
-# Build and run C benchmarks (Accelerate + OpenBLAS)
-pixi run -e bench bench_c_build
-pixi run -e bench bench_c_run
-
-# Run Mojo benchmarks for each level
-pixi run -e bench bench_mojo_l1
-pixi run -e bench bench_mojo_l2
-pixi run -e bench bench_mojo_l3
-
-# Generate comparison plots
-pixi run -e bench bench_plot
-
-# Run everything at once (C benchmarks, Mojo benchmarks, and plotting)
 pixi run -e bench bench_all
 ```
 
-**Benchmark outputs:**
-- **JSON results**: `benchmarks/mojo_l{1,2,3}_results.json` and `benchmarks/c_bench_results.json`
-- **Comparison plots**: `benchmarks/bench_plot_level{1,2,3}.png`
+### Outputs
 
-## Project Structure
+- `benchmarks/bench_plot_level1.png`
+- `benchmarks/bench_plot_level2.png`
+- `benchmarks/bench_plot_level3.png`
 
-```
-mojoBLAS/
-├── src/
-│   ├── __init__.mojo              # Main package initialization
-│   ├── type_aliases.mojo          # Type definitions and aliases
-│   ├── level1/                    # Level 1 BLAS implementations
-│   │   ├── __init__.mojo
-│   │   ├── axpy.mojo
-│   │   ├── asum.mojo
-│   │   ├── copy.mojo
-│   │   ├── dot.mojo
-│   │   ├── iamax.mojo
-│   │   ├── nrm2.mojo
-│   │   ├── rot.mojo
-│   │   ├── rotg.mojo
-│   │   ├── rotm.mojo
-│   │   ├── rotmg.mojo
-│   │   ├── scal.mojo
-│   │   └── swap.mojo
-│   ├── level2/                    # Level 2 BLAS implementations
-│   │   ├── __init__.mojo
-│   │   ├── gemv.mojo
-│   │   ├── ger.mojo
-│   │   ├── gbmv.mojo
-│   │   ├── sbmv.mojo
-│   │   ├── spmv.mojo
-│   │   ├── spr.mojo
-│   │   ├── spr2.mojo
-│   │   ├── symv.mojo
-│   │   ├── syr.mojo
-│   │   ├── syr2.mojo
-│   │   ├── tbmv.mojo
-│   │   ├── tbsv.mojo
-│   │   ├── tpmv.mojo
-│   │   ├── tpsv.mojo
-│   │   ├── trmv.mojo
-│   │   └── trsv.mojo
-│   └── level3/                    # Level 3 BLAS implementations
-│       ├── __init__.mojo
-│       ├── gemm.mojo
-│       ├── symm.mojo
-│       ├── syrk.mojo
-│       ├── syr2k.mojo
-│       ├── trmm.mojo
-│       └── trsm.mojo
-├── tests/
-│   ├── reference.c
-│   ├── test_level1.mojo
-│   ├── test_level2.mojo
-│   ├── test_level2_extended.mojo
-│   └── test_level3.mojo
-├── benchmarks/
-│   ├── benchmark_level1.mojo      # Level 1 Mojo benchmarks
-│   ├── benchmark_level2.mojo      # Level 2 Mojo benchmarks
-│   ├── benchmark_level3.mojo      # Level 3 Mojo benchmarks
-│   ├── bench.c                    # C benchmark (Accelerate + OpenBLAS)
-│   ├── Makefile                   # Build C benchmark
-│   └── plot_bench.py              # Generate comparison plots
-├── pixi.toml                      # Project configuration
-└── README.md                      # This file
-```
+## Project structure
+
+- `src/` - Mojo source for BLAS implementations
+- `tests/` - Mojo tests and reference data
+- `benchmarks/` - benchmark scripts and plots
+- `docs/` - Reference documentation.
 
 ## Roadmap
 
-### Completed:
-- [x] **Level 1 BLAS**
-- [x] **Level 2 BLAS**
-- [x] **Level 3 BLAS**
-- [x] **Benchmarking Suite**: Comparison against Accelerate and OpenBLAS.
+### Completed
 
-### Future goals (In the order):
-- [x] **Performance Optimizations**: SIMD vectorization, parallel execution.
-- [ ] **Complex Number Support**: Complex BLAS operations
-- [ ] **GPU Acceleration**: CUDA/ROCm backend support
+- [x] Level 1 BLAS
+- [x] Level 2 BLAS
+- [x] Level 3 BLAS
+- [x] Benchmarking suite
+
+### Future goals
+
+- [ ] Optimize current algorithms (Goal: openblas, accelerate performance and more :))
+- [ ] Complex number support
+- [ ] GPU acceleration
 
 ## Contributing
 
-Contributions are welcome! Any help would be appreciated :)
+Contributions are welcome. If you find a bug or performance issue, please open an issue or submit a pull request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-It is inspired by and based on the Netlib BLAS reference implementation:
+This project is inspired by the Netlib BLAS reference implementation:
+
 http://www.netlib.org/blas/
 
-Original authors:
-Lawson, Hanson, Kincaid, Krogh, Dongarra, et al.
-
-This is an independent reimplementation. Any errors or differences are our own.
-
-- **Modular Team**: For creating the amazing Mojo language.
-- **BLAS Community**: For establishing the standard linear algebra interface.
-
-## 📚 References
-
-- [BLAS (Basic Linear Algebra Subprograms)](https://netlib.org/blas/)
-- [Mojo Programming Language](https://docs.modular.com/mojo/)
-
----
+Special thanks to the Mojo and BLAS communities for the tools and ideas that made this project possible.
