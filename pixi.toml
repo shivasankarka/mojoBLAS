@@ -6,7 +6,7 @@ channels = [
     "https://conda.modular.com/max-nightly/",
     "https://repo.prefix.dev/modular-community",
 ]
-name = "mojoBLAS"
+name = "mojoblas"
 platforms = ["osx-arm64", "linux-64"]
 version = "0.1.0"
 preview = ["pixi-build"]
