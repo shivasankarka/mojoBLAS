@@ -4,12 +4,17 @@
 #include <time.h>
 #include <dlfcn.h>
 
-/* CBLAS enum values (ref: cblas.h) */
-enum CBLAS_ORDER {CblasRowMajor=101, CblasColMajor=102};
+#ifdef __APPLE__
+#include <Accelerate/Accelerate.h>
+#endif
+
+#ifndef __APPLE__
+enum CBLAS_ORDER     {CblasRowMajor=101, CblasColMajor=102};
 enum CBLAS_TRANSPOSE {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113};
-enum CBLAS_UPLO {CblasUpper=121, CblasLower=122};
-enum CBLAS_DIAG {CblasNonUnit=131, CblasUnit=132};
-enum CBLAS_SIDE {CblasLeft=141, CblasRight=142};
+enum CBLAS_UPLO      {CblasUpper=121, CblasLower=122};
+enum CBLAS_DIAG      {CblasNonUnit=131, CblasUnit=132};
+enum CBLAS_SIDE      {CblasLeft=141, CblasRight=142};
+#endif
 
 /* Level 1 */
 typedef void (*cblas_daxpy_fn)(int N, double alpha, const double *X, int incX, double *Y, int incY);
@@ -52,6 +57,26 @@ typedef void (*cblas_dtrmm_fn)(int Order, int Side, int Uplo, int TransA, int Di
 typedef void (*cblas_dtrsm_fn)(int Order, int Side, int Uplo, int TransA, int Diag,
     int M, int N, double alpha, const double *A, int lda, double *B, int ldb);
 
+/* Packed / band routines missing from original bench */
+typedef void (*cblas_dtpmv_fn)(int Order, int Uplo, int TransA, int Diag,
+    int N, const double *Ap, double *X, int incX);
+typedef void (*cblas_dtpsv_fn)(int Order, int Uplo, int TransA, int Diag,
+    int N, const double *Ap, double *X, int incX);
+typedef void (*cblas_dtbmv_fn)(int Order, int Uplo, int TransA, int Diag,
+    int N, int K, const double *A, int lda, double *X, int incX);
+typedef void (*cblas_dtbsv_fn)(int Order, int Uplo, int TransA, int Diag,
+    int N, int K, const double *A, int lda, double *X, int incX);
+typedef void (*cblas_dspmv_fn)(int Order, int Uplo, int N, double alpha,
+    const double *Ap, const double *X, int incX, double beta, double *Y, int incY);
+typedef void (*cblas_dspr_fn)(int Order, int Uplo, int N, double alpha,
+    const double *X, int incX, double *Ap);
+typedef void (*cblas_dspr2_fn)(int Order, int Uplo, int N, double alpha,
+    const double *X, int incX, const double *Y, int incY, double *Ap);
+typedef void (*cblas_drotm_fn)(int N, double *X, int incX, double *Y, int incY,
+    const double *P);
+typedef void (*cblas_drotmg_fn)(double *d1, double *d2, double *b1,
+    double b2, double *P);
+
 typedef struct {
     const char *name;
     void *handle;
@@ -72,7 +97,50 @@ typedef struct {
     cblas_dsymm_fn dsymm;
     cblas_dtrmm_fn dtrmm;
     cblas_dtrsm_fn dtrsm;
+    /* packed / band */
+    cblas_dtpmv_fn  dtpmv;
+    cblas_dtpsv_fn  dtpsv;
+    cblas_dtbmv_fn  dtbmv;
+    cblas_dtbsv_fn  dtbsv;
+    cblas_dspmv_fn  dspmv;
+    cblas_dspr_fn   dspr;
+    cblas_dspr2_fn  dspr2;
+    cblas_drotm_fn  drotm;
+    cblas_drotmg_fn drotmg;
 } BlasLib;
+
+static void init_accelerate(BlasLib *lib) {
+    lib->name   = "accelerate";
+    lib->handle = NULL;
+#ifdef __APPLE__
+    lib->daxpy  = (cblas_daxpy_fn)  cblas_daxpy;
+    lib->dnrm2  = (cblas_dnrm2_fn)  cblas_dnrm2;
+    lib->dasum  = (cblas_dasum_fn)  cblas_dasum;
+    lib->ddot   = (cblas_ddot_fn)   cblas_ddot;
+    lib->dscal  = (cblas_dscal_fn)  cblas_dscal;
+    lib->dgemv  = (cblas_dgemv_fn)  cblas_dgemv;
+    lib->dtrmv  = (cblas_dtrmv_fn)  cblas_dtrmv;
+    lib->dtrsv  = (cblas_dtrsv_fn)  cblas_dtrsv;
+    lib->dsymv  = (cblas_dsymv_fn)  cblas_dsymv;
+    lib->dsyr   = (cblas_dsyr_fn)   cblas_dsyr;
+    lib->dsyr2  = (cblas_dsyr2_fn)  cblas_dsyr2;
+    lib->dgemm  = (cblas_dgemm_fn)  cblas_dgemm;
+    lib->dsyrk  = (cblas_dsyrk_fn)  cblas_dsyrk;
+    lib->dsyr2k = (cblas_dsyr2k_fn) cblas_dsyr2k;
+    lib->dsymm  = (cblas_dsymm_fn)  cblas_dsymm;
+    lib->dtrmm  = (cblas_dtrmm_fn)  cblas_dtrmm;
+    lib->dtrsm  = (cblas_dtrsm_fn)  cblas_dtrsm;
+    lib->dtpmv  = (cblas_dtpmv_fn)  cblas_dtpmv;
+    lib->dtpsv  = (cblas_dtpsv_fn)  cblas_dtpsv;
+    lib->dtbmv  = (cblas_dtbmv_fn)  cblas_dtbmv;
+    lib->dtbsv  = (cblas_dtbsv_fn)  cblas_dtbsv;
+    lib->dspmv  = (cblas_dspmv_fn)  cblas_dspmv;
+    lib->dspr   = (cblas_dspr_fn)   cblas_dspr;
+    lib->dspr2  = (cblas_dspr2_fn)  cblas_dspr2;
+    lib->drotm  = (cblas_drotm_fn)  cblas_drotm;
+    lib->drotmg = (cblas_drotmg_fn) cblas_drotmg;
+#endif
+}
 
 static double now_seconds(void) {
     struct timespec ts;
@@ -112,8 +180,17 @@ static int load_lib(BlasLib *lib, const char *path) {
     lib->dsyrk = (cblas_dsyrk_fn)checked_dlsym(lib->handle, "cblas_dsyrk");
     lib->dsyr2k = (cblas_dsyr2k_fn)checked_dlsym(lib->handle, "cblas_dsyr2k");
     lib->dsymm = (cblas_dsymm_fn)checked_dlsym(lib->handle, "cblas_dsymm");
-    lib->dtrmm = (cblas_dtrmm_fn)checked_dlsym(lib->handle, "cblas_dtrmm");
-    lib->dtrsm = (cblas_dtrsm_fn)checked_dlsym(lib->handle, "cblas_dtrsm");
+    lib->dtrmm  = (cblas_dtrmm_fn) checked_dlsym(lib->handle, "cblas_dtrmm");
+    lib->dtrsm  = (cblas_dtrsm_fn) checked_dlsym(lib->handle, "cblas_dtrsm");
+    lib->dtpmv  = (cblas_dtpmv_fn) checked_dlsym(lib->handle, "cblas_dtpmv");
+    lib->dtpsv  = (cblas_dtpsv_fn) checked_dlsym(lib->handle, "cblas_dtpsv");
+    lib->dtbmv  = (cblas_dtbmv_fn) checked_dlsym(lib->handle, "cblas_dtbmv");
+    lib->dtbsv  = (cblas_dtbsv_fn) checked_dlsym(lib->handle, "cblas_dtbsv");
+    lib->dspmv  = (cblas_dspmv_fn) checked_dlsym(lib->handle, "cblas_dspmv");
+    lib->dspr   = (cblas_dspr_fn)  checked_dlsym(lib->handle, "cblas_dspr");
+    lib->dspr2  = (cblas_dspr2_fn) checked_dlsym(lib->handle, "cblas_dspr2");
+    lib->drotm  = (cblas_drotm_fn) checked_dlsym(lib->handle, "cblas_drotm");
+    lib->drotmg = (cblas_drotmg_fn)checked_dlsym(lib->handle, "cblas_drotmg");
     if (!lib->daxpy || !lib->dnrm2 || !lib->dasum || !lib->ddot || !lib->dscal) {
         dlclose(lib->handle);
         lib->handle = NULL;
@@ -189,18 +266,28 @@ static void bench_level1(BlasLib *lib, const char *lib_name, FILE *out, int n, i
 
     double t0, t1;
 
-    copy_buf(x, x0, (size_t)n);
-    copy_buf(y, y0, (size_t)n);
-    t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->daxpy(n, 1.1, x, 1, y, 1);
-    t1 = now_seconds();
-    WRITE_RESULT(lib_name, "axpy", n, iters, t1 - t0);
+    /* axpy: reset y each iteration. */
+    double axpy_elapsed = 0.0;
+    for (int it = 0; it < iters; it++) {
+        copy_buf(x, x0, (size_t)n);
+        copy_buf(y, y0, (size_t)n);
+        t0 = now_seconds();
+        lib->daxpy(n, 1.25, x, 1, y, 1);
+        t1 = now_seconds();
+        axpy_elapsed += t1 - t0;
+    }
+    WRITE_RESULT(lib_name, "axpy", n, iters, axpy_elapsed);
 
-    copy_buf(x, x0, (size_t)n);
-    t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dscal(n, 0.99999, x, 1);
-    t1 = now_seconds();
-    WRITE_RESULT(lib_name, "scal", n, iters, t1 - t0);
+    /* scal: reset x each iteration. */
+    double scal_elapsed = 0.0;
+    for (int it = 0; it < iters; it++) {
+        copy_buf(x, x0, (size_t)n);
+        t0 = now_seconds();
+        lib->dscal(n, 2.0, x, 1);
+        t1 = now_seconds();
+        scal_elapsed += t1 - t0;
+    }
+    WRITE_RESULT(lib_name, "scal", n, iters, scal_elapsed);
 
     copy_buf(x, x0, (size_t)n);
     copy_buf(y, y0, (size_t)n);
@@ -220,6 +307,34 @@ static void bench_level1(BlasLib *lib, const char *lib_name, FILE *out, int n, i
     for (int it = 0; it < iters; it++) lib->dasum(n, x, 1);
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "sum", n, iters, t1 - t0);
+
+    if (lib->drotm) {
+        /* rotm: reset x and y each iteration. */
+        double param[5] = {-1.0, 1.0, 0.5, -0.5, 1.0};
+        double rotm_elapsed = 0.0;
+        for (int it = 0; it < iters; it++) {
+            copy_buf(x, x0, (size_t)n);
+            copy_buf(y, y0, (size_t)n);
+            t0 = now_seconds();
+            lib->drotm(n, x, 1, y, 1, param);
+            t1 = now_seconds();
+            rotm_elapsed += t1 - t0;
+        }
+        WRITE_RESULT(lib_name, "rotm", n, iters, rotm_elapsed);
+    }
+
+    if (lib->drotmg) {
+        /* rotmg: reset inputs each iteration. */
+        double rotmg_elapsed = 0.0;
+        for (int it = 0; it < iters; it++) {
+            double d1 = 2.0, d2 = 3.0, b1 = 4.0, b2 = 5.0, p[5] = {0};
+            t0 = now_seconds();
+            lib->drotmg(&d1, &d2, &b1, b2, p);
+            t1 = now_seconds();
+            rotmg_elapsed += t1 - t0;
+        }
+        WRITE_RESULT(lib_name, "rotmg", n, iters, rotmg_elapsed);
+    }
 
     free(x); free(y); free(x0); free(y0);
 }
@@ -270,12 +385,16 @@ static void bench_level2(BlasLib *lib, const char *lib_name, FILE *out, int n, i
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "gemv_trans", n, iters, t1 - t0);
 
-    copy_buf(a, a0, (size_t)n * (size_t)n);
-    copy_buf(x, x0, (size_t)n);
-    t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dtrmv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit, n, a, n, x, 1);
-    t1 = now_seconds();
-    WRITE_RESULT(lib_name, "trmv", n, iters, t1 - t0);
+    /* dtrmv: reset x each iteration. */
+    double trmv_elapsed = 0.0;
+    for (int it = 0; it < iters; it++) {
+        copy_buf(x, x0, (size_t)n);
+        t0 = now_seconds();
+        lib->dtrmv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit, n, a, n, x, 1);
+        t1 = now_seconds();
+        trmv_elapsed += t1 - t0;
+    }
+    WRITE_RESULT(lib_name, "trmv", n, iters, trmv_elapsed);
 
     double trsv_elapsed = 0.0;
     for (int it = 0; it < iters; it++) {
@@ -295,20 +414,140 @@ static void bench_level2(BlasLib *lib, const char *lib_name, FILE *out, int n, i
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "symv", n, iters, t1 - t0);
 
-    copy_buf(a, a0, (size_t)n * (size_t)n);
-    copy_buf(x, x0, (size_t)n);
-    t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dsyr(CblasColMajor, CblasUpper, n, one_d, x, 1, a, n);
-    t1 = now_seconds();
-    WRITE_RESULT(lib_name, "syr", n, iters, t1 - t0);
+    /* dsyr: reset a each iteration. */
+    double syr_elapsed = 0.0;
+    for (int it = 0; it < iters; it++) {
+        copy_buf(a, a0, (size_t)n * (size_t)n);
+        copy_buf(x, x0, (size_t)n);
+        t0 = now_seconds();
+        lib->dsyr(CblasColMajor, CblasUpper, n, one_d, x, 1, a, n);
+        t1 = now_seconds();
+        syr_elapsed += t1 - t0;
+    }
+    WRITE_RESULT(lib_name, "syr", n, iters, syr_elapsed);
 
-    copy_buf(a, a0, (size_t)n * (size_t)n);
-    copy_buf(x, x0, (size_t)n);
-    copy_buf(y, y0, (size_t)n);
-    t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dsyr2(CblasColMajor, CblasUpper, n, one_d, x, 1, y, 1, a, n);
-    t1 = now_seconds();
-    WRITE_RESULT(lib_name, "syr2", n, iters, t1 - t0);
+    /* dsyr2: reset a each iteration. */
+    double syr2_elapsed = 0.0;
+    for (int it = 0; it < iters; it++) {
+        copy_buf(a, a0, (size_t)n * (size_t)n);
+        copy_buf(x, x0, (size_t)n);
+        copy_buf(y, y0, (size_t)n);
+        t0 = now_seconds();
+        lib->dsyr2(CblasColMajor, CblasUpper, n, one_d, x, 1, y, 1, a, n);
+        t1 = now_seconds();
+        syr2_elapsed += t1 - t0;
+    }
+    WRITE_RESULT(lib_name, "syr2", n, iters, syr2_elapsed);
+
+    /* --- Packed and band routines --- */
+    int packed_size = n * (n + 1) / 2;
+    int kband = 1;
+    int lda_band = kband + 1;
+    double *ap = NULL, *ap0 = NULL, *ab = NULL, *ab0 = NULL;
+    if (posix_memalign((void **)&ap,  64, sizeof(double) * (size_t)packed_size) == 0 &&
+        posix_memalign((void **)&ap0, 64, sizeof(double) * (size_t)packed_size) == 0 &&
+        posix_memalign((void **)&ab,  64, sizeof(double) * (size_t)(lda_band * n)) == 0 &&
+        posix_memalign((void **)&ab0, 64, sizeof(double) * (size_t)(lda_band * n)) == 0) {
+
+        fill_random(ap0, packed_size);
+        fill_random(ab0, lda_band * n);
+        int k2 = 0;
+        for (int j = 0; j < n; j++) { ap0[k2] += (double)(n + 1); k2 += j + 2; }
+        for (int j = 0; j < n; j++) ab0[kband + j * lda_band] += (double)(n + 1);
+
+        if (lib->dspmv) {
+            copy_buf(ap, ap0, (size_t)packed_size);
+            copy_buf(x, x0, (size_t)n);
+            copy_buf(y, y0, (size_t)n);
+            t0 = now_seconds();
+            for (int it = 0; it < iters; it++)
+                lib->dspmv(CblasColMajor, CblasUpper, n, one_d, ap, x, 1, zero_d, y, 1);
+            t1 = now_seconds();
+            WRITE_RESULT(lib_name, "spmv", n, iters, t1 - t0);
+        }
+
+        if (lib->dspr) {
+            /* dspr: reset ap each iteration. */
+            double spr_elapsed = 0.0;
+            for (int it = 0; it < iters; it++) {
+                copy_buf(ap, ap0, (size_t)packed_size);
+                copy_buf(x, x0, (size_t)n);
+                t0 = now_seconds();
+                lib->dspr(CblasColMajor, CblasUpper, n, one_d, x, 1, ap);
+                t1 = now_seconds();
+                spr_elapsed += t1 - t0;
+            }
+            WRITE_RESULT(lib_name, "spr", n, iters, spr_elapsed);
+        }
+
+        if (lib->dspr2) {
+            /* dspr2: reset ap each iteration. */
+            double spr2_elapsed = 0.0;
+            for (int it = 0; it < iters; it++) {
+                copy_buf(ap, ap0, (size_t)packed_size);
+                copy_buf(x, x0, (size_t)n);
+                copy_buf(y, y0, (size_t)n);
+                t0 = now_seconds();
+                lib->dspr2(CblasColMajor, CblasUpper, n, one_d, x, 1, y, 1, ap);
+                t1 = now_seconds();
+                spr2_elapsed += t1 - t0;
+            }
+            WRITE_RESULT(lib_name, "spr2", n, iters, spr2_elapsed);
+        }
+
+        if (lib->dtpmv) {
+            /* dtpmv: reset x each iteration. */
+            double tpmv_elapsed = 0.0;
+            for (int it = 0; it < iters; it++) {
+                copy_buf(x, x0, (size_t)n);
+                t0 = now_seconds();
+                lib->dtpmv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit, n, ap0, x, 1);
+                t1 = now_seconds();
+                tpmv_elapsed += t1 - t0;
+            }
+            WRITE_RESULT(lib_name, "tpmv", n, iters, tpmv_elapsed);
+        }
+
+        if (lib->dtpsv) {
+            double tpsv_elapsed = 0.0;
+            for (int it = 0; it < iters; it++) {
+                copy_buf(x, x0, (size_t)n);
+                t0 = now_seconds();
+                lib->dtpsv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit, n, ap0, x, 1);
+                t1 = now_seconds();
+                tpsv_elapsed += t1 - t0;
+            }
+            WRITE_RESULT(lib_name, "tpsv", n, iters, tpsv_elapsed);
+        }
+
+        if (lib->dtbmv) {
+            /* dtbmv: reset x each iteration. */
+            double tbmv_elapsed = 0.0;
+            for (int it = 0; it < iters; it++) {
+                copy_buf(x, x0, (size_t)n);
+                t0 = now_seconds();
+                lib->dtbmv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit,
+                           n, kband, ab0, lda_band, x, 1);
+                t1 = now_seconds();
+                tbmv_elapsed += t1 - t0;
+            }
+            WRITE_RESULT(lib_name, "tbmv", n, iters, tbmv_elapsed);
+        }
+
+        if (lib->dtbsv) {
+            double tbsv_elapsed = 0.0;
+            for (int it = 0; it < iters; it++) {
+                copy_buf(x, x0, (size_t)n);
+                t0 = now_seconds();
+                lib->dtbsv(CblasColMajor, CblasUpper, CblasNoTrans, CblasNonUnit,
+                           n, kband, ab0, lda_band, x, 1);
+                t1 = now_seconds();
+                tbsv_elapsed += t1 - t0;
+            }
+            WRITE_RESULT(lib_name, "tbsv", n, iters, tbsv_elapsed);
+        }
+    }
+    free(ap); free(ap0); free(ab); free(ab0);
 
     free(a); free(x); free(y); free(a0); free(x0); free(y0);
 }
@@ -374,12 +613,17 @@ static void bench_level3(BlasLib *lib, const char *lib_name, FILE *out, int n, i
     t1 = now_seconds();
     WRITE_RESULT(lib_name, "symm", n, iters, t1 - t0);
 
-    copy_buf(a, a0, (size_t)n * (size_t)n);
-    copy_buf(b, b0, (size_t)n * (size_t)n);
-    t0 = now_seconds();
-    for (int it = 0; it < iters; it++) lib->dtrmm(CblasColMajor, CblasLeft, CblasUpper, CblasNoTrans, CblasNonUnit, n, n, one_d, a, n, b, n);
-    t1 = now_seconds();
-    WRITE_RESULT(lib_name, "trmm", n, iters, t1 - t0);
+    /* trmm: reset b each iteration. */
+    double trmm_elapsed = 0.0;
+    for (int it = 0; it < iters; it++) {
+        copy_buf(a, a0, (size_t)n * (size_t)n);
+        copy_buf(b, b0, (size_t)n * (size_t)n);
+        t0 = now_seconds();
+        lib->dtrmm(CblasColMajor, CblasLeft, CblasUpper, CblasNoTrans, CblasNonUnit, n, n, one_d, a, n, b, n);
+        t1 = now_seconds();
+        trmm_elapsed += t1 - t0;
+    }
+    WRITE_RESULT(lib_name, "trmm", n, iters, trmm_elapsed);
 
     double trsm_elapsed = 0.0;
     for (int it = 0; it < iters; it++) {
@@ -401,11 +645,9 @@ int main(int argc, char **argv) {
     int iters = 0;
     const char *json_path = "bench_results.json";
     const char *openblas_path = getenv("OPENBLAS_PATH");
-    const char *accelerate_path = "/System/Library/Frameworks/Accelerate.framework/Accelerate";
 
     setenv("OPENBLAS_NUM_THREADS", "1", 0);
     setenv("OMP_NUM_THREADS", "1", 0);
-    setenv("VECLIB_MAXIMUM_THREADS", "1", 0);
 
     srand((unsigned)time(NULL));
 
@@ -429,20 +671,15 @@ int main(int argc, char **argv) {
         openblas_path = "libopenblas.dylib";
     }
 
-    BlasLib accel = { .name = "accelerate" };
-    BlasLib openblas = { .name = "openblas" };
+    BlasLib accel   = {0};
+    BlasLib openblas = {0};
 
-    fprintf(stderr, "Loading Accelerate from %s\n", accelerate_path);
-    if (!load_lib(&accel, accelerate_path)) {
-        fprintf(stderr, "Failed to load Accelerate\n");
-        return 1;
-    }
+    fprintf(stderr, "Initialising Accelerate (linked)\n");
+    init_accelerate(&accel);
 
     fprintf(stderr, "Loading OpenBLAS from %s\n", openblas_path);
     if (!load_lib(&openblas, openblas_path)) {
-        fprintf(stderr, "Failed to load OpenBLAS\n");
-        unload_lib(&accel);
-        return 1;
+        fprintf(stderr, "Failed to load OpenBLAS - continuing without it\n");
     }
 
     FILE *out = fopen(json_path, "w");
@@ -470,7 +707,7 @@ int main(int argc, char **argv) {
         }
 
         bench_level1(&accel, "accelerate", out, n, local_iters, &first);
-        bench_level1(&openblas, "openblas", out, n, local_iters, &first);
+        if (openblas.daxpy) bench_level1(&openblas, "openblas", out, n, local_iters, &first);
     }
 
     fprintf(stderr, "Benchmarking Level 2...\n");
@@ -484,7 +721,7 @@ int main(int argc, char **argv) {
         }
 
         bench_level2(&accel, "accelerate", out, n, local_iters, &first);
-        bench_level2(&openblas, "openblas", out, n, local_iters, &first);
+        if (openblas.dgemv) bench_level2(&openblas, "openblas", out, n, local_iters, &first);
     }
 
     fprintf(stderr, "Benchmarking Level 3...\n");
@@ -499,13 +736,12 @@ int main(int argc, char **argv) {
         }
 
         bench_level3(&accel, "accelerate", out, n, local_iters, &first);
-        bench_level3(&openblas, "openblas", out, n, local_iters, &first);
+        if (openblas.dgemm) bench_level3(&openblas, "openblas", out, n, local_iters, &first);
     }
 
     write_json_footer(out);
     fclose(out);
 
-    unload_lib(&accel);
     unload_lib(&openblas);
 
     if (sink == 0.123456789) {
