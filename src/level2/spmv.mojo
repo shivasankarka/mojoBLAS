@@ -75,7 +75,6 @@ def spmv[
 
     var upper = uplo == "U" or uplo == "u"
 
-    # Fast path for contiguous vectors using direct packed indexing.
     if incx == 1 and incy == 1:
         if beta == 0:
             for i in range(n):

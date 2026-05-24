@@ -156,7 +156,7 @@ def trsv[
                             x[ix - 1] = x[ix - 1] - temp * a[i + j * lda]
                     jx += incx
     else:
-        # Trans paths: sequential dot reduction — scalar (each j depends on prior)
+
         if upper:
             if incx == 1:
                 for j in range(n):

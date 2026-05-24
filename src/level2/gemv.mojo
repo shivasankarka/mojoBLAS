@@ -19,8 +19,6 @@ with support for various transpositions and scaling factors.
 from std.algorithm.functional import vectorize, parallelize
 from std.sys.info import simd_width_of
 
-# NOTE: I think we could so much optimization here if we promote a lot of these arguments into
-# compile time params. Especially will help with all these if branches.
 
 
 def gemv[
@@ -136,7 +134,7 @@ def gemv[
     if no_trans:
         var jx: Int = kx
         if incx == 1 and incy == 1:
-            # Fast path: both vectors contiguous - vectorize inner column axpy
+
             for j in range(n):
                 var xj = x[j]
                 if xj != 0:

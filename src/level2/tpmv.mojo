@@ -80,7 +80,6 @@ def tpmv[
     var upper = uplo == "U" or uplo == "u"
     var no_trans = trans == "N" or trans == "n"
 
-    # Fast path for contiguous vectors using direct packed indexing.
     if incx == 1:
         var x_in = alloc[Scalar[dtype]](n)
         var x_out = alloc[Scalar[dtype]](n)

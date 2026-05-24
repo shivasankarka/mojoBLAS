@@ -126,7 +126,7 @@ def symv[
                     var temp2: Scalar[dtype] = 0
                     var aj = a + j * lda
 
-                    # Single vectorized pass: update y[0..j) and accumulate dot(a[:,j], x[0..j))
+
                     def fused_upper[
                         width: Int
                     ](i: Int) {y, mut temp2, aj, x, temp1}:

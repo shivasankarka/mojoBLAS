@@ -78,7 +78,6 @@ def tpsv[
     var upper = uplo == "U" or uplo == "u"
     var no_trans = trans == "N" or trans == "n"
 
-    # Fast path for contiguous vectors using direct packed indexing.
     if incx == 1:
         if no_trans:
             if upper:
