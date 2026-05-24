@@ -156,7 +156,6 @@ def trsv[
                             x[ix - 1] = x[ix - 1] - temp * a[i + j * lda]
                     jx += incx
     else:
-
         if upper:
             if incx == 1:
                 for j in range(n):

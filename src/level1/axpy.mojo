@@ -37,17 +37,36 @@ def _axpy_serial[
     da: Scalar[dtype],
     length: Int,
 ):
-    """Inner kernel: yc[i] = da * xc[i] + yc[i] with n_acc independent SIMD streams."""
+    """Inner kernel: yc[i] = da * xc[i] + yc[i] with n_acc independent SIMD streams.
+    """
     comptime stride: Int = simd_width * n_acc
     var i = 0
     while i + stride <= length:
-        yc.store[width=simd_width](i + 0 * simd_width, da * xc.load[width=simd_width](i + 0 * simd_width) + yc.load[width=simd_width](i + 0 * simd_width))
-        yc.store[width=simd_width](i + 1 * simd_width, da * xc.load[width=simd_width](i + 1 * simd_width) + yc.load[width=simd_width](i + 1 * simd_width))
-        yc.store[width=simd_width](i + 2 * simd_width, da * xc.load[width=simd_width](i + 2 * simd_width) + yc.load[width=simd_width](i + 2 * simd_width))
-        yc.store[width=simd_width](i + 3 * simd_width, da * xc.load[width=simd_width](i + 3 * simd_width) + yc.load[width=simd_width](i + 3 * simd_width))
+        yc.store[width=simd_width](
+            i + 0 * simd_width,
+            da * xc.load[width=simd_width](i + 0 * simd_width)
+            + yc.load[width=simd_width](i + 0 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 1 * simd_width,
+            da * xc.load[width=simd_width](i + 1 * simd_width)
+            + yc.load[width=simd_width](i + 1 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 2 * simd_width,
+            da * xc.load[width=simd_width](i + 2 * simd_width)
+            + yc.load[width=simd_width](i + 2 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 3 * simd_width,
+            da * xc.load[width=simd_width](i + 3 * simd_width)
+            + yc.load[width=simd_width](i + 3 * simd_width),
+        )
         i += stride
     while i + simd_width <= length:
-        yc.store[width=simd_width](i, da * xc.load[width=simd_width](i) + yc.load[width=simd_width](i))
+        yc.store[width=simd_width](
+            i, da * xc.load[width=simd_width](i) + yc.load[width=simd_width](i)
+        )
         i += simd_width
     while i < length:
         yc[i] = da * xc[i] + yc[i]
@@ -67,13 +86,31 @@ def _axpy_add_serial[
     comptime stride: Int = simd_width * n_acc
     var i = 0
     while i + stride <= length:
-        yc.store[width=simd_width](i + 0 * simd_width, xc.load[width=simd_width](i + 0 * simd_width) + yc.load[width=simd_width](i + 0 * simd_width))
-        yc.store[width=simd_width](i + 1 * simd_width, xc.load[width=simd_width](i + 1 * simd_width) + yc.load[width=simd_width](i + 1 * simd_width))
-        yc.store[width=simd_width](i + 2 * simd_width, xc.load[width=simd_width](i + 2 * simd_width) + yc.load[width=simd_width](i + 2 * simd_width))
-        yc.store[width=simd_width](i + 3 * simd_width, xc.load[width=simd_width](i + 3 * simd_width) + yc.load[width=simd_width](i + 3 * simd_width))
+        yc.store[width=simd_width](
+            i + 0 * simd_width,
+            xc.load[width=simd_width](i + 0 * simd_width)
+            + yc.load[width=simd_width](i + 0 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 1 * simd_width,
+            xc.load[width=simd_width](i + 1 * simd_width)
+            + yc.load[width=simd_width](i + 1 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 2 * simd_width,
+            xc.load[width=simd_width](i + 2 * simd_width)
+            + yc.load[width=simd_width](i + 2 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 3 * simd_width,
+            xc.load[width=simd_width](i + 3 * simd_width)
+            + yc.load[width=simd_width](i + 3 * simd_width),
+        )
         i += stride
     while i + simd_width <= length:
-        yc.store[width=simd_width](i, xc.load[width=simd_width](i) + yc.load[width=simd_width](i))
+        yc.store[width=simd_width](
+            i, xc.load[width=simd_width](i) + yc.load[width=simd_width](i)
+        )
         i += simd_width
     while i < length:
         yc[i] += xc[i]
@@ -93,13 +130,31 @@ def _axpy_sub_serial[
     comptime stride: Int = simd_width * n_acc
     var i = 0
     while i + stride <= length:
-        yc.store[width=simd_width](i + 0 * simd_width, yc.load[width=simd_width](i + 0 * simd_width) - xc.load[width=simd_width](i + 0 * simd_width))
-        yc.store[width=simd_width](i + 1 * simd_width, yc.load[width=simd_width](i + 1 * simd_width) - xc.load[width=simd_width](i + 1 * simd_width))
-        yc.store[width=simd_width](i + 2 * simd_width, yc.load[width=simd_width](i + 2 * simd_width) - xc.load[width=simd_width](i + 2 * simd_width))
-        yc.store[width=simd_width](i + 3 * simd_width, yc.load[width=simd_width](i + 3 * simd_width) - xc.load[width=simd_width](i + 3 * simd_width))
+        yc.store[width=simd_width](
+            i + 0 * simd_width,
+            yc.load[width=simd_width](i + 0 * simd_width)
+            - xc.load[width=simd_width](i + 0 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 1 * simd_width,
+            yc.load[width=simd_width](i + 1 * simd_width)
+            - xc.load[width=simd_width](i + 1 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 2 * simd_width,
+            yc.load[width=simd_width](i + 2 * simd_width)
+            - xc.load[width=simd_width](i + 2 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 3 * simd_width,
+            yc.load[width=simd_width](i + 3 * simd_width)
+            - xc.load[width=simd_width](i + 3 * simd_width),
+        )
         i += stride
     while i + simd_width <= length:
-        yc.store[width=simd_width](i, yc.load[width=simd_width](i) - xc.load[width=simd_width](i))
+        yc.store[width=simd_width](
+            i, yc.load[width=simd_width](i) - xc.load[width=simd_width](i)
+        )
         i += simd_width
     while i < length:
         yc[i] -= xc[i]
@@ -207,6 +262,7 @@ def axpy[
             var chunk_size = (n + nt - 1) // nt
 
             if da == 1:
+
                 @parameter
                 def worker_add(tid: Int):
                     var start = tid * chunk_size
@@ -219,6 +275,7 @@ def axpy[
 
                 parallelize[worker_add](nt)
             elif da == -1:
+
                 @parameter
                 def worker_sub(tid: Int):
                     var start = tid * chunk_size
@@ -231,6 +288,7 @@ def axpy[
 
                 parallelize[worker_sub](nt)
             else:
+
                 @parameter
                 def worker(tid: Int):
                     var start = tid * chunk_size

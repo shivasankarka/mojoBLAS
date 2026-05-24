@@ -20,7 +20,6 @@ from std.algorithm.functional import vectorize, parallelize
 from std.sys.info import simd_width_of
 
 
-
 def gemv[
     mut_a: Bool,
     mut_x: Bool,
@@ -134,7 +133,6 @@ def gemv[
     if no_trans:
         var jx: Int = kx
         if incx == 1 and incy == 1:
-
             for j in range(n):
                 var xj = x[j]
                 if xj != 0:

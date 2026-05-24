@@ -126,7 +126,6 @@ def symv[
                     var temp2: Scalar[dtype] = 0
                     var aj = a + j * lda
 
-
                     def fused_upper[
                         width: Int
                     ](i: Int) {y, mut temp2, aj, x, temp1}:

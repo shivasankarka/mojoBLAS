@@ -82,11 +82,17 @@ def gemm[
     var no_trans_b = trans_b == "N" or trans_b == "n"
     if no_trans_a and no_trans_b:
         if n < GEMM_DISPATCH_THRESHOLD:
-            gemm_v3[dtype](trans_a, trans_b, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
+            gemm_v3[dtype](
+                trans_a, trans_b, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc
+            )
         else:
-            gemm_v7[dtype](trans_a, trans_b, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
+            gemm_v7[dtype](
+                trans_a, trans_b, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc
+            )
         return
-    _gemm_naive[dtype](trans_a, trans_b, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc)
+    _gemm_naive[dtype](
+        trans_a, trans_b, m, n, k, alpha, a, lda, b, ldb, beta, c, ldc
+    )
 
 
 def _gemm_naive[
@@ -208,6 +214,7 @@ def _gemm_naive[
 
     if no_trans_a:
         if no_trans_b:
+
             @parameter
             def gemm_nn_col(j: Int):
                 var cj = c + j * ldc
@@ -243,6 +250,7 @@ def _gemm_naive[
                 for j in range(n):
                     gemm_nn_col(j)
         else:
+
             @parameter
             def gemm_nt_col(j: Int):
                 var cj = c + j * ldc
@@ -279,6 +287,7 @@ def _gemm_naive[
                     gemm_nt_col(j)
     else:
         if no_trans_b:
+
             @parameter
             def gemm_tn_col(j: Int):
                 var cj = c + j * ldc
@@ -307,6 +316,7 @@ def _gemm_naive[
                 for j in range(n):
                     gemm_tn_col(j)
         else:
+
             @parameter
             def gemm_tt_col(j: Int):
                 var cj = c + j * ldc
@@ -931,7 +941,9 @@ def gemm_v7[
                         var acc15 = SIMD[dtype, MR](0)
 
                         for l in range(klen):
-                            var av = (a_pack + ir * TK + l * MR).load[width=MR]()
+                            var av = (a_pack + ir * TK + l * MR).load[
+                                width=MR
+                            ]()
                             acc0 = av * b_pack[l * NR + 0] + acc0
                             acc1 = av * b_pack[l * NR + 1] + acc1
                             acc2 = av * b_pack[l * NR + 2] + acc2
@@ -1003,7 +1015,9 @@ def gemm_v7[
                         var acc15 = SIMD[dtype, MR](0)
 
                         for l in range(klen):
-                            var av = (a_pack + ir * TK + l * MR).load[width=MR]()
+                            var av = (a_pack + ir * TK + l * MR).load[
+                                width=MR
+                            ]()
                             acc0 = av * b_pack[l * NR + 0] + acc0
                             acc1 = av * b_pack[l * NR + 1] + acc1
                             acc2 = av * b_pack[l * NR + 2] + acc2
