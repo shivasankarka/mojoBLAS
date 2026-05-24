@@ -1,162 +1,266 @@
+"""
+Usage (from repo root):
+  python benchmarks/plot_bench.py \\
+      --mojo-json benchmarks/mojo_l1_results.json \\
+                  benchmarks/mojo_l2_results.json \\
+                  benchmarks/mojo_l3_results.json \\
+      --c-json    benchmarks/c_bench_results.json \\
+      --out-prefix benchmarks/bench_plot
+"""
+
 import argparse
 import json
+import math
 from collections import defaultdict
+from pathlib import Path
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
-# TODO: Cross check this later.
-OP_BYTES_PER_ELEM = {
-    "axpy": 3.0,
-    "scal": 2.0,
-    "dot": 2.0,
-    "nrm2": 1.0,
-    "sum": 1.0,
-    "gemv": 2.0,
-    "gemv_trans": 2.0,
-    "trmv": 1.0,
-    "trsv": 1.0,
-    "symv": 2.0,
-    "syr": 1.0,
-    "syr2": 1.0,
-    "gemm": 2.0,
-    "syrk": 1.0,
-    "syr2k": 2.0,
-    "symm": 2.0,
-    "trmm": 2.0,
-    "trsm": 2.0,
+mpl.rcParams.update(
+    {
+        "figure.dpi": 150,
+        "savefig.dpi": 400,
+        "savefig.bbox": "tight",
+        "font.size": 12,
+        "axes.titlesize": 13,
+        "axes.labelsize": 13,
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
+        "legend.fontsize": 10,
+        "font.family": "serif",
+        "font.serif": ["Times New Roman", "Times", "STIXGeneral", "DejaVu Serif"],
+        "mathtext.fontset": "stix",
+        "text.usetex": False,
+        "axes.edgecolor": "black",
+        "axes.linewidth": 1.1,
+        "xtick.direction": "in",
+        "ytick.direction": "in",
+        "xtick.top": True,
+        "ytick.right": True,
+        "xtick.major.size": 6,
+        "ytick.major.size": 6,
+        "xtick.minor.size": 3,
+        "ytick.minor.size": 3,
+        "legend.frameon": True,
+        "legend.fancybox": False,
+        "legend.framealpha": 0.9,
+        "legend.edgecolor": "0.7",
+    }
+)
+
+
+# FLOPs formula per operation
+def flops(op: str, n: int) -> float:
+    op = op.lower()
+    if op in ("axpy", "dot"):
+        return 2.0 * n
+    if op in ("scal", "copy", "swap", "rot", "rotm"):
+        return float(n)
+    if op in ("nrm2", "sum", "asum"):
+        return 2.0 * n
+    if op in ("rotg", "rotmg"):
+        return 1.0
+    if op in ("gemv", "gemv_trans"):
+        return 2.0 * n * n
+    if op in ("symv", "spmv", "sbmv", "gbmv"):
+        return 2.0 * n * n
+    if op in ("syr", "trmv", "trsv", "tpmv", "tpsv", "tbmv", "tbsv"):
+        return float(n * n)
+    if op in ("syr2", "ger", "spr", "spr2"):
+        return 2.0 * n * n
+    if op in ("gemm", "symm"):
+        return 2.0 * n * n * n
+    if op in ("syrk", "trmm", "trsm"):
+        return float(n * n * n)
+    if op in ("syr2k",):
+        return 2.0 * n * n * n
+    return 0.0
+
+
+LIB_STYLE = {
+    "mojo": dict(color="steelblue", marker="o", ls="-", lw=2.0, ms=5),
+    "accelerate": dict(color="darkorange", marker="s", ls="--", lw=1.8, ms=5),
+    "openblas": dict(color="mediumseagreen", marker="^", ls=":", lw=1.5, ms=5),
 }
+LIB_LABEL = {
+    "mojo": "mojoBLAS",
+    "accelerate": "Accelerate",
+    "openblas": "OpenBLAS",
+}
+LIB_ORDER = ["mojo", "accelerate", "openblas"]
 
-LEVEL1_OPS = ["axpy", "scal", "dot", "nrm2", "sum"]
-LEVEL2_OPS = ["gemv", "gemv_trans", "trmv", "trsv", "symv", "syr", "syr2"]
-LEVEL3_OPS = ["gemm", "syrk", "syr2k", "symm", "trmm", "trsm"]
+LEVEL1_OPS = ["axpy", "scal", "dot", "nrm2", "sum", "rotm", "rotmg"]
+LEVEL2_OPS = [
+    "gemv",
+    "gemv_trans",
+    "symv",
+    "syr",
+    "syr2",
+    "trmv",
+    "trsv",
+    "spmv",
+    "tpmv",
+    "tpsv",
+    "tbmv",
+    "tbsv",
+    "spr",
+    "spr2",
+]
+LEVEL3_OPS = ["gemm", "symm", "syrk", "syr2k", "trmm", "trsm"]
 
 
-def load_results(path):
-    with open(path, "r") as f:
-        data = json.load(f)
-    return data.get("results", [])
+# Data loading and aggregation
 
 
-def parse_size_map(text):
-    if not text:
-        return {}
-    out = {}
-    for item in text.split(","):
-        item = item.strip()
-        if not item:
+def load_all(mojo_paths, c_path):
+    records = []
+    for p in mojo_paths:
+        records.extend(json.loads(Path(p).read_text()).get("results", []))
+    if c_path:
+        records.extend(json.loads(Path(c_path).read_text()).get("results", []))
+    return records
+
+
+def build_series(records):
+    """
+    Returns:
+      gf_series[op][lib] = sorted [(n, gflops), ...]
+      ms_series[op][lib] = sorted [(n, ms), ...]
+    """
+    gf_raw = defaultdict(lambda: defaultdict(dict))
+    ms_raw = defaultdict(lambda: defaultdict(dict))
+
+    for r in records:
+        op = r.get("op", "").lower()
+        lib = r.get("lib", "").lower()
+        n = int(r.get("n", 0))
+        sec = float(r.get("avg_seconds") or 0)
+        if sec <= 0 or n <= 0:
             continue
-        name, val = item.split(":")
-        out[name.strip()] = int(val.strip())
-    return out
-
-
-def build_series(results, elem_sizes):
-    series = defaultdict(lambda: defaultdict(list))
-    for row in results:
-        lib = row["lib"]
-        op = row["op"]
-        n = int(row["n"])
-        if "avg_seconds" in row:
-            avg_seconds = float(row["avg_seconds"])
-        elif "avg_ns" in row:
-            avg_seconds = float(row["avg_ns"]) * 1e-9
-        else:
+        fp = flops(op, n)
+        if fp <= 0:
             continue
-        series[op][lib].append((n, avg_seconds))
-    for op in series:
-        for lib in series[op]:
-            series[op][lib].sort(key=lambda t: t[0])
-    return series
+        gf = fp / sec / 1e9
+        ms = sec * 1000
+
+        if n not in gf_raw[op][lib] or gf > gf_raw[op][lib][n]:
+            gf_raw[op][lib][n] = gf
+            ms_raw[op][lib][n] = ms
+
+    def to_sorted(raw):
+        return {
+            op: {lib: sorted(nmap.items()) for lib, nmap in libs.items()}
+            for op, libs in raw.items()
+        }
+
+    return to_sorted(gf_raw), to_sorted(ms_raw)
 
 
-def plot_level(series, out_path, ops, scale):
-    n_ops = len(ops)
-    ncols = min(n_ops, 4)
-    nrows = (n_ops + ncols - 1) // ncols
-    fig, axes = plt.subplots(nrows, ncols, figsize=(5 * ncols, 4 * nrows), sharey=False)
-    if nrows == 1 and ncols == 1:
-        axes = [axes]
-    elif nrows == 1:
-        axes = list(axes)
-    else:
-        axes = axes.flatten()
+# Plotting helpers
 
-    for idx, op in enumerate(ops):
-        ax = axes[idx]
-        libs = series.get(op, {})
-        all_xs = []
-        for lib, points in libs.items():
-            xs = [p[0] for p in points]
-            ys = [p[1] for p in points]
-            ax.plot(xs, ys, marker="o", label=lib)
-            all_xs.extend(xs)
-        ax.set_title(op)
-        ax.set_xlabel("n")
-        ax.set_ylabel("avg_seconds")
+
+def _make_legend_handles(libs_present):
+    handles = []
+    for lib in LIB_ORDER:
+        if lib in libs_present:
+            style = LIB_STYLE.get(
+                lib, dict(color="gray", marker="x", ls="-", lw=1.5, ms=5)
+            )
+            handles.append(plt.Line2D([0], [0], label=LIB_LABEL.get(lib, lib), **style))
+    return handles
+
+
+def _plot_one_ax(ax, op, series, ylabel, log_y=False):
+    """Plots all libraries for one op onto ax."""
+    op_data = series.get(op, {})
+    libs_here = [l for l in LIB_ORDER if l in op_data]
+    for lib in libs_here:
+        pts = op_data[lib]
+        xs = [p[0] for p in pts]
+        ys = [p[1] for p in pts]
+        style = LIB_STYLE.get(lib, dict(color="gray", marker="x", ls="-", lw=1.5, ms=5))
+        ax.plot(xs, ys, label=LIB_LABEL.get(lib, lib), **style)
+
+    ax.set_title(op, fontsize=10, fontweight="bold")
+    ax.set_xlabel("n", fontsize=8)
+    ax.set_ylabel(ylabel, fontsize=8)
+    ax.set_xscale("log")
+    if log_y:
         ax.set_yscale("log")
-        ax.grid(True, which="major", linestyle="--", linewidth=0.5)
-        ax.set_xscale(scale)
-        if all_xs:
-            ax.set_xlim([min(all_xs) * 0.8, max(all_xs) * 1.2])
-
-    for idx in range(len(ops), len(axes)):
-        axes[idx].set_visible(False)
-
-    handles, labels = axes[0].get_legend_handles_labels()
+    ax.grid(True, which="major", ls="--", lw=0.4, alpha=0.6)
+    ax.tick_params(labelsize=7)
+    ax.xaxis.set_major_formatter(
+        ticker.FuncFormatter(lambda x, _: f"{int(x):,}" if x >= 1000 else str(int(x)))
+    )
+    handles, _ = ax.get_legend_handles_labels()
     if handles:
-        all_libs = set()
-        for op in ops:
-            for lib in series.get(op, {}):
-                all_libs.add(lib)
-        fig.legend(handles, labels, loc="upper center", ncol=len(all_libs))
-    fig.tight_layout(rect=[0, 0, 1, 0.92])
-    fig.savefig(out_path, dpi=200)
+        ax.legend(fontsize=7, loc="best")
+
+    return set(libs_here)
+
+
+def plot_group(gf_series, ops, title_prefix, out_gf):
+    present = [op for op in ops if op in gf_series]
+    if not present:
+        return
+
+    ncols = min(len(present), 4)
+    nrows = math.ceil(len(present) / ncols)
+    all_libs = set()
+
+    fig, axes = plt.subplots(
+        nrows, ncols, figsize=(5 * ncols, 3.8 * nrows), squeeze=False
+    )
+    for idx, op in enumerate(present):
+        ax = axes[idx // ncols][idx % ncols]
+        libs = _plot_one_ax(ax, op, gf_series, "GFlops/s  (higher=faster)", log_y=False)
+        all_libs |= libs
+    for idx in range(len(present), nrows * ncols):
+        axes[idx // ncols][idx % ncols].set_visible(False)
+
+    handles = _make_legend_handles(all_libs)
+    fig.legend(
+        handles=handles,
+        loc="upper center",
+        ncol=len(handles),
+        fontsize=9,
+        frameon=True,
+        bbox_to_anchor=(0.5, 1.01),
+    )
+    fig.suptitle(f"{title_prefix}", fontsize=13, fontweight="bold", y=1.05)
+    fig.tight_layout()
+    fig.savefig(out_gf, dpi=160, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  saved {out_gf}")
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--mojo-json",
-        required=True,
-        nargs="+",
-        help="One or more mojo benchmark JSON files",
-    )
-    parser.add_argument("--c-json", required=True)
-    parser.add_argument("--out-prefix", default="bench_plot")
-    parser.add_argument(
-        "--elem-sizes",
-        default="mojo:4,accelerate:8,openblas:8",
-        help="comma-separated lib:bytes entries",
-    )
-    args = parser.parse_args()
+    ap = argparse.ArgumentParser(description="Plot mojoBLAS benchmark results")
+    ap.add_argument("--mojo-json", nargs="+", required=True)
+    ap.add_argument("--c-json", required=True)
+    ap.add_argument("--out-prefix", default="benchmarks/bench_plot")
+    args = ap.parse_args()
 
-    elem_sizes = parse_size_map(args.elem_sizes)
+    print("Loading benchmark results...")
+    records = load_all(args.mojo_json, args.c_json)
+    print(f"  {len(records)} records")
 
-    results = []
-    for path in args.mojo_json:
-        results.extend(load_results(path))
-    results.extend(load_results(args.c_json))
+    gf_series, ms_series = build_series(records)
+    print(f"  ops: {sorted(gf_series)}")
 
-    series = build_series(results, elem_sizes)
+    p = args.out_prefix
+    print("\nLevel 1 (vector ops)...")
+    plot_group(gf_series, LEVEL1_OPS, "Level 1 - Vector ops", f"{p}_level1.png")
 
-    plot_level(
-        series,
-        f"{args.out_prefix}_level1.png",
-        LEVEL1_OPS,
-        "log",
-    )
-    plot_level(
-        series,
-        f"{args.out_prefix}_level2.png",
-        LEVEL2_OPS,
-        "linear",
-    )
-    plot_level(
-        series,
-        f"{args.out_prefix}_level3.png",
-        LEVEL3_OPS,
-        "linear",
-    )
+    print("Level 2 (matrix-vector ops)...")
+    plot_group(gf_series, LEVEL2_OPS, "Level 2 - Matrix-vector ops", f"{p}_level2.png")
+
+    print("Level 3 (matrix-matrix ops)...")
+    plot_group(gf_series, LEVEL3_OPS, "Level 3 - Matrix-matrix ops", f"{p}_level3.png")
+
+    print("\nAll done.")
 
 
 if __name__ == "__main__":
