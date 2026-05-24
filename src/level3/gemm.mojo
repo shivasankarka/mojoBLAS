@@ -809,7 +809,7 @@ def gemm_v7[
     ldc: Int,
 ):
     """
-    blocked shared-A-pack GEMM: C := alpha*A*B + beta*C.
+    Blocked shared-A-pack GEMM: C := alpha*A*B + beta*C.
     """
     var info: Int = 0
     if (
