@@ -37,8 +37,6 @@ def trsv[
     Solves a system of linear equations A*x = b or A^T*x = b,
     where A is an n by n triangular matrix.
 
-    Optimized with SIMD vectorization and parallelization.
-
     Parameters:
         mut_a: Indicates whether the pointer a is mutable (True) or immutable (False).
         origin_a: Memory origin of the pointer a.

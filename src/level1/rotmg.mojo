@@ -30,6 +30,23 @@ def rotmg[
     y1: BLASPtr[dtype, origin_y1],
     param: BLASPtr[dtype, origin_param],
 ) -> None:
+    """
+    Construct a modified Givens rotation.
+
+    Given scaling factors d1, d2 and vector components x1, y1, computes the
+    modified Givens rotation H such that the second component of H * [sqrt(d1)*x1, sqrt(d2)*y1]^T
+    is zero, and returns the rotation in the 5-element param vector.
+
+    Parameters:
+        dtype: Data type of the scalars.
+
+    Args:
+        d1: Pointer to the scaling factor for x1 (input/output).
+        d2: Pointer to the scaling factor for y1 (input/output).
+        x1: Pointer to the first vector component (input/output).
+        y1: Pointer to the second vector component (input).
+        param: 5-element output vector; param[0] is the flag, param[1..4] hold H matrix elements.
+    """
     comptime T = Scalar[dtype]
     var gam: T = 4096
     var gamsq: T = gam * gam

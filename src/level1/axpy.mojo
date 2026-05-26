@@ -183,17 +183,6 @@ def axpy[
     """
     Perform the AXPY operation: Y := alpha * X + Y.
 
-    Contiguous path (incx == incy == 1):
-        Uses n_acc independent SIMD streams of width simd_width_of[dtype]() to
-        hide FMA latency without a serial accumulator dependency chain. Parallelizes
-        across n_threads when n exceeds par_threshold and each thread would receive
-        at least min_chunk elements (guarded by nt >= 2 to avoid spawn overhead).
-        Special-cased for da == 1 (add) and da == -1 (subtract) to skip the multiply.
-
-    Strided path (incx != 1 or incy != 1):
-        Scalar loop with da == 1 / da == -1 fast paths. Same-stride positive
-        case (incx == incy > 0) uses a single index to avoid dual-pointer tracking.
-
     Parameters:
         mut: Mutability of the pointer to X.
         origin_x: Memory origin of X.
@@ -201,10 +190,8 @@ def axpy[
         dtype: Element data type.
         n_threads: Max threads for parallel execution.
         par_threshold: Minimum n to consider parallelism.
-        min_chunk: Minimum elements per thread; caps active thread count so
-                   nt = min(n_threads, n // min_chunk). Parallel path is skipped
-                   entirely when nt < 2.
-        n_acc: Number of independent SIMD streams in the inner kernel (default 4).
+        min_chunk: Minimum elements per thread.
+        n_acc: Number of independent SIMD streams in the inner kernel.
 
     Args:
         n: Number of elements. No-op if n <= 0 or da == 0.

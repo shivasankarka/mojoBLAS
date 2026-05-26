@@ -37,6 +37,24 @@ def rotm[
     incy: Int,
     param: BLASPtr[dtype, origin_param],
 ) -> None:
+    """
+    Apply a modified Givens rotation to vectors X and Y.
+
+    The rotation is defined by the 5-element parameter vector param, where
+    param[0] is the flag (-2, -1, 0, or 1) controlling which H matrix elements
+    are used, and param[1..4] hold h11, h21, h12, h22 as needed.
+
+    Parameters:
+        dtype: Data type of the elements in vectors X and Y.
+
+    Args:
+        n: Number of elements in vectors X and Y.
+        x: Pointer to the first element of vector X (input/output).
+        incx: Increment for the elements of X.
+        y: Pointer to the first element of vector Y (input/output).
+        incy: Increment for the elements of Y.
+        param: 5-element parameter vector defining the rotation.
+    """
     if n <= 0:
         return
 

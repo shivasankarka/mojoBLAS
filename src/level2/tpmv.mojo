@@ -33,8 +33,6 @@ def tpmv[
     Performs the matrix-vector operation x := A*x or x := A^T*x,
     where A is an n by n triangular matrix stored in packed format.
 
-    Optimized with SIMD vectorization and parallelization.
-
     Parameters:
         mut_ap: Indicates whether the pointer ap is mutable (True) or immutable (False).
         origin_ap: Memory origin of the pointer ap.

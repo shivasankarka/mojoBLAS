@@ -32,7 +32,7 @@ def scal[
 
     Parameters:
         origin: Memory origin of the pointer dx.
-        dtype: Data type of the elements in vectors X and Y.
+        dtype: Data type of the elements in vector X.
         n_threads: Number of threads for parallel execution.
         par_threshold: Minimum n to switch to parallel execution.
         unroll_factor: Unroll factor for vectorized loops.

@@ -62,7 +62,7 @@ def iamax[
     Parameters:
         mut: Indicates whether the pointer is mutable (True) or immutable (False).
         origin: Memory origin of the pointer x.
-        dtype: Data type of the elements in vectors X and Y.
+        dtype: Data type of the elements in vector X.
         n_threads: Number of threads for parallel execution.
         par_threshold: Minimum n to switch to parallel execution.
 
