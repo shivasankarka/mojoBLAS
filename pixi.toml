@@ -26,17 +26,17 @@ backend = { name = "pixi-build-mojo", version = "0.*", channels = [
 name = "mojoblas"
 
 [package.host-dependencies]
-mojo = "==1.0.0b1"
+mojo = "=1.0.0b2"
 
 [package.build-dependencies]
-mojo = "==1.0.0b1"
+mojo = "=1.0.0b2"
 
 [package.run-dependencies]
-mojo = "==1.0.0b1"
+mojo = "=1.0.0b2"
 
 [tasks]
-format = "mojo format ./src/ && mojo format ./tests/"
-package = "mojo package ./src -o mojoblas.mojopkg"
+format = "mojo format ./src && mojo format ./tests/"
+package = "mojo precompile ./src -o mojoblas.mojoc"
 test_level1 = "mojo run -I ./ ./tests/test_level1.mojo"
 test_level2 = "mojo run -I ./ ./tests/test_level2.mojo && mojo run -I ./ ./tests/test_level2_extended.mojo"
 test_level3 = "mojo run -I ./ ./tests/test_level3.mojo"
@@ -45,7 +45,7 @@ benchmark_level2 = "mojo run -I ./ ./benchmarks/benchmark_level2.mojo"
 benchmark_level3 = "mojo run -I ./ ./benchmarks/benchmark_level3.mojo"
 
 [dependencies]
-mojo = ">=1.0.0b1,<2"
+mojo = ">=1.0.0b2,<2"
 
 [feature.bench.dependencies]
 openblas = ">=0.3.32,<0.4"
@@ -55,11 +55,18 @@ python = ">=3.10"
 [feature.bench.tasks]
 bench_c_build = "make -C ./benchmarks clean && make -C ./benchmarks"
 bench_c_run = { cmd = "OPENBLAS_PATH=$PIXI_PROJECT_ROOT/.pixi/envs/bench/lib/libopenblas.dylib ./benchmarks/c_bench --json ./benchmarks/c_bench_results.json", depends-on = ["bench_c_build"] }
+bench_c_single = { cmd = "OPENBLAS_PATH=$PIXI_PROJECT_ROOT/.pixi/envs/bench/lib/libopenblas.dylib ./benchmarks/c_bench_single --min 256 --max 262144 --json ./benchmarks/c_bench_single_results.json", depends-on = ["bench_c_build"] }
+bench_c_multi = { cmd = "OPENBLAS_PATH=$PIXI_PROJECT_ROOT/.pixi/envs/bench/lib/libopenblas.dylib ./benchmarks/c_bench_multi --min 256 --max 262144 --json ./benchmarks/c_bench_multi_results.json", depends-on = ["bench_c_build"] }
 bench_mojo_l1 = "mojo run -I ./ ./benchmarks/benchmark_level1.mojo > ./benchmarks/mojo_l1_results.json"
 bench_mojo_l2 = "mojo run -I ./ ./benchmarks/benchmark_level2.mojo > ./benchmarks/mojo_l2_results.json"
 bench_mojo_l3 = "mojo run -I ./ ./benchmarks/benchmark_level3.mojo > ./benchmarks/mojo_l3_results.json"
 bench_mojo_all = { depends-on = ["bench_mojo_l1", "bench_mojo_l2", "bench_mojo_l3"] }
 bench_plot = "python ./benchmarks/plot_bench.py --mojo-json ./benchmarks/mojo_l1_results.json ./benchmarks/mojo_l2_results.json ./benchmarks/mojo_l3_results.json --c-json ./benchmarks/c_bench_results.json --out-prefix ./benchmarks/bench_plot"
+bench_plot_dark = "python ./benchmarks/plot_comparison_dark.py --mojo-v1-json ./benchmarks/mojo_l1_results_old.json ./benchmarks/mojo_l2_results_old.json ./benchmarks/mojo_l3_results_old.json --mojo-v2-json ./benchmarks/mojo_l1_results.json ./benchmarks/mojo_l2_results.json ./benchmarks/mojo_l3_results.json --single-json ./benchmarks/c_bench_single_results.json --multi-json ./benchmarks/c_bench_multi_results.json --out-prefix ./benchmarks/bench_compare_dark"
+bench_mojo_l3_f32 = "mojo run -I ./ ./benchmarks/benchmark_level3_f32.mojo > ./benchmarks/mojo_l3_f32_results.json"
+bench_c_l3_f32 = { cmd = "OPENBLAS_PATH=$PIXI_PROJECT_ROOT/.pixi/envs/bench/lib/libopenblas.dylib ./benchmarks/c_bench_l3_f32 --json ./benchmarks/c_l3_f32_results.json", depends-on = ["bench_c_build"] }
+bench_accel_ffi = "mojo run -I ./ ./benchmarks/benchmark_accelerate_ffi.mojo > ./benchmarks/accelerate_ffi_results.json"
+bench_plot_l3_f32 = "python ./benchmarks/plot_l3_f32_comparison.py --mojo-json ./benchmarks/mojo_l3_f32_results.json --c-json ./benchmarks/c_l3_f32_results.json --ffi-json ./benchmarks/accelerate_ffi_results.json --out-prefix ./benchmarks/bench_l3_f32"
 bench_all = { depends-on = ["bench_c_run", "bench_mojo_all", "bench_plot"] }
 
 [environments]

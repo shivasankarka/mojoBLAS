@@ -102,12 +102,18 @@ def bench_dsymm[current_size: Int]() raises -> Float64:
     var a = alloc[Scalar[f64]](lda * m)
     var b = alloc[Scalar[f64]](ldb * n)
     var c = alloc[Scalar[f64]](ldc * n)
-    for i in range(lda * m):
-        a[i] = Float64(i + 1)
+    # A must be symmetric (side=Left, uplo=Upper): fill both triangles, dominant diagonal
+    for j in range(m):
+        for i in range(j + 1):
+            var v = Float64((i + j) % 11 + 1)
+            if i == j:
+                v = Float64(m + i + 1)
+            a[i + j * lda] = v
+            a[j + i * lda] = v
     for i in range(ldb * n):
         b[i] = Float64(i + 1)
     for i in range(ldc * n):
-        c[i] = Float64(i + 1)
+        c[i] = Float64(0.0)
 
     @parameter
     def dsymm_only() -> None:
@@ -131,8 +137,15 @@ def bench_dtrmm[current_size: Int]() raises -> Float64:
     var ldb = m
     var a = alloc[Scalar[f64]](lda * m)
     var b = alloc[Scalar[f64]](ldb * n)
-    for i in range(lda * m):
-        a[i] = Float64(i + 1)
+    # A must be upper triangular (side=Left, uplo=Upper): zero lower triangle, dominant diagonal
+    for j in range(m):
+        for i in range(m):
+            if i > j:
+                a[i + j * lda] = Float64(0.0)
+            elif i == j:
+                a[i + j * lda] = Float64(m + i + 1)
+            else:
+                a[i + j * lda] = Float64((i + j) % 7 + 1) * Float64(0.1)
     for i in range(ldb * n):
         b[i] = Float64(i + 1)
 
@@ -180,7 +193,7 @@ def bench_dtrsm[current_size: Int]() raises -> Float64:
 
     return report.mean("ns")
 
-comptime sizes: List[Int] = [32, 64, 128, 256, 512]
+comptime sizes: List[Int] = [32, 64, 128, 256, 512, 1024, 2048]
 
 def benchmark_gemm() raises -> List[Float64]:
     var times: List[Float64] = []
@@ -220,7 +233,7 @@ def benchmark_trsm() raises -> List[Float64]:
 
 def main() raises:
     var min_n: Int = 32
-    var max_n: Int = 512
+    var max_n: Int = 2048
     var step: Int = 2
     var first = True
     var gemm_ns = benchmark_gemm()
@@ -236,7 +249,7 @@ def main() raises:
     print("    \"min_n\": ", min_n, ",")
     print("    \"max_n\": ", max_n, ",")
     print("    \"step\": ", step, ",")
-    print("    \"sizes\": [32, 64, 128, 256, 512]")
+    print("    \"sizes\": [32, 64, 128, 256, 512, 1024, 2048]")
     print("  },")
     print("  \"results\": [")
 

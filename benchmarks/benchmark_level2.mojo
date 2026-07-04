@@ -70,8 +70,15 @@ def bench_dtrmv[current_size: Int]() raises -> Float64:
     var lda = n
     var x = alloc[Scalar[f64]](n)
     var a = alloc[Scalar[f64]](lda * n)
-    for i in range(n * n):
-        a[i] = Float64(i + 1)
+    # upper triangular: zero lower, well-conditioned diagonal
+    for j in range(n):
+        for i in range(n):
+            if i > j:
+                a[i + j * lda] = Float64(0.0)
+            elif i == j:
+                a[i + j * lda] = Float64(n + i + 1)
+            else:
+                a[i + j * lda] = Float64((i + j) % 7 + 1) * Float64(0.1)
     for i in range(n):
         x[i] = Float64(i + 1)
 
@@ -123,11 +130,17 @@ def bench_dsymv[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[f64]](n)
     var y = alloc[Scalar[f64]](n)
     var a = alloc[Scalar[f64]](lda * n)
-    for i in range(n * n):
-        a[i] = Float64(i + 1)
+    # symmetric matrix: fill both triangles symmetrically, dominant diagonal
+    for j in range(n):
+        for i in range(j + 1):
+            var v = Float64((i + j) % 11 + 1)
+            if i == j:
+                v = Float64(n + i + 1)
+            a[i + j * lda] = v
+            a[j + i * lda] = v
     for i in range(n):
         x[i] = Float64(i + 1)
-        y[i] = Float64(i + 1)
+        y[i] = Float64(0.0)
 
     @parameter
     def dsymv_only() -> None:
@@ -149,8 +162,14 @@ def bench_dsyr[current_size: Int]() raises -> Float64:
     var lda = n
     var x = alloc[Scalar[f64]](n)
     var a = alloc[Scalar[f64]](lda * n)
-    for i in range(n * n):
-        a[i] = Float64(i + 1)
+    # symmetric input (syr updates upper triangle of a symmetric matrix)
+    for j in range(n):
+        for i in range(j + 1):
+            var v = Float64((i + j) % 11 + 1)
+            if i == j:
+                v = Float64(n + i + 1)
+            a[i + j * lda] = v
+            a[j + i * lda] = v
     for i in range(n):
         x[i] = Float64(i + 1)
 
@@ -173,11 +192,17 @@ def bench_dsyr2[current_size: Int]() raises -> Float64:
     var x = alloc[Scalar[f64]](n)
     var y = alloc[Scalar[f64]](n)
     var a = alloc[Scalar[f64]](lda * n)
-    for i in range(n * n):
-        a[i] = Float64(i + 1)
+    # symmetric input
+    for j in range(n):
+        for i in range(j + 1):
+            var v = Float64((i + j) % 11 + 1)
+            if i == j:
+                v = Float64(n + i + 1)
+            a[i + j * lda] = v
+            a[j + i * lda] = v
     for i in range(n):
         x[i] = Float64(i + 1)
-        y[i] = Float64(i + 1)
+        y[i] = Float64(i + 2)
 
     @parameter
     def dsyr2_only() -> None:

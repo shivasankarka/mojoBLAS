@@ -373,8 +373,7 @@ def benchmark_rotmg() raises -> List[Float64]:
 
 def main() raises:
     var min_n: Int = 256
-    # var max_n: Int = 262144
-    var max_n: Int = 65536
+    var max_n: Int = 262144
     var step: Int = 2
     var first = True
     var axpy_ns = benchmark_axpy()
