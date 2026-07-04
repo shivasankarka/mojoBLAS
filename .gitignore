@@ -27,5 +27,12 @@ plot_perf_history.py
 tune_*.mojo
 tune_*.sh
 plot_gemm*.py
+plot_comparison*.py
+plot_l3_f32*.py
 benchmark_gemm*.mojo
+check_gemm*.mojo
 bench_plot_gemm*.png
+bench_l3_f32*.png
+gemm_versions.png
+bench_level3_f32.c
+src/amx.mojo
