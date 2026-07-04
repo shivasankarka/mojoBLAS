@@ -24,8 +24,8 @@ def _dot_serial[
     """Inner dot kernel with n_acc independent SIMD accumulators.
 
     Each accumulator holds a simd_width-wide lane of partial sums. They are
-    independent, the compiler sees no dependency (hopefully lol) between acc0, acc1, ...,
-    so the CPU can issue n_acc * simd_width FMAs.
+    independent with no data dependency between acc0, acc1, ..., so the CPU
+    can issue n_acc * simd_width FMAs back to back.
     """
     comptime stride: Int = simd_width * n_acc
 

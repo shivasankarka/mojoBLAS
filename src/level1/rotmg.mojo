@@ -38,6 +38,12 @@ def rotmg[
     is zero, and returns the rotation in the 5-element param vector.
 
     Parameters:
+        origin_d1: Memory origin of the pointer d1.
+        origin_d2: Memory origin of the pointer d2.
+        origin_x1: Memory origin of the pointer x1.
+        mut_y1: Indicates whether the pointer to y1 is mutable (True) or immutable (False).
+        origin_y1: Memory origin of the pointer y1.
+        origin_param: Memory origin of the pointer param.
         dtype: Data type of the scalars.
 
     Args:

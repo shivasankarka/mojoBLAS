@@ -45,7 +45,14 @@ def rotm[
     are used, and param[1..4] hold h11, h21, h12, h22 as needed.
 
     Parameters:
+        origin_x: Origin of the elements in vector X (input/output).
+        origin_y: Origin of the elements in vector Y (input/output).
+        mut_param: Whether the parameter vector is mutable (input/output).
+        origin_param: Origin of the elements in the parameter vector (input/output).
         dtype: Data type of the elements in vectors X and Y.
+        n_threads: Number of threads to use for parallel execution.
+        par_threshold: Threshold for switching to parallel execution.
+        unroll_factor: Factor for loop unrolling in vectorized operations.
 
     Args:
         n: Number of elements in vectors X and Y.
