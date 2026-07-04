@@ -31,6 +31,11 @@ from .gemm import (
     gemm_v3,
     gemm_v6,
     gemm_v7,
+    gemm_v8,
+    gemm_v9,
+    gemm_v10,
+    gemm_v11,
+    gemm_v12,
 )
 from .symm import symm
 from .syrk import syrk
