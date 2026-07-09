@@ -26,13 +26,13 @@ backend = { name = "pixi-build-mojo", version = "0.*", channels = [
 name = "mojoblas"
 
 [package.host-dependencies]
-mojo = "=1.0.0b2"
+mojo = "==1.0.0b2"
 
 [package.build-dependencies]
-mojo = "=1.0.0b2"
+mojo = "==1.0.0b2"
 
 [package.run-dependencies]
-mojo = "=1.0.0b2"
+mojo = "==1.0.0b2"
 
 [tasks]
 format = "mojo format ./src && mojo format ./tests/"
