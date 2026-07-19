@@ -18,7 +18,7 @@ comptime SCAL_UNROLL: Int = 4
 
 # DOT
 comptime DOT_N_THREADS: Int = 8
-comptime DOT_PAR_THRESHOLD: Int = 8192
+comptime DOT_PAR_THRESHOLD: Int = 32768
 comptime DOT_N_ACC: Int = 8
 
 # ASUM
