@@ -1,10 +1,10 @@
 # Level 1 per-routine tuning constants (M2)
 
 # AXPY
-comptime AXPY_N_THREADS: Int = 4
-comptime AXPY_PAR_THRESHOLD: Int = 4096
-comptime AXPY_MIN_CHUNK_PER_THREAD: Int = 32768
-comptime AXPY_N_ACC: Int = 4
+comptime AXPY_N_THREADS: Int = 8
+comptime AXPY_PAR_THRESHOLD: Int = 8192
+comptime AXPY_MIN_CHUNK_PER_THREAD: Int = 8192
+comptime AXPY_N_ACC: Int = 8
 
 # COPY
 comptime COPY_N_THREADS: Int = 8
@@ -17,9 +17,9 @@ comptime SCAL_PAR_THRESHOLD: Int = 32768
 comptime SCAL_UNROLL: Int = 4
 
 # DOT
-comptime DOT_N_THREADS: Int = 4
-comptime DOT_PAR_THRESHOLD: Int = 16384
-comptime DOT_N_ACC: Int = 4
+comptime DOT_N_THREADS: Int = 8
+comptime DOT_PAR_THRESHOLD: Int = 8192
+comptime DOT_N_ACC: Int = 8
 
 # ASUM
 comptime ASUM_N_THREADS: Int = 8

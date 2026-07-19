@@ -62,6 +62,26 @@ def _axpy_serial[
             da * xc.load[width=simd_width](i + 3 * simd_width)
             + yc.load[width=simd_width](i + 3 * simd_width),
         )
+        yc.store[width=simd_width](
+            i + 4 * simd_width,
+            da * xc.load[width=simd_width](i + 4 * simd_width)
+            + yc.load[width=simd_width](i + 4 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 5 * simd_width,
+            da * xc.load[width=simd_width](i + 5 * simd_width)
+            + yc.load[width=simd_width](i + 5 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 6 * simd_width,
+            da * xc.load[width=simd_width](i + 6 * simd_width)
+            + yc.load[width=simd_width](i + 6 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 7 * simd_width,
+            da * xc.load[width=simd_width](i + 7 * simd_width)
+            + yc.load[width=simd_width](i + 7 * simd_width),
+        )
         i += stride
     while i + simd_width <= length:
         yc.store[width=simd_width](
@@ -106,6 +126,26 @@ def _axpy_add_serial[
             xc.load[width=simd_width](i + 3 * simd_width)
             + yc.load[width=simd_width](i + 3 * simd_width),
         )
+        yc.store[width=simd_width](
+            i + 4 * simd_width,
+            xc.load[width=simd_width](i + 4 * simd_width)
+            + yc.load[width=simd_width](i + 4 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 5 * simd_width,
+            xc.load[width=simd_width](i + 5 * simd_width)
+            + yc.load[width=simd_width](i + 5 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 6 * simd_width,
+            xc.load[width=simd_width](i + 6 * simd_width)
+            + yc.load[width=simd_width](i + 6 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 7 * simd_width,
+            xc.load[width=simd_width](i + 7 * simd_width)
+            + yc.load[width=simd_width](i + 7 * simd_width),
+        )
         i += stride
     while i + simd_width <= length:
         yc.store[width=simd_width](
@@ -149,6 +189,26 @@ def _axpy_sub_serial[
             i + 3 * simd_width,
             yc.load[width=simd_width](i + 3 * simd_width)
             - xc.load[width=simd_width](i + 3 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 4 * simd_width,
+            yc.load[width=simd_width](i + 4 * simd_width)
+            - xc.load[width=simd_width](i + 4 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 5 * simd_width,
+            yc.load[width=simd_width](i + 5 * simd_width)
+            - xc.load[width=simd_width](i + 5 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 6 * simd_width,
+            yc.load[width=simd_width](i + 6 * simd_width)
+            - xc.load[width=simd_width](i + 6 * simd_width),
+        )
+        yc.store[width=simd_width](
+            i + 7 * simd_width,
+            yc.load[width=simd_width](i + 7 * simd_width)
+            - xc.load[width=simd_width](i + 7 * simd_width),
         )
         i += stride
     while i + simd_width <= length:

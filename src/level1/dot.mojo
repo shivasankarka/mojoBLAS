@@ -33,6 +33,10 @@ def _dot_serial[
     var acc1 = SIMD[dtype, simd_width](0)
     var acc2 = SIMD[dtype, simd_width](0)
     var acc3 = SIMD[dtype, simd_width](0)
+    var acc4 = SIMD[dtype, simd_width](0)
+    var acc5 = SIMD[dtype, simd_width](0)
+    var acc6 = SIMD[dtype, simd_width](0)
+    var acc7 = SIMD[dtype, simd_width](0)
 
     var i = 0
     while i + stride <= length:
@@ -48,13 +52,25 @@ def _dot_serial[
         acc3 += xc.load[width=simd_width](i + 3 * simd_width) * yc.load[
             width=simd_width
         ](i + 3 * simd_width)
+        acc4 += xc.load[width=simd_width](i + 4 * simd_width) * yc.load[
+            width=simd_width
+        ](i + 4 * simd_width)
+        acc5 += xc.load[width=simd_width](i + 5 * simd_width) * yc.load[
+            width=simd_width
+        ](i + 5 * simd_width)
+        acc6 += xc.load[width=simd_width](i + 6 * simd_width) * yc.load[
+            width=simd_width
+        ](i + 6 * simd_width)
+        acc7 += xc.load[width=simd_width](i + 7 * simd_width) * yc.load[
+            width=simd_width
+        ](i + 7 * simd_width)
         i += stride
 
     while i + simd_width <= length:
         acc0 += xc.load[width=simd_width](i) * yc.load[width=simd_width](i)
         i += simd_width
 
-    var result = (acc0 + acc1 + acc2 + acc3).reduce_add()
+    var result = (acc0 + acc1 + acc2 + acc3 + acc4 + acc5 + acc6 + acc7).reduce_add()
 
     while i < length:
         result += xc[i] * yc[i]
