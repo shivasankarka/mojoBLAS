@@ -14,6 +14,10 @@ tests.mojo
 *.json
 *.txt
 *.md
+!README.md
+!CHANGELOG.md
+!THIRD_PARTY_NOTICES.md
+!docs/*.md
 *.csv
 
 c_bench
@@ -35,4 +39,3 @@ bench_plot_gemm*.png
 bench_l3_f32*.png
 gemm_versions.png
 bench_level3_f32.c
-src/amx.mojo
