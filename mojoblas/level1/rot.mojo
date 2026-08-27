@@ -81,8 +81,8 @@ def rot[
                 var length = end - start
                 if length <= 0:
                     return
-                var xc = x + start
-                var yc = y + start
+                var xc = x.unsafe_offset(start)
+                var yc = y.unsafe_offset(start)
 
                 def closure_p[width: Int](i: Int) {yc, xc, c, s}:
                     var xv = xc.unsafe_load[width=width](i)
@@ -112,9 +112,9 @@ def rot[
         iy = (-n + 1) * incy
 
     for _ in range(n):
-        var temp_x = c * x[ix] + s * y[iy]
-        var temp_y = -s * x[ix] + c * y[iy]
-        x[ix] = temp_x
-        y[iy] = temp_y
+        var temp_x = c * x[unsafe_offset=ix] + s * y[unsafe_offset=iy]
+        var temp_y = -s * x[unsafe_offset=ix] + c * y[unsafe_offset=iy]
+        x[unsafe_offset=ix] = temp_x
+        y[unsafe_offset=iy] = temp_y
         ix += incx
         iy += incy

@@ -52,21 +52,21 @@ def rotg[
         c: Pointer to cosine component of rotation (output).
         s: Pointer to sine component of rotation (output).
     """
-    var a_val = a[0]
-    var b_val = b[0]
+    var a_val = a[unsafe_offset=0]
+    var b_val = b[unsafe_offset=0]
 
     if b_val == 0:
-        c[0] = 1.0
-        s[0] = 0.0
-        a[0] = a_val
-        b[0] = 0.0
+        c[unsafe_offset=0] = 1.0
+        s[unsafe_offset=0] = 0.0
+        a[unsafe_offset=0] = a_val
+        b[unsafe_offset=0] = 0.0
         return
 
     if a_val == 0:
-        c[0] = 0.0
-        s[0] = 1.0
-        a[0] = abs(b_val)
-        b[0] = 1.0
+        c[unsafe_offset=0] = 0.0
+        s[unsafe_offset=0] = 1.0
+        a[unsafe_offset=0] = abs(b_val)
+        b[unsafe_offset=0] = 1.0
         return
 
     var abs_a = abs(a_val)
@@ -75,14 +75,14 @@ def rotg[
     if abs_a > abs_b:
         var t = b_val / a_val
         var u = copysign(sqrt(1.0 + t * t), a_val)
-        c[0] = 1.0 / u
-        s[0] = c[0] * t
-        a[0] = a_val * u
-        b[0] = s[0]
+        c[unsafe_offset=0] = 1.0 / u
+        s[unsafe_offset=0] = c[unsafe_offset=0] * t
+        a[unsafe_offset=0] = a_val * u
+        b[unsafe_offset=0] = s[unsafe_offset=0]
     else:
         var t = a_val / b_val
         var u = copysign(sqrt(1.0 + t * t), b_val)
-        s[0] = 1.0 / u
-        c[0] = s[0] * t
-        a[0] = b_val * u
-        b[0] = 1.0 if a_val != 0 else Scalar[dtype](0.0)
+        s[unsafe_offset=0] = 1.0 / u
+        c[unsafe_offset=0] = s[unsafe_offset=0] * t
+        a[unsafe_offset=0] = b_val * u
+        b[unsafe_offset=0] = 1.0 if a_val != 0 else Scalar[dtype](0.0)

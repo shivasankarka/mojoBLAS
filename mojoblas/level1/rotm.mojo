@@ -67,7 +67,7 @@ def rotm[
     if n <= 0:
         return
 
-    var flag = param[0]
+    var flag = param[unsafe_offset=0]
     if flag == -2:
         return
 
@@ -77,16 +77,16 @@ def rotm[
     var h22: Scalar[dtype] = 0
 
     if flag < 0:
-        h11 = param[1]
-        h21 = param[2]
-        h12 = param[3]
-        h22 = param[4]
+        h11 = param[unsafe_offset=1]
+        h21 = param[unsafe_offset=2]
+        h12 = param[unsafe_offset=3]
+        h22 = param[unsafe_offset=4]
     elif flag == 0:
-        h12 = param[3]
-        h21 = param[2]
+        h12 = param[unsafe_offset=3]
+        h21 = param[unsafe_offset=2]
     else:
-        h11 = param[1]
-        h22 = param[4]
+        h11 = param[unsafe_offset=1]
+        h22 = param[unsafe_offset=4]
 
     if incx == 1 and incy == 1:
         comptime simd_width: Int = simd_width_of[dtype]()
@@ -104,8 +104,8 @@ def rotm[
                     var length = end - start
                     if length <= 0:
                         return
-                    var xc = x + start
-                    var yc = y + start
+                    var xc = x.unsafe_offset(start)
+                    var yc = y.unsafe_offset(start)
 
                     def closure[
                         width: Int
@@ -144,8 +144,8 @@ def rotm[
                     var length = end - start
                     if length <= 0:
                         return
-                    var xc = x + start
-                    var yc = y + start
+                    var xc = x.unsafe_offset(start)
+                    var yc = y.unsafe_offset(start)
 
                     def closure[width: Int](i: Int) {xc, yc, h12, h21}:
                         var xv = xc.unsafe_load[width=width](i)
@@ -182,8 +182,8 @@ def rotm[
                     var length = end - start
                     if length <= 0:
                         return
-                    var xc = x + start
-                    var yc = y + start
+                    var xc = x.unsafe_offset(start)
+                    var yc = y.unsafe_offset(start)
 
                     def closure[width: Int](i: Int) {xc, yc, h11, h22}:
                         var xv = xc.unsafe_load[width=width](i)
@@ -214,25 +214,25 @@ def rotm[
     var ky = 0 if incy > 0 else (1 - n) * incy
     if flag < 0:
         for _ in range(n):
-            var w = x[kx]
-            var z = y[ky]
-            x[kx] = w * h11 + z * h12
-            y[ky] = w * h21 + z * h22
+            var w = x[unsafe_offset=kx]
+            var z = y[unsafe_offset=ky]
+            x[unsafe_offset=kx] = w * h11 + z * h12
+            y[unsafe_offset=ky] = w * h21 + z * h22
             kx += incx
             ky += incy
     elif flag == 0:
         for _ in range(n):
-            var w = x[kx]
-            var z = y[ky]
-            x[kx] = w + z * h12
-            y[ky] = w * h21 + z
+            var w = x[unsafe_offset=kx]
+            var z = y[unsafe_offset=ky]
+            x[unsafe_offset=kx] = w + z * h12
+            y[unsafe_offset=ky] = w * h21 + z
             kx += incx
             ky += incy
     else:
         for _ in range(n):
-            var w = x[kx]
-            var z = y[ky]
-            x[kx] = w * h11 + z
-            y[ky] = -w + h22 * z
+            var w = x[unsafe_offset=kx]
+            var z = y[unsafe_offset=ky]
+            x[unsafe_offset=kx] = w * h11 + z
+            y[unsafe_offset=ky] = -w + h22 * z
             kx += incx
             ky += incy

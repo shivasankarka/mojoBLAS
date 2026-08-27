@@ -69,10 +69,10 @@ def rotmg[
     var dh21: T = 0
     var dh22: T = 0
 
-    var dd1 = d1[0]
-    var dd2 = d2[0]
-    var dx1 = x1[0]
-    var dy1v = y1[0]
+    var dd1 = d1[unsafe_offset=0]
+    var dd2 = d2[unsafe_offset=0]
+    var dx1 = x1[unsafe_offset=0]
+    var dy1v = y1[unsafe_offset=0]
 
     if dd1 < zero:
         dflag = -one
@@ -86,10 +86,10 @@ def rotmg[
     else:
         var p2 = dd2 * dy1v
         if p2 == zero:
-            param[0] = -two
-            d1[0] = dd1
-            d2[0] = dd2
-            x1[0] = dx1
+            param[unsafe_offset=0] = -two
+            d1[unsafe_offset=0] = dd1
+            d2[unsafe_offset=0] = dd2
+            x1[unsafe_offset=0] = dx1
             return
 
         var p1 = dd1 * dx1
@@ -176,19 +176,19 @@ def rotmg[
                     dh21 = dh21 * gam
                     dh22 = dh22 * gam
 
-    param[0] = dflag
+    param[unsafe_offset=0] = dflag
     if dflag < zero:
-        param[1] = dh11
-        param[2] = dh21
-        param[3] = dh12
-        param[4] = dh22
+        param[unsafe_offset=1] = dh11
+        param[unsafe_offset=2] = dh21
+        param[unsafe_offset=3] = dh12
+        param[unsafe_offset=4] = dh22
     elif dflag == zero:
-        param[2] = dh21
-        param[3] = dh12
+        param[unsafe_offset=2] = dh21
+        param[unsafe_offset=3] = dh12
     else:
-        param[1] = dh11
-        param[4] = dh22
+        param[unsafe_offset=1] = dh11
+        param[unsafe_offset=4] = dh22
 
-    d1[0] = dd1
-    d2[0] = dd2
-    x1[0] = dx1
+    d1[unsafe_offset=0] = dd1
+    d2[unsafe_offset=0] = dd2
+    x1[unsafe_offset=0] = dx1
