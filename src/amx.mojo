@@ -20,8 +20,8 @@
 from std.sys._assembly import inlined_assembly
 
 from std.memory import (
-    memcpy,
-    memset_zero,
+    unsafe_memcpy,
+    unsafe_memset_zero,
     stack_allocation,
 )
 
@@ -865,7 +865,7 @@ def genlut_lookup(
 @always_inline
 def _encode_load_store[
     row_count: Int, dtype: DType
-](src: UnsafePointer[Scalar[dtype], _], start_index: Int) -> Int:
+](src: Pointer[Scalar[dtype], _], start_index: Int) -> Int:
     """
     Utility to do the bit encoding for load and store ops.
     """
@@ -879,42 +879,42 @@ def _encode_load_store[
 @always_inline
 def store_x[
     row_count: Int, dtype: DType
-](src: UnsafePointer[Scalar[dtype], _], start_index: Int):
+](src: Pointer[Scalar[dtype], _], start_index: Int):
     ldx(_encode_load_store[row_count, dtype](src, start_index))
 
 
 @always_inline
 def store_y[
     row_count: Int, dtype: DType
-](src: UnsafePointer[Scalar[dtype], _], start_index: Int):
+](src: Pointer[Scalar[dtype], _], start_index: Int):
     ldy(_encode_load_store[row_count, dtype](src, start_index))
 
 
 @always_inline
 def store_z[
     row_count: Int, dtype: DType
-](src: UnsafePointer[Scalar[dtype], _], start_index: Int):
+](src: Pointer[Scalar[dtype], _], start_index: Int):
     ldz(_encode_load_store[row_count, dtype](src, start_index))
 
 
 @always_inline
 def read_x[
     row_count: Int, dtype: DType
-](src: UnsafePointer[mut=True, Scalar[dtype], _], start_index: Int):
+](src: Pointer[mut=True, Scalar[dtype], _], start_index: Int):
     stx(_encode_load_store[row_count, dtype](src, start_index))
 
 
 @always_inline
 def read_y[
     row_count: Int, dtype: DType
-](src: UnsafePointer[mut=True, Scalar[dtype], _], start_index: Int):
+](src: Pointer[mut=True, Scalar[dtype], _], start_index: Int):
     sty(_encode_load_store[row_count, dtype](src, start_index))
 
 
 @always_inline
 def load_z[
     row_count: Int, dtype: DType
-](src: UnsafePointer[mut=True, Scalar[dtype], _], start_index: Int):
+](src: Pointer[mut=True, Scalar[dtype], _], start_index: Int):
     stz(_encode_load_store[row_count, dtype](src, start_index))
 
 
@@ -1019,11 +1019,11 @@ def dot_at_b[
     //,
     dtype: DType,
 ](
-    c: UnsafePointer[Scalar[dtype], origin_c],
+    c: Pointer[Scalar[dtype], origin_c],
     ldc: Int,
-    a: UnsafePointer[Scalar[dtype], origin_a],
+    a: Pointer[Scalar[dtype], origin_a],
     lda: Int,
-    b: UnsafePointer[Scalar[dtype], origin_b],
+    b: Pointer[Scalar[dtype], origin_b],
     ldb: Int,
 ):
     """Performs a matrix multiply C = A^T * B using Apple AMX instructions.
@@ -1069,17 +1069,17 @@ def dot_at_b[
     ]()
 
     for row in range(tile_dim):
-        memcpy(
-            dest=a_buffer + row * tile_dim,
-            src=a + row * lda,
+        unsafe_memcpy(
+            dest=a_buffer.unsafe_offset(row * tile_dim),
+            src=a.unsafe_offset(row * lda),
             count=tile_dim,
         )
-        memcpy(
-            dest=b_buffer + row * tile_dim,
-            src=b + row * ldb,
+        unsafe_memcpy(
+            dest=b_buffer.unsafe_offset(row * tile_dim),
+            src=b.unsafe_offset(row * ldb),
             count=tile_dim,
         )
-    memset_zero(c_buffer, num_elements)
+    unsafe_memset_zero(c_buffer, num_elements)
 
     # _set() has the side effect of clearing the z tile
     _set()
@@ -1087,31 +1087,31 @@ def dot_at_b[
     comptime if dtype == DType.float32:
         comptime for j in range(2):
             comptime for i in range(8):
-                ldx((i << 56) | Int(b_buffer + (j * 8 + i) * tile_dim))
-                ldy((i << 56) | Int(a_buffer + (j * 8 + i) * tile_dim))
+                ldx((i << 56) | Int(b_buffer.unsafe_offset((j * 8 + i) * tile_dim)))
+                ldy((i << 56) | Int(a_buffer.unsafe_offset((j * 8 + i) * tile_dim)))
 
             comptime for i in range(8):
                 fma32((i << 6 << 10) | (i << 6))
 
         comptime for i in range(0, 64, 4):
-            stz((i << 56) | Int(c_buffer + (i >> 2) * tile_dim))
+            stz((i << 56) | Int(c_buffer.unsafe_offset((i >> 2) * tile_dim)))
     elif dtype == DType.float16:
         comptime for j in range(4):
             comptime for i in range(8):
-                ldx((i << 56) | Int(b_buffer + (j * 8 + i) * tile_dim))
-                ldy((i << 56) | Int(a_buffer + (j * 8 + i) * tile_dim))
+                ldx((i << 56) | Int(b_buffer.unsafe_offset((j * 8 + i) * tile_dim)))
+                ldy((i << 56) | Int(a_buffer.unsafe_offset((j * 8 + i) * tile_dim)))
 
             comptime for i in range(8):
                 fma16((i << 6 << 10) | (i << 6))
 
         comptime for i in range(0, 64, 2):
-            stz((i << 56) | Int(c_buffer + (i >> 1) * tile_dim))
+            stz((i << 56) | Int(c_buffer.unsafe_offset((i >> 1) * tile_dim)))
 
     _clr()
 
     for row in range(tile_dim):
-        memcpy(
-            dest=c + row * ldc,
-            src=c_buffer + row * tile_dim,
+        unsafe_memcpy(
+            dest=c.unsafe_offset(row * ldc),
+            src=c_buffer.unsafe_offset(row * tile_dim),
             count=tile_dim,
         )
