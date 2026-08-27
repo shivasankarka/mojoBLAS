@@ -103,9 +103,15 @@ def tbmv[
                         var temp: Scalar[dtype] = x[unsafe_offset=j]
                         var i_start: Int = max(0, j - k)
                         for i in range(i_start, j):
-                            x[unsafe_offset=i] = x[unsafe_offset=i] + temp * a[unsafe_offset=k - j + i + j * lda]
+                            x[unsafe_offset=i] = (
+                                x[unsafe_offset=i]
+                                + temp * a[unsafe_offset=k - j + i + j * lda]
+                            )
                         if no_unit:
-                            x[unsafe_offset=j] = x[unsafe_offset=j] * a[unsafe_offset=k + j * lda]
+                            x[unsafe_offset=j] = (
+                                x[unsafe_offset=j]
+                                * a[unsafe_offset=k + j * lda]
+                            )
             else:
                 var jx: Int = kx
                 for j in range(n):
@@ -114,11 +120,15 @@ def tbmv[
                         var ix: Int = max(kx, kx + (j - k) * incx)
                         for i in range(max(0, j - k), j):
                             x[unsafe_offset=ix - 1] = (
-                                x[unsafe_offset=ix - 1] + temp * a[unsafe_offset=k - j + i + j * lda]
+                                x[unsafe_offset=ix - 1]
+                                + temp * a[unsafe_offset=k - j + i + j * lda]
                             )
                             ix += incx
                         if no_unit:
-                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] * a[unsafe_offset=k + j * lda]
+                            x[unsafe_offset=jx - 1] = (
+                                x[unsafe_offset=jx - 1]
+                                * a[unsafe_offset=k + j * lda]
+                            )
                     jx += incx
         else:
             if incx == 1:
@@ -127,9 +137,15 @@ def tbmv[
                         var temp: Scalar[dtype] = x[unsafe_offset=j]
                         var i_end: Int = min(n, j + k + 1)
                         for i in range(j + 1, i_end):
-                            x[unsafe_offset=i] = x[unsafe_offset=i] + temp * a[unsafe_offset=k - j + i + j * lda]
+                            x[unsafe_offset=i] = (
+                                x[unsafe_offset=i]
+                                + temp * a[unsafe_offset=k - j + i + j * lda]
+                            )
                         if no_unit:
-                            x[unsafe_offset=j] = x[unsafe_offset=j] * a[unsafe_offset=k + j * lda]
+                            x[unsafe_offset=j] = (
+                                x[unsafe_offset=j]
+                                * a[unsafe_offset=k + j * lda]
+                            )
             else:
                 var kx_plus: Int = kx + (n - 1) * incx
                 var jx: Int = kx_plus
@@ -140,11 +156,15 @@ def tbmv[
                         var i_end: Int = min(n, j + k + 1)
                         for i in range(j + 1, i_end):
                             x[unsafe_offset=ix - 1] = (
-                                x[unsafe_offset=ix - 1] + temp * a[unsafe_offset=k - j + i + j * lda]
+                                x[unsafe_offset=ix - 1]
+                                + temp * a[unsafe_offset=k - j + i + j * lda]
                             )
                             ix += incx
                         if no_unit:
-                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] * a[unsafe_offset=k + j * lda]
+                            x[unsafe_offset=jx - 1] = (
+                                x[unsafe_offset=jx - 1]
+                                * a[unsafe_offset=k + j * lda]
+                            )
                     jx -= incx
     else:
         if upper:
@@ -155,7 +175,11 @@ def tbmv[
                         temp = temp * a[unsafe_offset=k + j * lda]
                     var i_start: Int = max(0, j - k)
                     for i in range(j - 1, i_start - 1, -1):
-                        temp = temp + a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=i]
+                        temp = (
+                            temp
+                            + a[unsafe_offset=k - j + i + j * lda]
+                            * x[unsafe_offset=i]
+                        )
                     x[unsafe_offset=j] = temp
             else:
                 var jx: Int = kx + (n - 1) * incx
@@ -167,7 +191,11 @@ def tbmv[
                     var i_start: Int = max(0, j - k)
                     for i in range(j - 1, i_start - 1, -1):
                         ix -= incx
-                        temp = temp + a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=ix - 1]
+                        temp = (
+                            temp
+                            + a[unsafe_offset=k - j + i + j * lda]
+                            * x[unsafe_offset=ix - 1]
+                        )
                     x[unsafe_offset=jx - 1] = temp
                     jx -= incx
         else:
@@ -178,7 +206,11 @@ def tbmv[
                         temp = temp * a[unsafe_offset=k + j * lda]
                     var i_end: Int = min(n, j + k + 1)
                     for i in range(j + 1, i_end):
-                        temp = temp + a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=i]
+                        temp = (
+                            temp
+                            + a[unsafe_offset=k - j + i + j * lda]
+                            * x[unsafe_offset=i]
+                        )
                     x[unsafe_offset=j] = temp
             else:
                 var jx: Int = kx
@@ -190,7 +222,11 @@ def tbmv[
                     var i_end: Int = min(n, j + k + 1)
                     for i in range(j + 1, i_end):
                         ix += incx
-                        temp = temp + a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=ix - 1]
+                        temp = (
+                            temp
+                            + a[unsafe_offset=k - j + i + j * lda]
+                            * x[unsafe_offset=ix - 1]
+                        )
                     x[unsafe_offset=jx - 1] = temp
                     jx += incx
 

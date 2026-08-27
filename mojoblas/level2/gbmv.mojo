@@ -151,7 +151,10 @@ def gbmv[
                     var i_start: Int = max(0, j - ku)
                     var i_end: Int = min(m, j + kl + 1)
                     for i in range(i_start, i_end):
-                        y[unsafe_offset=i] = y[unsafe_offset=i] + temp * a[unsafe_offset=ku - j + i + j * lda]
+                        y[unsafe_offset=i] = (
+                            y[unsafe_offset=i]
+                            + temp * a[unsafe_offset=ku - j + i + j * lda]
+                        )
                 jx += incx
         else:
             for j in range(n):
@@ -161,7 +164,10 @@ def gbmv[
                     var i_start: Int = max(0, j - ku)
                     var i_end: Int = min(m, j + kl + 1)
                     for i in range(i_start, i_end):
-                        y[unsafe_offset=iy - 1] = y[unsafe_offset=iy - 1] + temp * a[unsafe_offset=ku - j + i + j * lda]
+                        y[unsafe_offset=iy - 1] = (
+                            y[unsafe_offset=iy - 1]
+                            + temp * a[unsafe_offset=ku - j + i + j * lda]
+                        )
                         iy += incy
                 jx += incx
     else:
@@ -172,7 +178,11 @@ def gbmv[
                 var i_start: Int = max(0, j - ku)
                 var i_end: Int = min(m, j + kl + 1)
                 for i in range(i_start, i_end):
-                    temp = temp + a[unsafe_offset=ku - j + i + j * lda] * x[unsafe_offset=i]
+                    temp = (
+                        temp
+                        + a[unsafe_offset=ku - j + i + j * lda]
+                        * x[unsafe_offset=i]
+                    )
                 y[unsafe_offset=jy - 1] = y[unsafe_offset=jy - 1] + alpha * temp
                 jy += incy
         else:
@@ -182,7 +192,11 @@ def gbmv[
                 var i_start: Int = max(0, j - ku)
                 var i_end: Int = min(m, j + kl + 1)
                 for i in range(i_start, i_end):
-                    temp = temp + a[unsafe_offset=ku - j + i + j * lda] * x[unsafe_offset=ix - 1]
+                    temp = (
+                        temp
+                        + a[unsafe_offset=ku - j + i + j * lda]
+                        * x[unsafe_offset=ix - 1]
+                    )
                     ix += incx
                 y[unsafe_offset=jy - 1] = y[unsafe_offset=jy - 1] + alpha * temp
                 jy += incy

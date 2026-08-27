@@ -90,7 +90,9 @@ def copy[
                 var yc = dy.unsafe_offset(start)
 
                 def closure_p[width: Int](i: Int) {yc, xc}:
-                    yc.unsafe_store[width=width](i, xc.unsafe_load[width=width](i))
+                    yc.unsafe_store[width=width](
+                        i, xc.unsafe_load[width=width](i)
+                    )
 
                 vectorize[simd_width, unroll_factor=unroll_factor](
                     length, closure_p

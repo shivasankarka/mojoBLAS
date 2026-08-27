@@ -101,11 +101,17 @@ def tbsv[
                 for j in range(n - 1, -1, -1):
                     if x[unsafe_offset=j] != 0:
                         if no_unit:
-                            x[unsafe_offset=j] = x[unsafe_offset=j] / a[unsafe_offset=k + j * lda]
+                            x[unsafe_offset=j] = (
+                                x[unsafe_offset=j]
+                                / a[unsafe_offset=k + j * lda]
+                            )
                         var temp: Scalar[dtype] = x[unsafe_offset=j]
                         var i_start: Int = max(0, j - k)
                         for i in range(j - 1, i_start - 1, -1):
-                            x[unsafe_offset=i] = x[unsafe_offset=i] - temp * a[unsafe_offset=k - j + i + j * lda]
+                            x[unsafe_offset=i] = (
+                                x[unsafe_offset=i]
+                                - temp * a[unsafe_offset=k - j + i + j * lda]
+                            )
             else:
                 var kx_plus: Int = kx + (n - 1) * incx
                 var jx: Int = kx_plus
@@ -113,38 +119,52 @@ def tbsv[
                     jx -= incx
                     if x[unsafe_offset=jx - 1] != 0:
                         if no_unit:
-                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] / a[unsafe_offset=k + j * lda]
+                            x[unsafe_offset=jx - 1] = (
+                                x[unsafe_offset=jx - 1]
+                                / a[unsafe_offset=k + j * lda]
+                            )
                         var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                         var ix: Int = jx
                         var i_start: Int = max(0, j - k)
                         for i in range(j - 1, i_start - 1, -1):
                             ix -= incx
                             x[unsafe_offset=ix - 1] = (
-                                x[unsafe_offset=ix - 1] - temp * a[unsafe_offset=k - j + i + j * lda]
+                                x[unsafe_offset=ix - 1]
+                                - temp * a[unsafe_offset=k - j + i + j * lda]
                             )
         else:
             if incx == 1:
                 for j in range(n):
                     if x[unsafe_offset=j] != 0:
                         if no_unit:
-                            x[unsafe_offset=j] = x[unsafe_offset=j] / a[unsafe_offset=k + j * lda]
+                            x[unsafe_offset=j] = (
+                                x[unsafe_offset=j]
+                                / a[unsafe_offset=k + j * lda]
+                            )
                         var temp: Scalar[dtype] = x[unsafe_offset=j]
                         var i_end: Int = min(n, j + k + 1)
                         for i in range(j + 1, i_end):
-                            x[unsafe_offset=i] = x[unsafe_offset=i] - temp * a[unsafe_offset=k - j + i + j * lda]
+                            x[unsafe_offset=i] = (
+                                x[unsafe_offset=i]
+                                - temp * a[unsafe_offset=k - j + i + j * lda]
+                            )
             else:
                 var jx: Int = kx
                 for j in range(n):
                     if x[unsafe_offset=jx - 1] != 0:
                         if no_unit:
-                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] / a[unsafe_offset=k + j * lda]
+                            x[unsafe_offset=jx - 1] = (
+                                x[unsafe_offset=jx - 1]
+                                / a[unsafe_offset=k + j * lda]
+                            )
                         var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                         var ix: Int = jx
                         var i_end: Int = min(n, j + k + 1)
                         for i in range(j + 1, i_end):
                             ix += incx
                             x[unsafe_offset=ix - 1] = (
-                                x[unsafe_offset=ix - 1] - temp * a[unsafe_offset=k - j + i + j * lda]
+                                x[unsafe_offset=ix - 1]
+                                - temp * a[unsafe_offset=k - j + i + j * lda]
                             )
                     jx += incx
     else:
@@ -154,7 +174,11 @@ def tbsv[
                     var temp: Scalar[dtype] = x[unsafe_offset=j]
                     var i_start: Int = max(0, j - k)
                     for i in range(i_start, j):
-                        temp = temp - a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=i]
+                        temp = (
+                            temp
+                            - a[unsafe_offset=k - j + i + j * lda]
+                            * x[unsafe_offset=i]
+                        )
                     if no_unit:
                         temp = temp / a[unsafe_offset=k + j * lda]
                     x[unsafe_offset=j] = temp
@@ -165,7 +189,11 @@ def tbsv[
                     var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                     var i_start: Int = max(0, j - k)
                     for i in range(i_start, j):
-                        temp = temp - a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=ix - 1]
+                        temp = (
+                            temp
+                            - a[unsafe_offset=k - j + i + j * lda]
+                            * x[unsafe_offset=ix - 1]
+                        )
                         ix += incx
                     if no_unit:
                         temp = temp / a[unsafe_offset=k + j * lda]
@@ -177,7 +205,11 @@ def tbsv[
                     var temp: Scalar[dtype] = x[unsafe_offset=j]
                     var i_end: Int = min(n, j + k + 1)
                     for i in range(j + 1, i_end):
-                        temp = temp - a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=i]
+                        temp = (
+                            temp
+                            - a[unsafe_offset=k - j + i + j * lda]
+                            * x[unsafe_offset=i]
+                        )
                     if no_unit:
                         temp = temp / a[unsafe_offset=k + j * lda]
                     x[unsafe_offset=j] = temp
@@ -189,7 +221,11 @@ def tbsv[
                     var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                     var i_end: Int = min(n, j + k + 1)
                     for i in range(j + 1, i_end):
-                        temp = temp - a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=ix - 1]
+                        temp = (
+                            temp
+                            - a[unsafe_offset=k - j + i + j * lda]
+                            * x[unsafe_offset=ix - 1]
+                        )
                         ix -= incx
                     if no_unit:
                         temp = temp / a[unsafe_offset=k + j * lda]

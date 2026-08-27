@@ -1089,8 +1089,14 @@ def dot_at_b[
     comptime if dtype == DType.float32:
         comptime for j in range(2):
             comptime for i in range(8):
-                ldx((i << 56) | Int(b_buffer.unsafe_offset((j * 8 + i) * tile_dim)))
-                ldy((i << 56) | Int(a_buffer.unsafe_offset((j * 8 + i) * tile_dim)))
+                ldx(
+                    (i << 56)
+                    | Int(b_buffer.unsafe_offset((j * 8 + i) * tile_dim))
+                )
+                ldy(
+                    (i << 56)
+                    | Int(a_buffer.unsafe_offset((j * 8 + i) * tile_dim))
+                )
 
             comptime for i in range(8):
                 fma32((i << 6 << 10) | (i << 6))
@@ -1100,8 +1106,14 @@ def dot_at_b[
     elif dtype == DType.float16:
         comptime for j in range(4):
             comptime for i in range(8):
-                ldx((i << 56) | Int(b_buffer.unsafe_offset((j * 8 + i) * tile_dim)))
-                ldy((i << 56) | Int(a_buffer.unsafe_offset((j * 8 + i) * tile_dim)))
+                ldx(
+                    (i << 56)
+                    | Int(b_buffer.unsafe_offset((j * 8 + i) * tile_dim))
+                )
+                ldy(
+                    (i << 56)
+                    | Int(a_buffer.unsafe_offset((j * 8 + i) * tile_dim))
+                )
 
             comptime for i in range(8):
                 fma16((i << 6 << 10) | (i << 6))

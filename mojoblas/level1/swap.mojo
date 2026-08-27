@@ -90,7 +90,9 @@ def vswap[
 
                 def closure_p[width: Int](i: Int) {xc, yc}:
                     var temp = xc.unsafe_load[width=width](i)
-                    xc.unsafe_store[width=width](i, yc.unsafe_load[width=width](i))
+                    xc.unsafe_store[width=width](
+                        i, yc.unsafe_load[width=width](i)
+                    )
                     yc.unsafe_store[width=width](i, temp)
 
                 vectorize[simd_width, unroll_factor=unroll_factor](

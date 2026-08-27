@@ -66,7 +66,11 @@ def spr2[
                     var temp1: Scalar[dtype] = alpha * y[unsafe_offset=j]
                     var temp2: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     for i in range(j + 1):
-                        ap[unsafe_offset=kk + i] = ap[unsafe_offset=kk + i] + x[unsafe_offset=i] * temp1 + y[unsafe_offset=i] * temp2
+                        ap[unsafe_offset=kk + i] = (
+                            ap[unsafe_offset=kk + i]
+                            + x[unsafe_offset=i] * temp1
+                            + y[unsafe_offset=i] * temp2
+                        )
                 kk += j + 1
         else:
             var jx: Int = kx
@@ -78,7 +82,11 @@ def spr2[
                     var ix: Int = kx
                     var iy: Int = ky
                     for k in range(kk, kk + j + 1):
-                        ap[unsafe_offset=k] = ap[unsafe_offset=k] + x[unsafe_offset=ix] * temp1 + y[unsafe_offset=iy] * temp2
+                        ap[unsafe_offset=k] = (
+                            ap[unsafe_offset=k]
+                            + x[unsafe_offset=ix] * temp1
+                            + y[unsafe_offset=iy] * temp2
+                        )
                         ix += incx
                         iy += incy
                 jx += incx
@@ -92,7 +100,9 @@ def spr2[
                     var temp2: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     for i in range(j, n):
                         ap[unsafe_offset=kk + i - j] = (
-                            ap[unsafe_offset=kk + i - j] + x[unsafe_offset=i] * temp1 + y[unsafe_offset=i] * temp2
+                            ap[unsafe_offset=kk + i - j]
+                            + x[unsafe_offset=i] * temp1
+                            + y[unsafe_offset=i] * temp2
                         )
                 kk += n - j
         else:
@@ -105,7 +115,11 @@ def spr2[
                     var ix: Int = jx
                     var iy: Int = jy
                     for k in range(kk, kk + n - j):
-                        ap[unsafe_offset=k] = ap[unsafe_offset=k] + x[unsafe_offset=ix] * temp1 + y[unsafe_offset=iy] * temp2
+                        ap[unsafe_offset=k] = (
+                            ap[unsafe_offset=k]
+                            + x[unsafe_offset=ix] * temp1
+                            + y[unsafe_offset=iy] * temp2
+                        )
                         ix += incx
                         iy += incy
                 jx += incx

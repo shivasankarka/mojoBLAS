@@ -58,7 +58,9 @@ def spr[
                 if x[unsafe_offset=j] != 0:
                     var temp: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     for i in range(j + 1):
-                        ap[unsafe_offset=kk + i] = ap[unsafe_offset=kk + i] + x[unsafe_offset=i] * temp
+                        ap[unsafe_offset=kk + i] = (
+                            ap[unsafe_offset=kk + i] + x[unsafe_offset=i] * temp
+                        )
                 kk += j + 1
         else:
             var jx: Int = kx
@@ -67,7 +69,9 @@ def spr[
                     var temp: Scalar[dtype] = alpha * x[unsafe_offset=jx]
                     var ix: Int = kx
                     for k in range(kk, kk + j + 1):
-                        ap[unsafe_offset=k] = ap[unsafe_offset=k] + x[unsafe_offset=ix] * temp
+                        ap[unsafe_offset=k] = (
+                            ap[unsafe_offset=k] + x[unsafe_offset=ix] * temp
+                        )
                         ix += incx
                 jx += incx
                 kk += j + 1
@@ -77,7 +81,10 @@ def spr[
                 if x[unsafe_offset=j] != 0:
                     var temp: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     for i in range(j, n):
-                        ap[unsafe_offset=kk + i - j] = ap[unsafe_offset=kk + i - j] + x[unsafe_offset=i] * temp
+                        ap[unsafe_offset=kk + i - j] = (
+                            ap[unsafe_offset=kk + i - j]
+                            + x[unsafe_offset=i] * temp
+                        )
                 kk += n - j
         else:
             var jx: Int = kx
@@ -86,7 +93,9 @@ def spr[
                     var temp: Scalar[dtype] = alpha * x[unsafe_offset=jx]
                     var ix: Int = jx
                     for k in range(kk, kk + n - j):
-                        ap[unsafe_offset=k] = ap[unsafe_offset=k] + x[unsafe_offset=ix] * temp
+                        ap[unsafe_offset=k] = (
+                            ap[unsafe_offset=k] + x[unsafe_offset=ix] * temp
+                        )
                         ix += incx
                 jx += incx
                 kk += n - j

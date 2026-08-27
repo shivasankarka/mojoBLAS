@@ -97,13 +97,13 @@ def _axpy_serial[
         i += stride
     while i + simd_width <= length:
         yc.unsafe_store[width=simd_width](
-            i, da * xc.unsafe_load[width=simd_width](i) + yc.unsafe_load[width=simd_width](i)
+            i,
+            da * xc.unsafe_load[width=simd_width](i)
+            + yc.unsafe_load[width=simd_width](i),
         )
         i += simd_width
     while i < length:
-        yc[unsafe_offset=i] = (
-            da * xc[unsafe_offset=i] + yc[unsafe_offset=i]
-        )
+        yc[unsafe_offset=i] = da * xc[unsafe_offset=i] + yc[unsafe_offset=i]
         i += 1
 
 
@@ -163,7 +163,9 @@ def _axpy_add_serial[
         i += stride
     while i + simd_width <= length:
         yc.unsafe_store[width=simd_width](
-            i, xc.unsafe_load[width=simd_width](i) + yc.unsafe_load[width=simd_width](i)
+            i,
+            xc.unsafe_load[width=simd_width](i)
+            + yc.unsafe_load[width=simd_width](i),
         )
         i += simd_width
     while i < length:
@@ -227,7 +229,9 @@ def _axpy_sub_serial[
         i += stride
     while i + simd_width <= length:
         yc.unsafe_store[width=simd_width](
-            i, yc.unsafe_load[width=simd_width](i) - xc.unsafe_load[width=simd_width](i)
+            i,
+            yc.unsafe_load[width=simd_width](i)
+            - xc.unsafe_load[width=simd_width](i),
         )
         i += simd_width
     while i < length:
@@ -335,7 +339,9 @@ def axpy[
                     if end <= start:
                         return
                     _axpy_add_serial[dtype, simd_width, n_acc](
-                        dx.unsafe_offset(start), dy.unsafe_offset(start), end - start
+                        dx.unsafe_offset(start),
+                        dy.unsafe_offset(start),
+                        end - start,
                     )
 
                 parallelize[worker_add](nt)
@@ -348,7 +354,9 @@ def axpy[
                     if end <= start:
                         return
                     _axpy_sub_serial[dtype, simd_width, n_acc](
-                        dx.unsafe_offset(start), dy.unsafe_offset(start), end - start
+                        dx.unsafe_offset(start),
+                        dy.unsafe_offset(start),
+                        end - start,
                     )
 
                 parallelize[worker_sub](nt)
@@ -361,7 +369,10 @@ def axpy[
                     if end <= start:
                         return
                     _axpy_serial[dtype, simd_width, n_acc](
-                        dx.unsafe_offset(start), dy.unsafe_offset(start), da, end - start
+                        dx.unsafe_offset(start),
+                        dy.unsafe_offset(start),
+                        da,
+                        end - start,
                     )
 
                 parallelize[worker](nt)

@@ -78,7 +78,9 @@ def scal[
                 var xc = dx.unsafe_offset(start)
 
                 def closure_p[width: Int](i: Int) {xc, alpha}:
-                    xc.unsafe_store[width=width](i, alpha * xc.unsafe_load[width=width](i))
+                    xc.unsafe_store[width=width](
+                        i, alpha * xc.unsafe_load[width=width](i)
+                    )
 
                 vectorize[simd_width, unroll_factor=unroll_factor](
                     length, closure_p
@@ -88,7 +90,9 @@ def scal[
             return
 
         def closure[width: Int](i: Int) {dx, alpha}:
-            dx.unsafe_store[width=width](i, alpha * dx.unsafe_load[width=width](i))
+            dx.unsafe_store[width=width](
+                i, alpha * dx.unsafe_load[width=width](i)
+            )
 
         vectorize[simd_width, unroll_factor=unroll_factor](n, closure)
         return

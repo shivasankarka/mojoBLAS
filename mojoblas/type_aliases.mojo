@@ -12,7 +12,5 @@ Type Aliases (`type_aliases`)
 Provides type aliases for BLAS operations with memory origin tracking.
 """
 
-comptime BLASPtr[dtype: DType, origin: Origin] = Pointer[
-    Scalar[dtype], origin
-]
+comptime BLASPtr[dtype: DType, origin: Origin] = Pointer[Scalar[dtype], origin]
 """An unsafe pointer type for BLAS operations."""

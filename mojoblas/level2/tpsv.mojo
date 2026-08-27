@@ -94,7 +94,11 @@ def tpsv[
                 for i in range(n - 1, -1, -1):
                     var sum: Scalar[dtype] = x[unsafe_offset=i]
                     for j in range(i + 1, n):
-                        sum = sum - ap[unsafe_offset=(j * (j + 1)) // 2 + i] * x[unsafe_offset=j]
+                        sum = (
+                            sum
+                            - ap[unsafe_offset=(j * (j + 1)) // 2 + i]
+                            * x[unsafe_offset=j]
+                        )
                     if no_unit:
                         sum = sum / ap[unsafe_offset=(i * (i + 1)) // 2 + i]
                     x[unsafe_offset=i] = sum
@@ -103,7 +107,11 @@ def tpsv[
                     var sum: Scalar[dtype] = x[unsafe_offset=i]
                     for j in range(i):
                         var start = j * n - (j * (j - 1)) // 2
-                        sum = sum - ap[unsafe_offset=start + (i - j)] * x[unsafe_offset=j]
+                        sum = (
+                            sum
+                            - ap[unsafe_offset=start + (i - j)]
+                            * x[unsafe_offset=j]
+                        )
                     if no_unit:
                         var start_i = i * n - (i * (i - 1)) // 2
                         sum = sum / ap[unsafe_offset=start_i]
@@ -113,7 +121,11 @@ def tpsv[
                 for i in range(n):
                     var sum: Scalar[dtype] = x[unsafe_offset=i]
                     for j in range(i):
-                        sum = sum - ap[unsafe_offset=(i * (i + 1)) // 2 + j] * x[unsafe_offset=j]
+                        sum = (
+                            sum
+                            - ap[unsafe_offset=(i * (i + 1)) // 2 + j]
+                            * x[unsafe_offset=j]
+                        )
                     if no_unit:
                         sum = sum / ap[unsafe_offset=(i * (i + 1)) // 2 + i]
                     x[unsafe_offset=i] = sum
@@ -122,7 +134,11 @@ def tpsv[
                     var sum: Scalar[dtype] = x[unsafe_offset=i]
                     var start_i = i * n - (i * (i - 1)) // 2
                     for j in range(i + 1, n):
-                        sum = sum - ap[unsafe_offset=start_i + (j - i)] * x[unsafe_offset=j]
+                        sum = (
+                            sum
+                            - ap[unsafe_offset=start_i + (j - i)]
+                            * x[unsafe_offset=j]
+                        )
                     if no_unit:
                         sum = sum / ap[unsafe_offset=start_i]
                     x[unsafe_offset=i] = sum

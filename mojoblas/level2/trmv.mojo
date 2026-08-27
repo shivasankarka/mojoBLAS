@@ -117,7 +117,10 @@ def trmv[
 
                         vectorize[simd_width](j, axpy_upper)
                         if no_unit:
-                            x[unsafe_offset=j] = x[unsafe_offset=j] * a[unsafe_offset=j + j * lda]
+                            x[unsafe_offset=j] = (
+                                x[unsafe_offset=j]
+                                * a[unsafe_offset=j + j * lda]
+                            )
             else:
                 var jx: Int = kx
                 for j in range(n):
@@ -125,10 +128,16 @@ def trmv[
                         var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                         var ix: Int = kx
                         for i in range(j):
-                            x[unsafe_offset=ix - 1] = x[unsafe_offset=ix - 1] + temp * a[unsafe_offset=i + j * lda]
+                            x[unsafe_offset=ix - 1] = (
+                                x[unsafe_offset=ix - 1]
+                                + temp * a[unsafe_offset=i + j * lda]
+                            )
                             ix += incx
                         if no_unit:
-                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] * a[unsafe_offset=j + j * lda]
+                            x[unsafe_offset=jx - 1] = (
+                                x[unsafe_offset=jx - 1]
+                                * a[unsafe_offset=j + j * lda]
+                            )
                     jx += incx
         else:
             if incx == 1:
@@ -147,7 +156,10 @@ def trmv[
 
                         vectorize[simd_width](n - j - 1, axpy_lower)
                         if no_unit:
-                            x[unsafe_offset=j] = x[unsafe_offset=j] * a[unsafe_offset=j + j * lda]
+                            x[unsafe_offset=j] = (
+                                x[unsafe_offset=j]
+                                * a[unsafe_offset=j + j * lda]
+                            )
             else:
                 var kx_plus: Int = kx + (n - 1) * incx
                 var jx: Int = kx_plus
@@ -156,10 +168,16 @@ def trmv[
                         var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                         var ix: Int = kx_plus
                         for i in range(n - 1, j, -1):
-                            x[unsafe_offset=ix - 1] = x[unsafe_offset=ix - 1] + temp * a[unsafe_offset=i + j * lda]
+                            x[unsafe_offset=ix - 1] = (
+                                x[unsafe_offset=ix - 1]
+                                + temp * a[unsafe_offset=i + j * lda]
+                            )
                             ix -= incx
                         if no_unit:
-                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] * a[unsafe_offset=j + j * lda]
+                            x[unsafe_offset=jx - 1] = (
+                                x[unsafe_offset=jx - 1]
+                                * a[unsafe_offset=j + j * lda]
+                            )
                     jx -= incx
     else:
         if upper:
@@ -172,7 +190,8 @@ def trmv[
 
                     def dot_upper[width: Int](i: Int) {mut temp, aj, x}:
                         temp += (
-                            aj.unsafe_load[width=width](i) * x.unsafe_load[width=width](i)
+                            aj.unsafe_load[width=width](i)
+                            * x.unsafe_load[width=width](i)
                         ).reduce_add()
 
                     vectorize[simd_width](j, dot_upper)
@@ -186,7 +205,11 @@ def trmv[
                         temp = temp * a[unsafe_offset=j + j * lda]
                     for i in range(j - 1, -1, -1):
                         ix -= incx
-                        temp = temp + a[unsafe_offset=i + j * lda] * x[unsafe_offset=ix - 1]
+                        temp = (
+                            temp
+                            + a[unsafe_offset=i + j * lda]
+                            * x[unsafe_offset=ix - 1]
+                        )
                     x[unsafe_offset=jx - 1] = temp
                     jx -= incx
         else:
@@ -200,7 +223,8 @@ def trmv[
                     def dot_lower[width: Int](i: Int) {mut temp, aj, x, j}:
                         var ii = j + 1 + i
                         temp += (
-                            aj.unsafe_load[width=width](ii) * x.unsafe_load[width=width](ii)
+                            aj.unsafe_load[width=width](ii)
+                            * x.unsafe_load[width=width](ii)
                         ).reduce_add()
 
                     vectorize[simd_width](n - j - 1, dot_lower)
@@ -214,7 +238,11 @@ def trmv[
                         temp = temp * a[unsafe_offset=j + j * lda]
                     for i in range(j + 1, n):
                         ix += incx
-                        temp = temp + a[unsafe_offset=i + j * lda] * x[unsafe_offset=ix - 1]
+                        temp = (
+                            temp
+                            + a[unsafe_offset=i + j * lda]
+                            * x[unsafe_offset=ix - 1]
+                        )
                     x[unsafe_offset=jx - 1] = temp
                     jx += incx
 

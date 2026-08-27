@@ -105,14 +105,20 @@ def spmv[
                     var aij = ap[unsafe_offset=kk + i]
                     y[unsafe_offset=i] = y[unsafe_offset=i] + temp1 * aij
                     temp2 = temp2 + aij * x[unsafe_offset=i]
-                y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * ap[unsafe_offset=kk + j] + alpha * temp2
+                y[unsafe_offset=j] = (
+                    y[unsafe_offset=j]
+                    + temp1 * ap[unsafe_offset=kk + j]
+                    + alpha * temp2
+                )
                 kk += j + 1
         else:
             var kk: Int = 0
             for j in range(n):
                 var temp1: Scalar[dtype] = alpha * x[unsafe_offset=j]
                 var temp2: Scalar[dtype] = 0
-                y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * ap[unsafe_offset=kk]
+                y[unsafe_offset=j] = (
+                    y[unsafe_offset=j] + temp1 * ap[unsafe_offset=kk]
+                )
                 for i in range(j + 1, n):
                     var aij = ap[unsafe_offset=kk + i - j]
                     y[unsafe_offset=i] = y[unsafe_offset=i] + temp1 * aij

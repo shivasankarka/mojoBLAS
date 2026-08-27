@@ -113,7 +113,8 @@ def ger[
                 def axpy_col[width: Int](i: Int) {mut aj, x, temp}:
                     aj.unsafe_store[width=width](
                         i,
-                        aj.unsafe_load[width=width](i) + x.unsafe_load[width=width](i) * temp,
+                        aj.unsafe_load[width=width](i)
+                        + x.unsafe_load[width=width](i) * temp,
                     )
 
                 vectorize[simd_width](m, axpy_col)
@@ -131,7 +132,10 @@ def ger[
                 var temp: Scalar[dtype] = alpha * y[unsafe_offset=j]
                 var ix: Int = kx
                 for i in range(m):
-                    a[unsafe_offset=i + j * lda] = a[unsafe_offset=i + j * lda] + x[unsafe_offset=ix - 1] * temp
+                    a[unsafe_offset=i + j * lda] = (
+                        a[unsafe_offset=i + j * lda]
+                        + x[unsafe_offset=ix - 1] * temp
+                    )
                     ix += incx
 
         if n >= PAR_THRESHOLD:
@@ -146,7 +150,10 @@ def ger[
                 var temp: Scalar[dtype] = alpha * y[unsafe_offset=jy - 1]
                 var ix: Int = kx
                 for i in range(m):
-                    a[unsafe_offset=i + j * lda] = a[unsafe_offset=i + j * lda] + x[unsafe_offset=ix - 1] * temp
+                    a[unsafe_offset=i + j * lda] = (
+                        a[unsafe_offset=i + j * lda]
+                        + x[unsafe_offset=ix - 1] * temp
+                    )
                     ix += incx
             jy += incy
 

@@ -106,7 +106,10 @@ def trsv[
                 for j in range(n - 1, -1, -1):
                     if x[unsafe_offset=j] != 0:
                         if no_unit:
-                            x[unsafe_offset=j] = x[unsafe_offset=j] / a[unsafe_offset=j + j * lda]
+                            x[unsafe_offset=j] = (
+                                x[unsafe_offset=j]
+                                / a[unsafe_offset=j + j * lda]
+                            )
                         var temp: Scalar[dtype] = x[unsafe_offset=j]
                         var aj = a.unsafe_offset(j * lda)
 
@@ -125,18 +128,27 @@ def trsv[
                     jx -= incx
                     if x[unsafe_offset=jx - 1] != 0:
                         if no_unit:
-                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] / a[unsafe_offset=j + j * lda]
+                            x[unsafe_offset=jx - 1] = (
+                                x[unsafe_offset=jx - 1]
+                                / a[unsafe_offset=j + j * lda]
+                            )
                         var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                         var ix: Int = jx
                         for i in range(j - 1, -1, -1):
                             ix -= incx
-                            x[unsafe_offset=ix - 1] = x[unsafe_offset=ix - 1] - temp * a[unsafe_offset=i + j * lda]
+                            x[unsafe_offset=ix - 1] = (
+                                x[unsafe_offset=ix - 1]
+                                - temp * a[unsafe_offset=i + j * lda]
+                            )
         else:
             if incx == 1:
                 for j in range(n):
                     if x[unsafe_offset=j] != 0:
                         if no_unit:
-                            x[unsafe_offset=j] = x[unsafe_offset=j] / a[unsafe_offset=j + j * lda]
+                            x[unsafe_offset=j] = (
+                                x[unsafe_offset=j]
+                                / a[unsafe_offset=j + j * lda]
+                            )
                         var temp: Scalar[dtype] = x[unsafe_offset=j]
                         var aj = a.unsafe_offset(j * lda)
 
@@ -154,12 +166,18 @@ def trsv[
                 for j in range(n):
                     if x[unsafe_offset=jx - 1] != 0:
                         if no_unit:
-                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] / a[unsafe_offset=j + j * lda]
+                            x[unsafe_offset=jx - 1] = (
+                                x[unsafe_offset=jx - 1]
+                                / a[unsafe_offset=j + j * lda]
+                            )
                         var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                         var ix: Int = jx
                         for i in range(j + 1, n):
                             ix += incx
-                            x[unsafe_offset=ix - 1] = x[unsafe_offset=ix - 1] - temp * a[unsafe_offset=i + j * lda]
+                            x[unsafe_offset=ix - 1] = (
+                                x[unsafe_offset=ix - 1]
+                                - temp * a[unsafe_offset=i + j * lda]
+                            )
                     jx += incx
     else:
         if upper:
@@ -170,7 +188,8 @@ def trsv[
 
                     def dot_upper[width: Int](i: Int) {mut temp, aj, x}:
                         temp -= (
-                            aj.unsafe_load[width=width](i) * x.unsafe_load[width=width](i)
+                            aj.unsafe_load[width=width](i)
+                            * x.unsafe_load[width=width](i)
                         ).reduce_add()
 
                     vectorize[simd_width](j, dot_upper)
@@ -183,7 +202,11 @@ def trsv[
                     var ix: Int = kx
                     var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                     for i in range(j):
-                        temp = temp - a[unsafe_offset=i + j * lda] * x[unsafe_offset=ix - 1]
+                        temp = (
+                            temp
+                            - a[unsafe_offset=i + j * lda]
+                            * x[unsafe_offset=ix - 1]
+                        )
                         ix += incx
                     if no_unit:
                         temp = temp / a[unsafe_offset=j + j * lda]
@@ -198,7 +221,8 @@ def trsv[
                     def dot_lower[width: Int](i: Int) {mut temp, aj, x, j}:
                         var ii = j + 1 + i
                         temp -= (
-                            aj.unsafe_load[width=width](ii) * x.unsafe_load[width=width](ii)
+                            aj.unsafe_load[width=width](ii)
+                            * x.unsafe_load[width=width](ii)
                         ).reduce_add()
 
                     vectorize[simd_width](n - j - 1, dot_lower)
@@ -212,7 +236,11 @@ def trsv[
                     var ix: Int = kx_plus
                     var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                     for i in range(n - 1, j, -1):
-                        temp = temp - a[unsafe_offset=i + j * lda] * x[unsafe_offset=ix - 1]
+                        temp = (
+                            temp
+                            - a[unsafe_offset=i + j * lda]
+                            * x[unsafe_offset=ix - 1]
+                        )
                         ix -= incx
                     if no_unit:
                         temp = temp / a[unsafe_offset=j + j * lda]

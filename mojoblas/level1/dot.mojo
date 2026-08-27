@@ -57,34 +57,36 @@ def _dot_serial[
 
     var i = 0
     while i + stride <= length:
-        acc0 += xc.unsafe_load[width=simd_width](i + 0 * simd_width) * yc.unsafe_load[
-            width=simd_width
-        ](i + 0 * simd_width)
-        acc1 += xc.unsafe_load[width=simd_width](i + 1 * simd_width) * yc.unsafe_load[
-            width=simd_width
-        ](i + 1 * simd_width)
-        acc2 += xc.unsafe_load[width=simd_width](i + 2 * simd_width) * yc.unsafe_load[
-            width=simd_width
-        ](i + 2 * simd_width)
-        acc3 += xc.unsafe_load[width=simd_width](i + 3 * simd_width) * yc.unsafe_load[
-            width=simd_width
-        ](i + 3 * simd_width)
-        acc4 += xc.unsafe_load[width=simd_width](i + 4 * simd_width) * yc.unsafe_load[
-            width=simd_width
-        ](i + 4 * simd_width)
-        acc5 += xc.unsafe_load[width=simd_width](i + 5 * simd_width) * yc.unsafe_load[
-            width=simd_width
-        ](i + 5 * simd_width)
-        acc6 += xc.unsafe_load[width=simd_width](i + 6 * simd_width) * yc.unsafe_load[
-            width=simd_width
-        ](i + 6 * simd_width)
-        acc7 += xc.unsafe_load[width=simd_width](i + 7 * simd_width) * yc.unsafe_load[
-            width=simd_width
-        ](i + 7 * simd_width)
+        acc0 += xc.unsafe_load[width=simd_width](
+            i + 0 * simd_width
+        ) * yc.unsafe_load[width=simd_width](i + 0 * simd_width)
+        acc1 += xc.unsafe_load[width=simd_width](
+            i + 1 * simd_width
+        ) * yc.unsafe_load[width=simd_width](i + 1 * simd_width)
+        acc2 += xc.unsafe_load[width=simd_width](
+            i + 2 * simd_width
+        ) * yc.unsafe_load[width=simd_width](i + 2 * simd_width)
+        acc3 += xc.unsafe_load[width=simd_width](
+            i + 3 * simd_width
+        ) * yc.unsafe_load[width=simd_width](i + 3 * simd_width)
+        acc4 += xc.unsafe_load[width=simd_width](
+            i + 4 * simd_width
+        ) * yc.unsafe_load[width=simd_width](i + 4 * simd_width)
+        acc5 += xc.unsafe_load[width=simd_width](
+            i + 5 * simd_width
+        ) * yc.unsafe_load[width=simd_width](i + 5 * simd_width)
+        acc6 += xc.unsafe_load[width=simd_width](
+            i + 6 * simd_width
+        ) * yc.unsafe_load[width=simd_width](i + 6 * simd_width)
+        acc7 += xc.unsafe_load[width=simd_width](
+            i + 7 * simd_width
+        ) * yc.unsafe_load[width=simd_width](i + 7 * simd_width)
         i += stride
 
     while i + simd_width <= length:
-        acc0 += xc.unsafe_load[width=simd_width](i) * yc.unsafe_load[width=simd_width](i)
+        acc0 += xc.unsafe_load[width=simd_width](i) * yc.unsafe_load[
+            width=simd_width
+        ](i)
         i += simd_width
 
     var result = (

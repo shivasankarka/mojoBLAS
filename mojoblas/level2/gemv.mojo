@@ -125,7 +125,9 @@ def gemv[
             else:
 
                 def closure[width: Int](i: Int) {y, beta}:
-                    y.unsafe_store[width=width](i, beta * y.unsafe_load[width=width](i))
+                    y.unsafe_store[width=width](
+                        i, beta * y.unsafe_load[width=width](i)
+                    )
 
                 vectorize[simd_width](leny, closure)
         else:
@@ -183,7 +185,10 @@ def gemv[
                     var temp: Scalar[dtype] = alpha * xj
                     var iy: Int = ky
                     for i in range(m):
-                        y[unsafe_offset=iy - 1] = y[unsafe_offset=iy - 1] + temp * a[unsafe_offset=i + j * lda]
+                        y[unsafe_offset=iy - 1] = (
+                            y[unsafe_offset=iy - 1]
+                            + temp * a[unsafe_offset=i + j * lda]
+                        )
                         iy += incy
                 jx += incx
     else:
@@ -197,13 +202,16 @@ def gemv[
 
                 def dot_col[width: Int](i: Int) {mut temp, aj, x}:
                     temp += (
-                        aj.unsafe_load[width=width](i) * x.unsafe_load[width=width](i)
+                        aj.unsafe_load[width=width](i)
+                        * x.unsafe_load[width=width](i)
                     ).reduce_add()
 
                 vectorize[simd_width](m, dot_col)
                 if temp != 0:
                     var jy_idx = ky - 1 + j * incy
-                    y[unsafe_offset=jy_idx] = y[unsafe_offset=jy_idx] + alpha * temp
+                    y[unsafe_offset=jy_idx] = (
+                        y[unsafe_offset=jy_idx] + alpha * temp
+                    )
 
             if n >= PAR_THRESHOLD:
                 parallelize[gemv_trans_col](n)
@@ -216,10 +224,15 @@ def gemv[
                 var temp: Scalar[dtype] = 0
                 var ix: Int = kx
                 for i in range(m):
-                    temp = temp + a[unsafe_offset=i + j * lda] * x[unsafe_offset=ix - 1]
+                    temp = (
+                        temp
+                        + a[unsafe_offset=i + j * lda] * x[unsafe_offset=ix - 1]
+                    )
                     ix += incx
                 if temp != 0:
-                    y[unsafe_offset=jy - 1] = y[unsafe_offset=jy - 1] + alpha * temp
+                    y[unsafe_offset=jy - 1] = (
+                        y[unsafe_offset=jy - 1] + alpha * temp
+                    )
                 jy += incy
 
     return

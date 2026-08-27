@@ -245,7 +245,9 @@ def _gemm_naive[
                 var cj = c.unsafe_offset(j * ldc)
 
                 def scale_col[width: Int](i: Int) {cj, beta}:
-                    cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
+                    cj.unsafe_store[width=width](
+                        i, beta * cj.unsafe_load[width=width](i)
+                    )
 
                 vectorize[simd_width](m, scale_col)
         return
@@ -270,12 +272,16 @@ def _gemm_naive[
                 elif beta != 1:
 
                     def scale_nn[width: Int](i: Int) {cj, beta}:
-                        cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
+                        cj.unsafe_store[width=width](
+                            i, beta * cj.unsafe_load[width=width](i)
+                        )
 
                     vectorize[simd_width](m, scale_nn)
                 for l in range(k):
                     if b[unsafe_offset=l + j * ldb] != 0:
-                        var temp: Scalar[dtype] = alpha * b[unsafe_offset=l + j * ldb]
+                        var temp: Scalar[dtype] = (
+                            alpha * b[unsafe_offset=l + j * ldb]
+                        )
                         var al = a.unsafe_offset(l * lda)
 
                         def axpy_nn[width: Int](i: Int) {cj, al, temp}:
@@ -306,12 +312,16 @@ def _gemm_naive[
                 elif beta != 1:
 
                     def scale_nt[width: Int](i: Int) {cj, beta}:
-                        cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
+                        cj.unsafe_store[width=width](
+                            i, beta * cj.unsafe_load[width=width](i)
+                        )
 
                     vectorize[simd_width](m, scale_nt)
                 for l in range(k):
                     if b[unsafe_offset=j + l * ldb] != 0:
-                        var temp: Scalar[dtype] = alpha * b[unsafe_offset=j + l * ldb]
+                        var temp: Scalar[dtype] = (
+                            alpha * b[unsafe_offset=j + l * ldb]
+                        )
                         var al = a.unsafe_offset(l * lda)
 
                         def axpy_nt[width: Int](i: Int) {cj, al, temp}:
@@ -343,15 +353,22 @@ def _gemm_naive[
                 elif beta != 1:
 
                     def scale_tn[width: Int](i: Int) {cj, beta}:
-                        cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
+                        cj.unsafe_store[width=width](
+                            i, beta * cj.unsafe_load[width=width](i)
+                        )
 
                     vectorize[simd_width](m, scale_tn)
                 for l in range(k):
                     if b[unsafe_offset=l + j * ldb] != 0:
-                        var temp: Scalar[dtype] = alpha * b[unsafe_offset=l + j * ldb]
+                        var temp: Scalar[dtype] = (
+                            alpha * b[unsafe_offset=l + j * ldb]
+                        )
                         var al = a.unsafe_offset(l)
                         for i in range(m):
-                            cj[unsafe_offset=i] = cj[unsafe_offset=i] + temp * al[unsafe_offset=i * lda]
+                            cj[unsafe_offset=i] = (
+                                cj[unsafe_offset=i]
+                                + temp * al[unsafe_offset=i * lda]
+                            )
 
             if n >= PAR_THRESHOLD:
                 parallelize[gemm_tn_col](n)
@@ -372,15 +389,22 @@ def _gemm_naive[
                 elif beta != 1:
 
                     def scale_tt[width: Int](i: Int) {cj, beta}:
-                        cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
+                        cj.unsafe_store[width=width](
+                            i, beta * cj.unsafe_load[width=width](i)
+                        )
 
                     vectorize[simd_width](m, scale_tt)
                 for l in range(k):
                     if b[unsafe_offset=j + l * ldb] != 0:
-                        var temp: Scalar[dtype] = alpha * b[unsafe_offset=j + l * ldb]
+                        var temp: Scalar[dtype] = (
+                            alpha * b[unsafe_offset=j + l * ldb]
+                        )
                         var al = a.unsafe_offset(l)
                         for i in range(m):
-                            cj[unsafe_offset=i] = cj[unsafe_offset=i] + temp * al[unsafe_offset=i * lda]
+                            cj[unsafe_offset=i] = (
+                                cj[unsafe_offset=i]
+                                + temp * al[unsafe_offset=i * lda]
+                            )
 
             if n >= PAR_THRESHOLD:
                 parallelize[gemm_tt_col](n)
@@ -486,7 +510,9 @@ def gemm_v3[
             var cj = c.unsafe_offset(j * ldc)
 
             def scale_v3[width: Int](i: Int) {cj, beta}:
-                cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
+                cj.unsafe_store[width=width](
+                    i, beta * cj.unsafe_load[width=width](i)
+                )
 
             vectorize[simd_width_of[dtype]()](m, scale_v3)
 
@@ -508,7 +534,8 @@ def gemm_v3[
             for l in range(klen):
                 comptime for r in range(NR):
                     b_pack[unsafe_offset=l * NR + r] = (
-                        b[unsafe_offset=(k0 + l) + (j0 + r) * ldb] if r < jlen else 0
+                        b[unsafe_offset=(k0 + l) + (j0 + r) * ldb] if r
+                        < jlen else 0
                     )
 
             var ir = 0
@@ -523,7 +550,12 @@ def gemm_v3[
                 var acc7 = SIMD[dtype, MR](0)
 
                 for l in range(klen):
-                    var av = alpha * a.unsafe_offset((k0 + l) * lda + ir).unsafe_load[width=MR]()
+                    var av = (
+                        alpha
+                        * a.unsafe_offset((k0 + l) * lda + ir).unsafe_load[
+                            width=MR
+                        ]()
+                    )
                     acc0 = av * b_pack[unsafe_offset=l * NR + 0] + acc0
                     acc1 = av * b_pack[unsafe_offset=l * NR + 1] + acc1
                     acc2 = av * b_pack[unsafe_offset=l * NR + 2] + acc2
@@ -537,32 +569,49 @@ def gemm_v3[
                 cp0.unsafe_store[width=MR](acc0 + cp0.unsafe_load[width=MR]())
                 if jlen > 1:
                     var cp1 = c.unsafe_offset((j0 + 1) * ldc + ir)
-                    cp1.unsafe_store[width=MR](acc1 + cp1.unsafe_load[width=MR]())
+                    cp1.unsafe_store[width=MR](
+                        acc1 + cp1.unsafe_load[width=MR]()
+                    )
                 if jlen > 2:
                     var cp2 = c.unsafe_offset((j0 + 2) * ldc + ir)
-                    cp2.unsafe_store[width=MR](acc2 + cp2.unsafe_load[width=MR]())
+                    cp2.unsafe_store[width=MR](
+                        acc2 + cp2.unsafe_load[width=MR]()
+                    )
                 if jlen > 3:
                     var cp3 = c.unsafe_offset((j0 + 3) * ldc + ir)
-                    cp3.unsafe_store[width=MR](acc3 + cp3.unsafe_load[width=MR]())
+                    cp3.unsafe_store[width=MR](
+                        acc3 + cp3.unsafe_load[width=MR]()
+                    )
                 if jlen > 4:
                     var cp4 = c.unsafe_offset((j0 + 4) * ldc + ir)
-                    cp4.unsafe_store[width=MR](acc4 + cp4.unsafe_load[width=MR]())
+                    cp4.unsafe_store[width=MR](
+                        acc4 + cp4.unsafe_load[width=MR]()
+                    )
                 if jlen > 5:
                     var cp5 = c.unsafe_offset((j0 + 5) * ldc + ir)
-                    cp5.unsafe_store[width=MR](acc5 + cp5.unsafe_load[width=MR]())
+                    cp5.unsafe_store[width=MR](
+                        acc5 + cp5.unsafe_load[width=MR]()
+                    )
                 if jlen > 6:
                     var cp6 = c.unsafe_offset((j0 + 6) * ldc + ir)
-                    cp6.unsafe_store[width=MR](acc6 + cp6.unsafe_load[width=MR]())
+                    cp6.unsafe_store[width=MR](
+                        acc6 + cp6.unsafe_load[width=MR]()
+                    )
                 if jlen > 7:
                     var cp7 = c.unsafe_offset((j0 + 7) * ldc + ir)
-                    cp7.unsafe_store[width=MR](acc7 + cp7.unsafe_load[width=MR]())
+                    cp7.unsafe_store[width=MR](
+                        acc7 + cp7.unsafe_load[width=MR]()
+                    )
                 ir += MR
 
             while ir < m:
                 for jc in range(jlen):
                     var sum: Scalar[dtype] = 0
                     for l in range(klen):
-                        sum += a[unsafe_offset=ir + (k0 + l) * lda] * b_pack[unsafe_offset=l * NR + jc]
+                        sum += (
+                            a[unsafe_offset=ir + (k0 + l) * lda]
+                            * b_pack[unsafe_offset=l * NR + jc]
+                        )
                     c[unsafe_offset=ir + (j0 + jc) * ldc] += alpha * sum
                 ir += 1
 
@@ -670,7 +719,9 @@ def gemm_v6[
             var cj = c.unsafe_offset(j * ldc)
 
             def scale_v6[width: Int](i: Int) {cj, beta}:
-                cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
+                cj.unsafe_store[width=width](
+                    i, beta * cj.unsafe_load[width=width](i)
+                )
 
             vectorize[MR](m, scale_v6)
 
@@ -689,7 +740,9 @@ def gemm_v6[
                 var row_count = min(MR, mc_len - ir)
                 for l in range(klen):
                     if row_count == MR:
-                        (a_pack.unsafe_offset(ir * TK + l * MR)).unsafe_store[width=MR](
+                        (a_pack.unsafe_offset(ir * TK + l * MR)).unsafe_store[
+                            width=MR
+                        ](
                             alpha
                             * a.unsafe_offset(
                                 (k0 + l) * lda + mc0 + ir
@@ -698,7 +751,10 @@ def gemm_v6[
                     else:
                         for rr in range(row_count):
                             a_pack[unsafe_offset=ir * TK + l * MR + rr] = (
-                                alpha * a[unsafe_offset=mc0 + ir + rr + (k0 + l) * lda]
+                                alpha
+                                * a[
+                                    unsafe_offset=mc0 + ir + rr + (k0 + l) * lda
+                                ]
                             )
                         for rr in range(row_count, MR):
                             a_pack[unsafe_offset=ir * TK + l * MR + rr] = 0
@@ -714,7 +770,8 @@ def gemm_v6[
                 for l in range(klen):
                     comptime for r in range(NR):
                         b_pack[unsafe_offset=l * NR + r] = (
-                            b[unsafe_offset=(k0 + l) + (j0 + r) * ldb] if r < jlen else 0
+                            b[unsafe_offset=(k0 + l) + (j0 + r) * ldb] if r
+                            < jlen else 0
                         )
 
                 var ir = 0
@@ -738,7 +795,10 @@ def gemm_v6[
 
                     for l in range(klen):
                         var av = (
-                            alpha * (a_pack.unsafe_offset(ir * TK + l * MR)).unsafe_load[width=MR]()
+                            alpha
+                            * (
+                                a_pack.unsafe_offset(ir * TK + l * MR)
+                            ).unsafe_load[width=MR]()
                         )
                         acc0 = av * b_pack[unsafe_offset=l * NR + 0] + acc0
                         acc1 = av * b_pack[unsafe_offset=l * NR + 1] + acc1
@@ -759,60 +819,97 @@ def gemm_v6[
 
                     var row = mc0 + ir
                     var cp0 = c.unsafe_offset((j0 + 0) * ldc + row)
-                    cp0.unsafe_store[width=MR](acc0 + cp0.unsafe_load[width=MR]())
+                    cp0.unsafe_store[width=MR](
+                        acc0 + cp0.unsafe_load[width=MR]()
+                    )
                     if jlen > 1:
                         var p = c.unsafe_offset((j0 + 1) * ldc + row)
-                        p.unsafe_store[width=MR](acc1 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc1 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 2:
                         var p = c.unsafe_offset((j0 + 2) * ldc + row)
-                        p.unsafe_store[width=MR](acc2 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc2 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 3:
                         var p = c.unsafe_offset((j0 + 3) * ldc + row)
-                        p.unsafe_store[width=MR](acc3 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc3 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 4:
                         var p = c.unsafe_offset((j0 + 4) * ldc + row)
-                        p.unsafe_store[width=MR](acc4 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc4 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 5:
                         var p = c.unsafe_offset((j0 + 5) * ldc + row)
-                        p.unsafe_store[width=MR](acc5 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc5 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 6:
                         var p = c.unsafe_offset((j0 + 6) * ldc + row)
-                        p.unsafe_store[width=MR](acc6 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc6 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 7:
                         var p = c.unsafe_offset((j0 + 7) * ldc + row)
-                        p.unsafe_store[width=MR](acc7 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc7 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 8:
                         var p = c.unsafe_offset((j0 + 8) * ldc + row)
-                        p.unsafe_store[width=MR](acc8 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc8 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 9:
                         var p = c.unsafe_offset((j0 + 9) * ldc + row)
-                        p.unsafe_store[width=MR](acc9 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc9 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 10:
                         var p = c.unsafe_offset((j0 + 10) * ldc + row)
-                        p.unsafe_store[width=MR](acc10 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc10 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 11:
                         var p = c.unsafe_offset((j0 + 11) * ldc + row)
-                        p.unsafe_store[width=MR](acc11 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc11 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 12:
                         var p = c.unsafe_offset((j0 + 12) * ldc + row)
-                        p.unsafe_store[width=MR](acc12 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc12 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 13:
                         var p = c.unsafe_offset((j0 + 13) * ldc + row)
-                        p.unsafe_store[width=MR](acc13 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc13 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 14:
                         var p = c.unsafe_offset((j0 + 14) * ldc + row)
-                        p.unsafe_store[width=MR](acc14 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc14 + p.unsafe_load[width=MR]()
+                        )
                     if jlen > 15:
                         var p = c.unsafe_offset((j0 + 15) * ldc + row)
-                        p.unsafe_store[width=MR](acc15 + p.unsafe_load[width=MR]())
+                        p.unsafe_store[width=MR](
+                            acc15 + p.unsafe_load[width=MR]()
+                        )
                     ir += MR
 
                 while ir < mc_len:
                     for jc in range(jlen):
                         var s: Scalar[dtype] = 0
                         for l in range(klen):
-                            s += a_pack[unsafe_offset=ir * TK + l * MR] * b_pack[unsafe_offset=l * NR + jc]
-                        c[unsafe_offset=(mc0 + ir) + (j0 + jc) * ldc] += alpha * s
+                            s += (
+                                a_pack[unsafe_offset=ir * TK + l * MR]
+                                * b_pack[unsafe_offset=l * NR + jc]
+                            )
+                        c[unsafe_offset=(mc0 + ir) + (j0 + jc) * ldc] += (
+                            alpha * s
+                        )
                     ir += 1
 
             var n_groups_v6 = (n + NR - 1) // NR
@@ -921,7 +1018,9 @@ def gemm_v7[
             var cj = c.unsafe_offset(j * ldc)
 
             def scale_v7[width: Int](i: Int) {cj, beta}:
-                cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
+                cj.unsafe_store[width=width](
+                    i, beta * cj.unsafe_load[width=width](i)
+                )
 
             vectorize[MR](m, scale_v7)
 
@@ -940,7 +1039,9 @@ def gemm_v7[
                 var row_count = min(MR, mc_len - ir)
                 for l in range(klen):
                     if row_count == MR:
-                        (a_pack.unsafe_offset(ir * TK + l * MR)).unsafe_store[width=MR](
+                        (a_pack.unsafe_offset(ir * TK + l * MR)).unsafe_store[
+                            width=MR
+                        ](
                             a.unsafe_offset(
                                 (k0 + l) * lda + mc0 + ir
                             ).unsafe_load[width=MR]()
@@ -964,7 +1065,8 @@ def gemm_v7[
                 for l in range(klen):
                     comptime for r in range(NR):
                         b_pack[unsafe_offset=l * NR + r] = (
-                            b[unsafe_offset=(k0 + l) + (j0 + r) * ldb] if r < jlen else 0
+                            b[unsafe_offset=(k0 + l) + (j0 + r) * ldb] if r
+                            < jlen else 0
                         )
 
                 var ir = 0
@@ -988,9 +1090,9 @@ def gemm_v7[
                         var acc15 = SIMD[dtype, MR](0)
 
                         for l in range(klen):
-                            var av = (a_pack.unsafe_offset(ir * TK + l * MR)).unsafe_load[
-                                width=MR
-                            ]()
+                            var av = (
+                                a_pack.unsafe_offset(ir * TK + l * MR)
+                            ).unsafe_load[width=MR]()
                             acc0 = av * b_pack[unsafe_offset=l * NR + 0] + acc0
                             acc1 = av * b_pack[unsafe_offset=l * NR + 1] + acc1
                             acc2 = av * b_pack[unsafe_offset=l * NR + 2] + acc2
@@ -1001,46 +1103,90 @@ def gemm_v7[
                             acc7 = av * b_pack[unsafe_offset=l * NR + 7] + acc7
                             acc8 = av * b_pack[unsafe_offset=l * NR + 8] + acc8
                             acc9 = av * b_pack[unsafe_offset=l * NR + 9] + acc9
-                            acc10 = av * b_pack[unsafe_offset=l * NR + 10] + acc10
-                            acc11 = av * b_pack[unsafe_offset=l * NR + 11] + acc11
-                            acc12 = av * b_pack[unsafe_offset=l * NR + 12] + acc12
-                            acc13 = av * b_pack[unsafe_offset=l * NR + 13] + acc13
-                            acc14 = av * b_pack[unsafe_offset=l * NR + 14] + acc14
-                            acc15 = av * b_pack[unsafe_offset=l * NR + 15] + acc15
+                            acc10 = (
+                                av * b_pack[unsafe_offset=l * NR + 10] + acc10
+                            )
+                            acc11 = (
+                                av * b_pack[unsafe_offset=l * NR + 11] + acc11
+                            )
+                            acc12 = (
+                                av * b_pack[unsafe_offset=l * NR + 12] + acc12
+                            )
+                            acc13 = (
+                                av * b_pack[unsafe_offset=l * NR + 13] + acc13
+                            )
+                            acc14 = (
+                                av * b_pack[unsafe_offset=l * NR + 14] + acc14
+                            )
+                            acc15 = (
+                                av * b_pack[unsafe_offset=l * NR + 15] + acc15
+                            )
 
                         var row = mc0 + ir
                         var p0 = c.unsafe_offset((j0 + 0) * ldc + row)
-                        p0.unsafe_store[width=MR](acc0 + p0.unsafe_load[width=MR]())
+                        p0.unsafe_store[width=MR](
+                            acc0 + p0.unsafe_load[width=MR]()
+                        )
                         var p1 = c.unsafe_offset((j0 + 1) * ldc + row)
-                        p1.unsafe_store[width=MR](acc1 + p1.unsafe_load[width=MR]())
+                        p1.unsafe_store[width=MR](
+                            acc1 + p1.unsafe_load[width=MR]()
+                        )
                         var p2 = c.unsafe_offset((j0 + 2) * ldc + row)
-                        p2.unsafe_store[width=MR](acc2 + p2.unsafe_load[width=MR]())
+                        p2.unsafe_store[width=MR](
+                            acc2 + p2.unsafe_load[width=MR]()
+                        )
                         var p3 = c.unsafe_offset((j0 + 3) * ldc + row)
-                        p3.unsafe_store[width=MR](acc3 + p3.unsafe_load[width=MR]())
+                        p3.unsafe_store[width=MR](
+                            acc3 + p3.unsafe_load[width=MR]()
+                        )
                         var p4 = c.unsafe_offset((j0 + 4) * ldc + row)
-                        p4.unsafe_store[width=MR](acc4 + p4.unsafe_load[width=MR]())
+                        p4.unsafe_store[width=MR](
+                            acc4 + p4.unsafe_load[width=MR]()
+                        )
                         var p5 = c.unsafe_offset((j0 + 5) * ldc + row)
-                        p5.unsafe_store[width=MR](acc5 + p5.unsafe_load[width=MR]())
+                        p5.unsafe_store[width=MR](
+                            acc5 + p5.unsafe_load[width=MR]()
+                        )
                         var p6 = c.unsafe_offset((j0 + 6) * ldc + row)
-                        p6.unsafe_store[width=MR](acc6 + p6.unsafe_load[width=MR]())
+                        p6.unsafe_store[width=MR](
+                            acc6 + p6.unsafe_load[width=MR]()
+                        )
                         var p7 = c.unsafe_offset((j0 + 7) * ldc + row)
-                        p7.unsafe_store[width=MR](acc7 + p7.unsafe_load[width=MR]())
+                        p7.unsafe_store[width=MR](
+                            acc7 + p7.unsafe_load[width=MR]()
+                        )
                         var p8 = c.unsafe_offset((j0 + 8) * ldc + row)
-                        p8.unsafe_store[width=MR](acc8 + p8.unsafe_load[width=MR]())
+                        p8.unsafe_store[width=MR](
+                            acc8 + p8.unsafe_load[width=MR]()
+                        )
                         var p9 = c.unsafe_offset((j0 + 9) * ldc + row)
-                        p9.unsafe_store[width=MR](acc9 + p9.unsafe_load[width=MR]())
+                        p9.unsafe_store[width=MR](
+                            acc9 + p9.unsafe_load[width=MR]()
+                        )
                         var p10 = c.unsafe_offset((j0 + 10) * ldc + row)
-                        p10.unsafe_store[width=MR](acc10 + p10.unsafe_load[width=MR]())
+                        p10.unsafe_store[width=MR](
+                            acc10 + p10.unsafe_load[width=MR]()
+                        )
                         var p11 = c.unsafe_offset((j0 + 11) * ldc + row)
-                        p11.unsafe_store[width=MR](acc11 + p11.unsafe_load[width=MR]())
+                        p11.unsafe_store[width=MR](
+                            acc11 + p11.unsafe_load[width=MR]()
+                        )
                         var p12 = c.unsafe_offset((j0 + 12) * ldc + row)
-                        p12.unsafe_store[width=MR](acc12 + p12.unsafe_load[width=MR]())
+                        p12.unsafe_store[width=MR](
+                            acc12 + p12.unsafe_load[width=MR]()
+                        )
                         var p13 = c.unsafe_offset((j0 + 13) * ldc + row)
-                        p13.unsafe_store[width=MR](acc13 + p13.unsafe_load[width=MR]())
+                        p13.unsafe_store[width=MR](
+                            acc13 + p13.unsafe_load[width=MR]()
+                        )
                         var p14 = c.unsafe_offset((j0 + 14) * ldc + row)
-                        p14.unsafe_store[width=MR](acc14 + p14.unsafe_load[width=MR]())
+                        p14.unsafe_store[width=MR](
+                            acc14 + p14.unsafe_load[width=MR]()
+                        )
                         var p15 = c.unsafe_offset((j0 + 15) * ldc + row)
-                        p15.unsafe_store[width=MR](acc15 + p15.unsafe_load[width=MR]())
+                        p15.unsafe_store[width=MR](
+                            acc15 + p15.unsafe_load[width=MR]()
+                        )
                         ir += MR
                 else:
                     while ir + MR <= mc_len:
@@ -1062,9 +1208,9 @@ def gemm_v7[
                         var acc15 = SIMD[dtype, MR](0)
 
                         for l in range(klen):
-                            var av = (a_pack.unsafe_offset(ir * TK + l * MR)).unsafe_load[
-                                width=MR
-                            ]()
+                            var av = (
+                                a_pack.unsafe_offset(ir * TK + l * MR)
+                            ).unsafe_load[width=MR]()
                             acc0 = av * b_pack[unsafe_offset=l * NR + 0] + acc0
                             acc1 = av * b_pack[unsafe_offset=l * NR + 1] + acc1
                             acc2 = av * b_pack[unsafe_offset=l * NR + 2] + acc2
@@ -1075,68 +1221,115 @@ def gemm_v7[
                             acc7 = av * b_pack[unsafe_offset=l * NR + 7] + acc7
                             acc8 = av * b_pack[unsafe_offset=l * NR + 8] + acc8
                             acc9 = av * b_pack[unsafe_offset=l * NR + 9] + acc9
-                            acc10 = av * b_pack[unsafe_offset=l * NR + 10] + acc10
-                            acc11 = av * b_pack[unsafe_offset=l * NR + 11] + acc11
-                            acc12 = av * b_pack[unsafe_offset=l * NR + 12] + acc12
-                            acc13 = av * b_pack[unsafe_offset=l * NR + 13] + acc13
-                            acc14 = av * b_pack[unsafe_offset=l * NR + 14] + acc14
-                            acc15 = av * b_pack[unsafe_offset=l * NR + 15] + acc15
+                            acc10 = (
+                                av * b_pack[unsafe_offset=l * NR + 10] + acc10
+                            )
+                            acc11 = (
+                                av * b_pack[unsafe_offset=l * NR + 11] + acc11
+                            )
+                            acc12 = (
+                                av * b_pack[unsafe_offset=l * NR + 12] + acc12
+                            )
+                            acc13 = (
+                                av * b_pack[unsafe_offset=l * NR + 13] + acc13
+                            )
+                            acc14 = (
+                                av * b_pack[unsafe_offset=l * NR + 14] + acc14
+                            )
+                            acc15 = (
+                                av * b_pack[unsafe_offset=l * NR + 15] + acc15
+                            )
 
                         var row = mc0 + ir
                         var cp0 = c.unsafe_offset((j0 + 0) * ldc + row)
-                        cp0.unsafe_store[width=MR](acc0 + cp0.unsafe_load[width=MR]())
+                        cp0.unsafe_store[width=MR](
+                            acc0 + cp0.unsafe_load[width=MR]()
+                        )
                         if jlen > 1:
                             var p = c.unsafe_offset((j0 + 1) * ldc + row)
-                            p.unsafe_store[width=MR](acc1 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc1 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 2:
                             var p = c.unsafe_offset((j0 + 2) * ldc + row)
-                            p.unsafe_store[width=MR](acc2 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc2 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 3:
                             var p = c.unsafe_offset((j0 + 3) * ldc + row)
-                            p.unsafe_store[width=MR](acc3 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc3 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 4:
                             var p = c.unsafe_offset((j0 + 4) * ldc + row)
-                            p.unsafe_store[width=MR](acc4 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc4 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 5:
                             var p = c.unsafe_offset((j0 + 5) * ldc + row)
-                            p.unsafe_store[width=MR](acc5 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc5 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 6:
                             var p = c.unsafe_offset((j0 + 6) * ldc + row)
-                            p.unsafe_store[width=MR](acc6 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc6 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 7:
                             var p = c.unsafe_offset((j0 + 7) * ldc + row)
-                            p.unsafe_store[width=MR](acc7 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc7 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 8:
                             var p = c.unsafe_offset((j0 + 8) * ldc + row)
-                            p.unsafe_store[width=MR](acc8 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc8 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 9:
                             var p = c.unsafe_offset((j0 + 9) * ldc + row)
-                            p.unsafe_store[width=MR](acc9 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc9 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 10:
                             var p = c.unsafe_offset((j0 + 10) * ldc + row)
-                            p.unsafe_store[width=MR](acc10 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc10 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 11:
                             var p = c.unsafe_offset((j0 + 11) * ldc + row)
-                            p.unsafe_store[width=MR](acc11 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc11 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 12:
                             var p = c.unsafe_offset((j0 + 12) * ldc + row)
-                            p.unsafe_store[width=MR](acc12 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc12 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 13:
                             var p = c.unsafe_offset((j0 + 13) * ldc + row)
-                            p.unsafe_store[width=MR](acc13 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc13 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 14:
                             var p = c.unsafe_offset((j0 + 14) * ldc + row)
-                            p.unsafe_store[width=MR](acc14 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc14 + p.unsafe_load[width=MR]()
+                            )
                         if jlen > 15:
                             var p = c.unsafe_offset((j0 + 15) * ldc + row)
-                            p.unsafe_store[width=MR](acc15 + p.unsafe_load[width=MR]())
+                            p.unsafe_store[width=MR](
+                                acc15 + p.unsafe_load[width=MR]()
+                            )
                         ir += MR
 
                 while ir < mc_len:
                     for jc in range(jlen):
                         var s: Scalar[dtype] = 0
                         for l in range(klen):
-                            s += a_pack[unsafe_offset=ir * TK + l * MR] * b_pack[unsafe_offset=l * NR + jc]
+                            s += (
+                                a_pack[unsafe_offset=ir * TK + l * MR]
+                                * b_pack[unsafe_offset=l * NR + jc]
+                            )
                         c[unsafe_offset=(mc0 + ir) + (j0 + jc) * ldc] += s
                     ir += 1
 
@@ -1356,7 +1549,9 @@ def gemm_v8[
             var cj = c.unsafe_offset(j * ldc)
 
             def scale_v8[width: Int](i: Int) {cj, beta}:
-                cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
+                cj.unsafe_store[width=width](
+                    i, beta * cj.unsafe_load[width=width](i)
+                )
 
             vectorize[MR](m, scale_v8)
 
@@ -1386,7 +1581,10 @@ def gemm_v8[
                 for l in range(klen):
                     for r in range(row_count):
                         a_pack[unsafe_offset=base + l * TILE + r] = (
-                            alpha * a[unsafe_offset=mc0 + ir_tile + r + (k0 + l) * lda]
+                            alpha
+                            * a[
+                                unsafe_offset=mc0 + ir_tile + r + (k0 + l) * lda
+                            ]
                         )
                     for r in range(row_count, TILE):
                         a_pack[unsafe_offset=base + l * TILE + r] = 0
@@ -1402,7 +1600,9 @@ def gemm_v8[
                 var b_pack = stack_allocation[TK * TILE, dtype, alignment=128]()
                 for l in range(klen):
                     for r in range(jlen):
-                        b_pack[unsafe_offset=l * TILE + r] = b[unsafe_offset=(k0 + l) + (j0 + r) * ldb]
+                        b_pack[unsafe_offset=l * TILE + r] = b[
+                            unsafe_offset=(k0 + l) + (j0 + r) * ldb
+                        ]
                     for r in range(jlen, TILE):
                         b_pack[unsafe_offset=l * TILE + r] = 0
 
@@ -1415,9 +1615,13 @@ def gemm_v8[
                     # Accumulate over k panel
                     for l in range(klen):
                         # Load row of packed A (16 f32) into Y[0]
-                        _amx_load_y_row[dtype](a_pack.unsafe_offset(a_base + l * TILE), 0)
+                        _amx_load_y_row[dtype](
+                            a_pack.unsafe_offset(a_base + l * TILE), 0
+                        )
                         # Load row of packed B (16 f32) into X[0]
-                        _amx_load_x_row[dtype](b_pack.unsafe_offset(l * TILE), 0)
+                        _amx_load_x_row[dtype](
+                            b_pack.unsafe_offset(l * TILE), 0
+                        )
                         # Tile FMA: Z[0::4][:] += outer(Y[0], X[0]) — 16×16 outer product
                         _amx_fma32_tile(0, 0, 0, False)
 
@@ -1425,7 +1629,9 @@ def gemm_v8[
                     # Z tile mode lays out result as: Z[row*4][col] for row in 0..15, col in 0..15
                     # i.e. Z[0], Z[4], Z[8], ... Z[60] hold rows 0..15 of the 16×16 result.
                     comptime for row in range(TILE):
-                        _amx_store_z_row[dtype](z_buf.unsafe_offset(row * TILE), row * 4)
+                        _amx_store_z_row[dtype](
+                            z_buf.unsafe_offset(row * TILE), row * 4
+                        )
 
                     _amx_clr()
 
@@ -1448,7 +1654,9 @@ def gemm_v8[
                         var s: Scalar[dtype] = 0
                         for l in range(klen):
                             s += (
-                                a_pack[unsafe_offset=tile_base + l * TILE + lane]
+                                a_pack[
+                                    unsafe_offset=tile_base + l * TILE + lane
+                                ]
                                 * b_pack[unsafe_offset=l * TILE + jc]
                             )
                         c[unsafe_offset=(mc0 + ir_tile) + (j0 + jc) * ldc] += s
@@ -1596,7 +1804,13 @@ def gemm_v9[
                 for l in range(klen):
                     for r in range(row_count):
                         a_pack[unsafe_offset=base + l * TILE + r] = (
-                            alpha * a[unsafe_offset=mc0 + tile_idx + r + (k0 + l) * lda]
+                            alpha
+                            * a[
+                                unsafe_offset=mc0
+                                + tile_idx
+                                + r
+                                + (k0 + l) * lda
+                            ]
                         )
                     for r in range(row_count, TILE):
                         a_pack[unsafe_offset=base + l * TILE + r] = 0
@@ -1612,7 +1826,9 @@ def gemm_v9[
                 var b_pack = stack_allocation[TK * TILE, dtype, alignment=128]()
                 for l in range(klen):
                     for r in range(jlen):
-                        b_pack[unsafe_offset=l * TILE + r] = b[unsafe_offset=(k0 + l) + (j0 + r) * ldb]
+                        b_pack[unsafe_offset=l * TILE + r] = b[
+                            unsafe_offset=(k0 + l) + (j0 + r) * ldb
+                        ]
                     for r in range(jlen, TILE):
                         b_pack[unsafe_offset=l * TILE + r] = 0
 
@@ -1633,12 +1849,22 @@ def gemm_v9[
 
                     for l in range(klen):
                         # One B row into X[0] (shared across all 4 FMAs).
-                        _amx_load_x_row[dtype](b_pack.unsafe_offset(l * TILE), 0)
+                        _amx_load_x_row[dtype](
+                            b_pack.unsafe_offset(l * TILE), 0
+                        )
                         # Four A rows into Y[0..3].
-                        _amx_load_y_row[dtype](a_pack.unsafe_offset(ab0 + l * TILE), 0)
-                        _amx_load_y_row[dtype](a_pack.unsafe_offset(ab1 + l * TILE), 1)
-                        _amx_load_y_row[dtype](a_pack.unsafe_offset(ab2 + l * TILE), 2)
-                        _amx_load_y_row[dtype](a_pack.unsafe_offset(ab3 + l * TILE), 3)
+                        _amx_load_y_row[dtype](
+                            a_pack.unsafe_offset(ab0 + l * TILE), 0
+                        )
+                        _amx_load_y_row[dtype](
+                            a_pack.unsafe_offset(ab1 + l * TILE), 1
+                        )
+                        _amx_load_y_row[dtype](
+                            a_pack.unsafe_offset(ab2 + l * TILE), 2
+                        )
+                        _amx_load_y_row[dtype](
+                            a_pack.unsafe_offset(ab3 + l * TILE), 3
+                        )
                         # Z[z][:,:] += outer(Y[z][:], X[0][:])  for z in 0..3
                         _amx_fma32_tile(0, 0, 0, False)
                         _amx_fma32_tile(1, 0, 1, False)
@@ -1664,7 +1890,9 @@ def gemm_v9[
                     # For each output column col, gather the MR values from c_tile
                     # (strided by TILE) and add to the contiguous C column.
                     for col in range(jlen):
-                        var c_col_ptr = c.unsafe_offset((j0 + col) * ldc + mc0 + ir)
+                        var c_col_ptr = c.unsafe_offset(
+                            (j0 + col) * ldc + mc0 + ir
+                        )
                         comptime for blk in range(MR // SIMD_W):
                             var base_row = blk * SIMD_W
                             var v = SIMD[dtype, SIMD_W](0)
@@ -1674,7 +1902,8 @@ def gemm_v9[
                                 ]
                             c_col_ptr.unsafe_store[width=SIMD_W](
                                 base_row,
-                                c_col_ptr.unsafe_load[width=SIMD_W](base_row) + v,
+                                c_col_ptr.unsafe_load[width=SIMD_W](base_row)
+                                + v,
                             )
 
                     ir += MR
@@ -1684,15 +1913,23 @@ def gemm_v9[
                     var ab0 = ir * TK
                     _amx_set()
                     for l in range(klen):
-                        _amx_load_x_row[dtype](b_pack.unsafe_offset(l * TILE), 0)
-                        _amx_load_y_row[dtype](a_pack.unsafe_offset(ab0 + l * TILE), 0)
+                        _amx_load_x_row[dtype](
+                            b_pack.unsafe_offset(l * TILE), 0
+                        )
+                        _amx_load_y_row[dtype](
+                            a_pack.unsafe_offset(ab0 + l * TILE), 0
+                        )
                         _amx_fma32_tile(0, 0, 0, False)
                     comptime for r in range(TILE):
-                        _amx_store_z_row[dtype](c_tile.unsafe_offset(r * TILE), r * 4)
+                        _amx_store_z_row[dtype](
+                            c_tile.unsafe_offset(r * TILE), r * 4
+                        )
                     _amx_clr()
 
                     for col in range(jlen):
-                        var c_col_ptr = c.unsafe_offset((j0 + col) * ldc + mc0 + ir)
+                        var c_col_ptr = c.unsafe_offset(
+                            (j0 + col) * ldc + mc0 + ir
+                        )
                         comptime for blk in range(TILE // SIMD_W):
                             var base_row = blk * SIMD_W
                             var v = SIMD[dtype, SIMD_W](0)
@@ -1702,7 +1939,8 @@ def gemm_v9[
                                 ]
                             c_col_ptr.unsafe_store[width=SIMD_W](
                                 base_row,
-                                c_col_ptr.unsafe_load[width=SIMD_W](base_row) + v,
+                                c_col_ptr.unsafe_load[width=SIMD_W](base_row)
+                                + v,
                             )
 
                     ir += TILE
@@ -1715,7 +1953,9 @@ def gemm_v9[
                         var s: Scalar[dtype] = 0
                         for l in range(klen):
                             s += (
-                                a_pack[unsafe_offset=tile_base + l * TILE + lane]
+                                a_pack[
+                                    unsafe_offset=tile_base + l * TILE + lane
+                                ]
                                 * b_pack[unsafe_offset=l * TILE + jc]
                             )
                         c[unsafe_offset=(mc0 + ir) + (j0 + jc) * ldc] += s
@@ -1776,7 +2016,9 @@ def _transpose_store_tile[
         comptime c0 = col_blk * SW
         comptime for row_blk in range(TILE // SW):
             comptime r0 = row_blk * SW
-            var r0v = z_buf.unsafe_load[width=TILE](r0 * TILE).slice[SW, offset=c0]()
+            var r0v = z_buf.unsafe_load[width=TILE](r0 * TILE).slice[
+                SW, offset=c0
+            ]()
             var r1v = z_buf.unsafe_load[width=TILE]((r0 + 1) * TILE).slice[
                 SW, offset=c0
             ]()
@@ -1824,7 +2066,9 @@ def _transpose_store_tile_set[
         comptime c0 = col_blk * SW
         comptime for row_blk in range(TILE // SW):
             comptime r0 = row_blk * SW
-            var r0v = z_buf.unsafe_load[width=TILE](r0 * TILE).slice[SW, offset=c0]()
+            var r0v = z_buf.unsafe_load[width=TILE](r0 * TILE).slice[
+                SW, offset=c0
+            ]()
             var r1v = z_buf.unsafe_load[width=TILE]((r0 + 1) * TILE).slice[
                 SW, offset=c0
             ]()
@@ -1839,7 +2083,9 @@ def _transpose_store_tile_set[
             var t2 = SIMD[dtype, SW](r0v[2], r1v[2], r2v[2], r3v[2])
             var t3 = SIMD[dtype, SW](r0v[3], r1v[3], r2v[3], r3v[3])
             if c0 < jlen:
-                (c_col_base.unsafe_offset(c0 * ldc + r0)).unsafe_store[width=SW](0, t0)
+                (c_col_base.unsafe_offset(c0 * ldc + r0)).unsafe_store[
+                    width=SW
+                ](0, t0)
             if c0 + 1 < jlen:
                 (c_col_base.unsafe_offset((c0 + 1) * ldc + r0)).unsafe_store[
                     width=SW
@@ -1965,7 +2211,13 @@ def gemm_v10[
                 for l in range(klen):
                     for r in range(row_count):
                         a_pack[unsafe_offset=base + l * TILE + r] = (
-                            alpha * a[unsafe_offset=mc0 + tile_idx + r + (k0 + l) * lda]
+                            alpha
+                            * a[
+                                unsafe_offset=mc0
+                                + tile_idx
+                                + r
+                                + (k0 + l) * lda
+                            ]
                         )
                     for r in range(row_count, TILE):
                         a_pack[unsafe_offset=base + l * TILE + r] = 0
@@ -1981,7 +2233,9 @@ def gemm_v10[
                 var b_pack = stack_allocation[TK * TILE, dtype, alignment=128]()
                 for l in range(klen):
                     for r in range(jlen):
-                        b_pack[unsafe_offset=l * TILE + r] = b[unsafe_offset=(k0 + l) + (j0 + r) * ldb]
+                        b_pack[unsafe_offset=l * TILE + r] = b[
+                            unsafe_offset=(k0 + l) + (j0 + r) * ldb
+                        ]
                     for r in range(jlen, TILE):
                         b_pack[unsafe_offset=l * TILE + r] = 0
 
@@ -1997,7 +2251,9 @@ def gemm_v10[
 
                     for l in range(klen):
                         # B row → X[0], shared by all 8 FMAs.
-                        _amx_load_x_row[dtype](b_pack.unsafe_offset(l * TILE), 0)
+                        _amx_load_x_row[dtype](
+                            b_pack.unsafe_offset(l * TILE), 0
+                        )
                         # 4 A rows → Y[0..3].
                         comptime for z in range(NZ):
                             _amx_load_y_row[dtype](
@@ -2025,7 +2281,9 @@ def gemm_v10[
                     # Process in NZ sub-tiles of TILE×TILE each.
                     comptime for z in range(NZ):
                         var z_sub = z_buf.unsafe_offset(z * TILE * TILE)
-                        var c_row_base = c_base.unsafe_offset(ir + z * TILE + j0 * ldc)
+                        var c_row_base = c_base.unsafe_offset(
+                            ir + z * TILE + j0 * ldc
+                        )
                         _transpose_store_tile[dtype, TILE](
                             z_sub, c_row_base, ldc, jlen
                         )
@@ -2038,7 +2296,9 @@ def gemm_v10[
                 while ir + MR4 <= mc_len:
                     _amx_set()
                     for l in range(klen):
-                        _amx_load_x_row[dtype](b_pack.unsafe_offset(l * TILE), 0)
+                        _amx_load_x_row[dtype](
+                            b_pack.unsafe_offset(l * TILE), 0
+                        )
                         comptime for z in range(NZ4):
                             _amx_load_y_row[dtype](
                                 a_pack.unsafe_offset(
@@ -2057,7 +2317,9 @@ def gemm_v10[
                     _amx_clr()
                     comptime for z in range(NZ4):
                         var z_sub = z_buf.unsafe_offset(z * TILE * TILE)
-                        var c_row_base = c_base.unsafe_offset(ir + z * TILE + j0 * ldc)
+                        var c_row_base = c_base.unsafe_offset(
+                            ir + z * TILE + j0 * ldc
+                        )
                         _transpose_store_tile[dtype, TILE](
                             z_sub, c_row_base, ldc, jlen
                         )
@@ -2067,11 +2329,17 @@ def gemm_v10[
                 while ir + TILE <= mc_len:
                     _amx_set()
                     for l in range(klen):
-                        _amx_load_x_row[dtype](b_pack.unsafe_offset(l * TILE), 0)
-                        _amx_load_y_row[dtype](a_pack.unsafe_offset(ir * TK + l * TILE), 0)
+                        _amx_load_x_row[dtype](
+                            b_pack.unsafe_offset(l * TILE), 0
+                        )
+                        _amx_load_y_row[dtype](
+                            a_pack.unsafe_offset(ir * TK + l * TILE), 0
+                        )
                         _amx_fma32_tile(0, 0, 0, False)
                     comptime for r in range(TILE):
-                        _amx_store_z_row[dtype](z_buf.unsafe_offset(r * TILE), r * 4)
+                        _amx_store_z_row[dtype](
+                            z_buf.unsafe_offset(r * TILE), r * 4
+                        )
                     _amx_clr()
                     var c_row_base = c_base.unsafe_offset(ir + j0 * ldc)
                     _transpose_store_tile[dtype, TILE](
@@ -2087,7 +2355,9 @@ def gemm_v10[
                         var s: Scalar[dtype] = 0
                         for l in range(klen):
                             s += (
-                                a_pack[unsafe_offset=tile_base + l * TILE + lane]
+                                a_pack[
+                                    unsafe_offset=tile_base + l * TILE + lane
+                                ]
                                 * b_pack[unsafe_offset=l * TILE + jc]
                             )
                         c[unsafe_offset=(mc0 + ir) + (j0 + jc) * ldc] += s
@@ -2219,7 +2489,9 @@ def gemm_v11[
                 var cj = c.unsafe_offset(j * ldc)
 
                 def scale_v11_empty[w: Int](i: Int) {cj, beta}:
-                    cj.unsafe_store[width=w](i, beta * cj.unsafe_load[width=w](i))
+                    cj.unsafe_store[width=w](
+                        i, beta * cj.unsafe_load[width=w](i)
+                    )
 
                 vectorize[SIMD_W](m, scale_v11_empty)
         return
@@ -2262,7 +2534,9 @@ def gemm_v11[
         # Packed once per k-panel and reused for every MC row block.
         var b_panel = unsafe_alloc[Scalar[dtype]](n_groups * b_stride * TILE)
         # One A-pack arena per k-panel; each row task owns a disjoint slice.
-        var a_panels = unsafe_alloc[Scalar[dtype]](mc_groups * mc_stride * a_stride)
+        var a_panels = unsafe_alloc[Scalar[dtype]](
+            mc_groups * mc_stride * a_stride
+        )
 
         # Pack B panel for all output column groups, then reuse it for each MC block.
         for jr_block in range(n_groups):
@@ -2292,7 +2566,13 @@ def gemm_v11[
                 for l in range(klen):
                     for r in range(row_count):
                         a_pack[unsafe_offset=base + l * TILE + r] = (
-                            alpha * a[unsafe_offset=mc0 + tile_idx + r + (k0 + l) * lda]
+                            alpha
+                            * a[
+                                unsafe_offset=mc0
+                                + tile_idx
+                                + r
+                                + (k0 + l) * lda
+                            ]
                         )
                     for r in range(row_count, TILE):
                         a_pack[unsafe_offset=base + l * TILE + r] = 0
@@ -2365,7 +2645,9 @@ def gemm_v11[
 
                     # Scalar tail for remaining k-steps (< UK).
                     while l < klen:
-                        _amx_load_x_row[dtype](b_pack.unsafe_offset(l * TILE), 0)
+                        _amx_load_x_row[dtype](
+                            b_pack.unsafe_offset(l * TILE), 0
+                        )
                         comptime for z in range(NZ):
                             _amx_load_y_row[dtype](
                                 a_pack.unsafe_offset(
@@ -2387,7 +2669,9 @@ def gemm_v11[
                     _amx_clr()
                     comptime for z in range(NZ):
                         var z_sub = z_buf.unsafe_offset(z * TILE * TILE)
-                        var c_row_base = c.unsafe_offset((j0 * ldc) + mc0 + ir + z * TILE)
+                        var c_row_base = c.unsafe_offset(
+                            (j0 * ldc) + mc0 + ir + z * TILE
+                        )
                         if direct_store_first_panel and k0 == 0:
                             _transpose_store_tile_set[dtype, TILE](
                                 z_sub, c_row_base, ldc, jlen
@@ -2412,7 +2696,8 @@ def gemm_v11[
                                 )
                             comptime for u in range(0, UK, 2):
                                 _amx_load_y_2rows[dtype](
-                                    a_pack.unsafe_offset(ab0 + (l + u) * TILE), u
+                                    a_pack.unsafe_offset(ab0 + (l + u) * TILE),
+                                    u,
                                 )
                         else:
                             comptime for u in range(UK):
@@ -2421,18 +2706,25 @@ def gemm_v11[
                                 )
                             comptime for u in range(UK):
                                 _amx_load_y_row[dtype](
-                                    a_pack.unsafe_offset(ab0 + (l + u) * TILE), u
+                                    a_pack.unsafe_offset(ab0 + (l + u) * TILE),
+                                    u,
                                 )
                         comptime for u in range(UK):
                             _amx_fma32_tile(0, u, u, False)
                         l += UK
                     while l < klen:
-                        _amx_load_x_row[dtype](b_pack.unsafe_offset(l * TILE), 0)
-                        _amx_load_y_row[dtype](a_pack.unsafe_offset(ab0 + l * TILE), 0)
+                        _amx_load_x_row[dtype](
+                            b_pack.unsafe_offset(l * TILE), 0
+                        )
+                        _amx_load_y_row[dtype](
+                            a_pack.unsafe_offset(ab0 + l * TILE), 0
+                        )
                         _amx_fma32_tile(0, 0, 0, False)
                         l += 1
                     comptime for r in range(TILE):
-                        _amx_store_z_row[dtype](z_buf.unsafe_offset(r * TILE), r * 4)
+                        _amx_store_z_row[dtype](
+                            z_buf.unsafe_offset(r * TILE), r * 4
+                        )
                     _amx_clr()
 
                     var c_row_base = c.unsafe_offset((j0 * ldc) + mc0 + ir)
@@ -2455,7 +2747,9 @@ def gemm_v11[
                         var s: Scalar[dtype] = 0
                         for l in range(klen):
                             s += (
-                                a_pack[unsafe_offset=tile_base + l * TILE + lane]
+                                a_pack[
+                                    unsafe_offset=tile_base + l * TILE + lane
+                                ]
                                 * b_pack[unsafe_offset=l * TILE + jc]
                             )
                         if direct_store_first_panel and k0 == 0:
@@ -2562,7 +2856,9 @@ def gemm_v12[
                 var cj = c.unsafe_offset(j * ldc)
 
                 def scale_v12_empty[w: Int](i: Int) {cj, beta}:
-                    cj.unsafe_store[width=w](i, beta * cj.unsafe_load[width=w](i))
+                    cj.unsafe_store[width=w](
+                        i, beta * cj.unsafe_load[width=w](i)
+                    )
 
                 vectorize[SIMD_W](m, scale_v12_empty)
         return
@@ -2619,7 +2915,13 @@ def gemm_v12[
                 for l in range(klen):
                     for r in range(row_count):
                         a_pack[unsafe_offset=base + l * TILE + r] = (
-                            alpha * a[unsafe_offset=mc0 + tile_idx + r + (k0 + l) * lda]
+                            alpha
+                            * a[
+                                unsafe_offset=mc0
+                                + tile_idx
+                                + r
+                                + (k0 + l) * lda
+                            ]
                         )
                     for r in range(row_count, TILE):
                         a_pack[unsafe_offset=base + l * TILE + r] = 0
@@ -2657,7 +2959,9 @@ def gemm_v12[
                                 _amx_fma32_tile(z, u, u, False)
                         l += UK
                     while l < klen:
-                        _amx_load_x_row[dtype](b_pack.unsafe_offset(l * TILE), 0)
+                        _amx_load_x_row[dtype](
+                            b_pack.unsafe_offset(l * TILE), 0
+                        )
                         comptime for z in range(NZ):
                             _amx_load_y_row[dtype](
                                 a_pack.unsafe_offset(
@@ -2678,7 +2982,9 @@ def gemm_v12[
                     _amx_clr()
                     comptime for z in range(NZ):
                         var z_sub = z_buf.unsafe_offset(z * TILE * TILE)
-                        var c_row_base = c.unsafe_offset((j0 * ldc) + mc0 + ir + z * TILE)
+                        var c_row_base = c.unsafe_offset(
+                            (j0 * ldc) + mc0 + ir + z * TILE
+                        )
                         _transpose_store_tile[dtype, TILE](
                             z_sub, c_row_base, ldc, jlen
                         )
@@ -2701,12 +3007,18 @@ def gemm_v12[
                             _amx_fma32_tile(0, u, u, False)
                         l += UK
                     while l < klen:
-                        _amx_load_x_row[dtype](b_pack.unsafe_offset(l * TILE), 0)
-                        _amx_load_y_row[dtype](a_pack.unsafe_offset(ab0 + l * TILE), 0)
+                        _amx_load_x_row[dtype](
+                            b_pack.unsafe_offset(l * TILE), 0
+                        )
+                        _amx_load_y_row[dtype](
+                            a_pack.unsafe_offset(ab0 + l * TILE), 0
+                        )
                         _amx_fma32_tile(0, 0, 0, False)
                         l += 1
                     comptime for r in range(TILE):
-                        _amx_store_z_row[dtype](z_buf.unsafe_offset(r * TILE), r * 4)
+                        _amx_store_z_row[dtype](
+                            z_buf.unsafe_offset(r * TILE), r * 4
+                        )
                     _amx_clr()
                     var c_row_base = c.unsafe_offset((j0 * ldc) + mc0 + ir)
                     _transpose_store_tile[dtype, TILE](
@@ -2721,7 +3033,9 @@ def gemm_v12[
                         var s: Scalar[dtype] = 0
                         for l in range(klen):
                             s += (
-                                a_pack[unsafe_offset=tile_base + l * TILE + lane]
+                                a_pack[
+                                    unsafe_offset=tile_base + l * TILE + lane
+                                ]
                                 * b_pack[unsafe_offset=l * TILE + jc]
                             )
                         c[unsafe_offset=(mc0 + ir) + (j0 + jc) * ldc] += s

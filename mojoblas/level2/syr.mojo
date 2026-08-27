@@ -105,7 +105,10 @@ def syr[
                     var temp: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                     var ix: Int = kx
                     for i in range(j + 1):
-                        a[unsafe_offset=i + j * lda] = a[unsafe_offset=i + j * lda] + x[unsafe_offset=ix - 1] * temp
+                        a[unsafe_offset=i + j * lda] = (
+                            a[unsafe_offset=i + j * lda]
+                            + x[unsafe_offset=ix - 1] * temp
+                        )
                         ix += incx
                 jx += incx
     else:
@@ -131,7 +134,10 @@ def syr[
                     var temp: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                     var ix: Int = jx
                     for i in range(j, n):
-                        a[unsafe_offset=i + j * lda] = a[unsafe_offset=i + j * lda] + x[unsafe_offset=ix - 1] * temp
+                        a[unsafe_offset=i + j * lda] = (
+                            a[unsafe_offset=i + j * lda]
+                            + x[unsafe_offset=ix - 1] * temp
+                        )
                         ix += incx
                 jx += incx
 
