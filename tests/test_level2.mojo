@@ -1,6 +1,6 @@
 from std.testing import assert_almost_equal, assert_equal, TestSuite
 
-from src.level2 import (
+from mojoblas.level2 import (
     gemv,
     trmv,
     trsv,

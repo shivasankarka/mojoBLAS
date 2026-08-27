@@ -1,6 +1,6 @@
 from std.testing import assert_almost_equal, TestSuite
 
-from src.level3 import gemm, syrk, trmm, trsm, symm, syr2k
+from mojoblas.level3 import gemm, syrk, trmm, trsm, symm, syr2k
 
 
 def test_gemm_no_transpose() raises:

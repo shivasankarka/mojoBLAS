@@ -1,7 +1,7 @@
 import std.benchmark as benchmark
 from std.benchmark import keep
 
-from src.level1 import (
+from mojoblas.level1 import (
     axpy,
     copy,
     scal,

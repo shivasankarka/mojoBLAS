@@ -1,7 +1,7 @@
 from std.testing import TestSuite
 from std.testing import assert_true, assert_almost_equal
 
-from src.level1 import (
+from mojoblas.level1 import (
     axpy,
     copy,
     scal,

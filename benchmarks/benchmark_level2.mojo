@@ -3,7 +3,7 @@ from std.time import sleep
 import std.benchmark as benchmark
 from std.benchmark import keep
 
-from src.level2 import *
+from mojoblas.level2 import *
 
 comptime f64 = DType.float64
 
