@@ -90,7 +90,9 @@ def _axpy_serial[
         )
         i += simd_width
     while i < length:
-        yc[i] = da * xc[i] + yc[i]
+        yc[unsafe_offset=i] = (
+            da * xc[unsafe_offset=i] + yc[unsafe_offset=i]
+        )
         i += 1
 
 
@@ -154,7 +156,7 @@ def _axpy_add_serial[
         )
         i += simd_width
     while i < length:
-        yc[i] += xc[i]
+        yc[unsafe_offset=i] += xc[unsafe_offset=i]
         i += 1
 
 
@@ -218,7 +220,7 @@ def _axpy_sub_serial[
         )
         i += simd_width
     while i < length:
-        yc[i] -= xc[i]
+        yc[unsafe_offset=i] -= xc[unsafe_offset=i]
         i += 1
 
 
@@ -272,13 +274,15 @@ def axpy[
             var nsteps = n * incx
             if da == 1:
                 for i in range(0, nsteps, incx):
-                    dy[i] += dx[i]
+                    dy[unsafe_offset=i] += dx[unsafe_offset=i]
             elif da == -1:
                 for i in range(0, nsteps, incx):
-                    dy[i] -= dx[i]
+                    dy[unsafe_offset=i] -= dx[unsafe_offset=i]
             else:
                 for i in range(0, nsteps, incx):
-                    dy[i] = da * dx[i] + dy[i]
+                    dy[unsafe_offset=i] = (
+                        da * dx[unsafe_offset=i] + dy[unsafe_offset=i]
+                    )
             return
 
         var ix: Int = 0
@@ -289,17 +293,19 @@ def axpy[
             iy = (-n + 1) * incy
         if da == 1:
             for _ in range(n):
-                dy[iy] += dx[ix]
+                dy[unsafe_offset=iy] += dx[unsafe_offset=ix]
                 ix += incx
                 iy += incy
         elif da == -1:
             for _ in range(n):
-                dy[iy] -= dx[ix]
+                dy[unsafe_offset=iy] -= dx[unsafe_offset=ix]
                 ix += incx
                 iy += incy
         else:
             for _ in range(n):
-                dy[iy] = da * dx[ix] + dy[iy]
+                dy[unsafe_offset=iy] = (
+                    da * dx[unsafe_offset=ix] + dy[unsafe_offset=iy]
+                )
                 ix += incx
                 iy += incy
         return
@@ -318,7 +324,7 @@ def axpy[
                     if end <= start:
                         return
                     _axpy_add_serial[dtype, simd_width, n_acc](
-                        dx + start, dy + start, end - start
+                        dx.unsafe_offset(start), dy.unsafe_offset(start), end - start
                     )
 
                 parallelize[worker_add](nt)
@@ -331,7 +337,7 @@ def axpy[
                     if end <= start:
                         return
                     _axpy_sub_serial[dtype, simd_width, n_acc](
-                        dx + start, dy + start, end - start
+                        dx.unsafe_offset(start), dy.unsafe_offset(start), end - start
                     )
 
                 parallelize[worker_sub](nt)
@@ -344,7 +350,7 @@ def axpy[
                     if end <= start:
                         return
                     _axpy_serial[dtype, simd_width, n_acc](
-                        dx + start, dy + start, da, end - start
+                        dx.unsafe_offset(start), dy.unsafe_offset(start), da, end - start
                     )
 
                 parallelize[worker](nt)

@@ -138,7 +138,7 @@ def tpmv[
 
     def a_at(
         i: Int, j: Int
-    ) {read no_unit, read upper, read ap, read n} -> Scalar[dtype]:
+    ) {imm no_unit, imm upper, imm ap, imm n} -> Scalar[dtype]:
         if i == j and not no_unit:
             return 1
         if upper:
