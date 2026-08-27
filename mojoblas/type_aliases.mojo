@@ -1,14 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Type Aliases
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Type Aliases (`type_aliases`)
-============================================
+Type Aliases (mojoblas.type_aliases).
+=====================================
 Provides type aliases for BLAS operations with memory origin tracking.
 """
 

@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Symmetric Matrix-Matrix Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Symmetric Matrix-Matrix Operations (`level3.symm`)
-=============================================
+Symmetric Matrix-Matrix Operations (mojoblas.level3.symm).
+==========================================================
 Provides symmetric matrix-matrix operations as defined in the BLAS library standard.
 """
 

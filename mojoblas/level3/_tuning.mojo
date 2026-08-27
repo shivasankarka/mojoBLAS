@@ -1,5 +1,17 @@
-# Level 3 GEMM tuning constants.
-# Target: Apple M2
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Level 3 Tuning Constants
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+"""
+Level 3 Tuning Constants (mojoblas.level3._tuning).
+===================================================
+Per-kernel compile-time tuning constants for Level 3 GEMM and friends,
+hand-picked for Apple M2 (tile sizes, thread counts, AMX-related knobs).
+"""
 
 comptime GEMM_DISPATCH_THRESHOLD: Int = 512
 

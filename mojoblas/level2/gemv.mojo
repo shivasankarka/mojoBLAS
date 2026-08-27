@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: General Matrix-Vector Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-General Matrix-Vector Operations (`level2.gemv`)
-=============================================
+General Matrix-Vector Operations (mojoblas.level2.gemv).
+========================================================
 Provides general matrix-vector operations as defined in the BLAS library standard.
 
 This module implements the gemv operation for matrix-vector multiplication

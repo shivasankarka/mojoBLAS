@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Index of Maximum Absolute Value
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Index of Maximum Absolute Value (`level1.iamax`)
-============================================
+Index of Maximum Absolute Value (mojoblas.level1.iamax).
+========================================================
 Provides index of maximum absolute value operations as defined in the BLAS library standard.
 """
 

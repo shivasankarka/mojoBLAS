@@ -34,8 +34,11 @@ from pathlib import Path
 
 SEPARATOR_WIDTH = 80  # "# ===" + 70 "-" + "=== #"
 EXPECTED_SEPARATOR = "# ===" + "-" * 70 + "=== #"
+# Line 2 (`# mojoBLAS: <description>`) is per-file and checked separately.
+# Lines 3-8 are fixed license/attribution text — the Netlib attribution is
+# required by the Reference BLAS license terms (see THIRD_PARTY_NOTICES.md),
+# not optional decoration.
 LICENSE_LINES = [
-    "# mojoBLAS: Mojo bindings for BLAS library",
     "# Distributed under the MIT License.",
     "# See LICENSE for more information.",
     "#",
@@ -200,7 +203,14 @@ def check_header(lines: list[str], report: FileReport) -> int:
             f"'# ===' + 70 dashes + '=== #'): {lines[0].rstrip()!r}",
         )
 
-    idx = 1
+    if len(lines) < 2 or not re.match(r"^# mojoBLAS: \S", lines[1]):
+        report.add(
+            2,
+            "header",
+            "Second header line should read '# mojoBLAS: <short description>'.",
+        )
+
+    idx = 2
     for expected in LICENSE_LINES:
         if idx >= len(lines) or lines[idx].rstrip("\n") != expected:
             report.add(
@@ -221,17 +231,15 @@ def check_header(lines: list[str], report: FileReport) -> int:
             )
         idx += 1
 
-    # mojoBLAS convention (unlike NuMojo): one blank line between the
-    # closing header separator and the module docstring — confirmed
-    # universal across the codebase (2026-08-27 survey).
-    if idx < len(lines) and lines[idx].strip() != "":
+    # No blank line between header and docstring (matches NuMojo).
+    if idx < len(lines) and lines[idx].strip() == "":
         report.add(
             idx + 1,
             "header",
-            "Missing blank line between header and module docstring.",
+            "Blank line between header and module docstring (should be none).",
         )
-        return idx
-    return idx + 1
+
+    return idx
 
 
 # ===----------------------------------------------------------------------=== #
@@ -292,16 +300,19 @@ def check_module_docstring(
             "docstring",
             "Second line of module docstring should be a bare '===' underline.",
         )
-    # NOTE: unlike NuMojo, mojoBLAS's underline is decorative and doesn't
-    # need to match title length — confirmed by survey (2026-08-27): ~75%
-    # of files mismatch, so length-matching was never the real convention
-    # here. Not checked.
+    elif len(underline_line) != len(title_line):
+        report.add(
+            idx + 3,
+            "docstring",
+            f"Underline length ({len(underline_line)}) does not match title "
+            f"length ({len(title_line)}): title={title_line!r}",
+        )
 
-    if not re.match(r"^[A-Za-z_].*\(`[a-z0-9_.]+`\)$", title_line):
+    if not re.match(r"^[A-Za-z_].*\(mojoblas(\.[a-z0-9_]+)*\)\.$", title_line):
         report.add(
             idx + 2,
             "docstring",
-            f"Title line should look like 'Name (`level1.dot`)': {title_line!r}",
+            f"Title line should look like 'Name (mojoblas.level1.dot).': {title_line!r}",
         )
 
     if close >= idx + 4:

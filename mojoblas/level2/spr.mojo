@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Symmetric Packed Rank-1 Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Symmetric Packed Rank-1 Operations (`level2.spr`)
-=============================================
+Symmetric Packed Rank-1 Operations (mojoblas.level2.spr).
+=========================================================
 Provides symmetric packed rank-1 operations as defined in the BLAS library standard.
 """
 

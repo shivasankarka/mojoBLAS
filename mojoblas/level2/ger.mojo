@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: General Rank-1 Update
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-General Rank-1 Update (`level2.ger`)
-===========================================
+General Rank-1 Update (mojoblas.level2.ger).
+============================================
 Provides general rank-1 update operations as defined in the BLAS library standard.
 """
 

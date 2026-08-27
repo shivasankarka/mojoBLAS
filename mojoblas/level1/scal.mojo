@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Vector Scale Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Vector Scale Operations (`level1.scal`)
-============================================
+Vector Scale Operations (mojoblas.level1.scal).
+===============================================
 Provides vector scale operations as defined in the BLAS library standard.
 """
 

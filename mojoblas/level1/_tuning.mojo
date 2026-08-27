@@ -1,4 +1,17 @@
-# Level 1 per-routine tuning constants (M2)
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS: Level 1 Tuning Constants
+# Distributed under the MIT License.
+# See LICENSE for more information.
+#
+# It is inspired by and based on the Netlib BLAS reference implementation:
+# http://www.netlib.org/blas/
+# ===----------------------------------------------------------------------=== #
+"""
+Level 1 Tuning Constants (mojoblas.level1._tuning).
+===================================================
+Per-routine compile-time tuning constants for Level 1 BLAS, hand-picked for
+Apple M2 (thread counts, parallelization thresholds, SIMD unroll factors).
+"""
 
 # AXPY
 comptime AXPY_N_THREADS: Int = 8

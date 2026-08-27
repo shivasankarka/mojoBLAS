@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Triangular Matrix-Matrix Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Triangular Matrix-Matrix Operations (`level3.trmm`)
-=============================================
+Triangular Matrix-Matrix Operations (mojoblas.level3.trmm).
+===========================================================
 Provides triangular matrix-matrix operations as defined in the BLAS library standard.
 """
 

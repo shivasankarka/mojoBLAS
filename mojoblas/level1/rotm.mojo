@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Modified Givens Rotation Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Modified Givens Rotation Operations (`level1.rotm`)
-============================================
+Modified Givens Rotation Operations (mojoblas.level1.rotm).
+===========================================================
 Provides modified Givens rotation operations as defined in the BLAS library standard.
 """
 

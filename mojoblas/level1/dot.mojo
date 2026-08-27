@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Dot Product Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Dot Product Operations (`level1.dot`)
-============================================
+Dot Product Operations (mojoblas.level1.dot).
+=============================================
 Provides dot product operations as defined in the BLAS library standard.
 """
 

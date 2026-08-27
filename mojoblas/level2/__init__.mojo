@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Level 2 BLAS Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Level 2 BLAS Operations (`level2`)
-============================================
+Level 2 BLAS Operations (mojoblas.level2).
+==========================================
 This module provides Level 2 BLAS (Basic Linear Algebra Subprograms) operations
 implemented in Mojo. Level 2 BLAS includes vector-matrix operations
 such as matrix-vector multiplication and triangular solving.

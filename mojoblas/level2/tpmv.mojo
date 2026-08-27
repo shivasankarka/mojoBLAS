@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Triangular Packed Matrix-Vector Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Triangular Packed Matrix-Vector Operations (`level2.tpmv`)
-=============================================
+Triangular Packed Matrix-Vector Operations (mojoblas.level2.tpmv).
+==================================================================
 Provides triangular packed matrix-vector operations as defined in the BLAS library standard.
 """
 

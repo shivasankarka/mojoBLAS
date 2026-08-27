@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Level 3 BLAS Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Level 3 BLAS Operations (`level3`)
-============================================
+Level 3 BLAS Operations (mojoblas.level3).
+==========================================
 This module provides Level 3 BLAS (Basic Linear Algebra Subprograms) operations
 implemented in Mojo. Level 3 BLAS includes matrix-matrix operations
 such as general matrix multiplication, symmetric multiplication, and triangular solves.

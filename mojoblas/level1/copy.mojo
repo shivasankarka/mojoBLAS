@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Vector Copy Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Vector Copy Operations (`level1.copy`)
-============================================
+Vector Copy Operations (mojoblas.level1.copy).
+==============================================
 Provides vector copy operations as defined in the BLAS library standard.
 """
 

@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Vector Alpha Plus Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Vector Alpha Plus Operations (`level1.axpy`)
-============================================
+Vector Alpha Plus Operations (mojoblas.level1.axpy).
+====================================================
 Provides vector alpha plus operations as defined in the BLAS library standard.
 """
 

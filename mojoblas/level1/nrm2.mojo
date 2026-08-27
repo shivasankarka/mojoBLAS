@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Euclidean Norm Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Euclidean Norm Operations (`level1.nrm2`)
-============================================
+Euclidean Norm Operations (mojoblas.level1.nrm2).
+=================================================
 Provides Euclidean norm operations as defined in the BLAS library standard.
 """
 

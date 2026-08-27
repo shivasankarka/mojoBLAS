@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Symmetric Rank-2 Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Symmetric Rank-2 Operations (`level2.syr2`)
-=============================================
+Symmetric Rank-2 Operations (mojoblas.level2.syr2).
+===================================================
 Provides symmetric rank-2 operations as defined in the BLAS library standard.
 """
 

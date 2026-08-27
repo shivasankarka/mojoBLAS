@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Plane Rotation Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Plane Rotation Operations (`level1.rot`)
-============================================
+Plane Rotation Operations (mojoblas.level1.rot).
+================================================
 Provides plane rotation operations as defined in the BLAS library standard.
 """
 

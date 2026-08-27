@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: General Matrix-Matrix Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-General Matrix-Matrix Operations (`level3.gemm`)
-=============================================
+General Matrix-Matrix Operations (mojoblas.level3.gemm).
+========================================================
 Provides general matrix-matrix operations as defined in the BLAS library standard.
 """
 

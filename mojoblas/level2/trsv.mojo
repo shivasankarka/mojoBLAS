@@ -1,15 +1,14 @@
 # ===----------------------------------------------------------------------=== #
-# mojoBLAS: Mojo bindings for BLAS library
+# mojoBLAS: Triangular Solve Operations
 # Distributed under the MIT License.
 # See LICENSE for more information.
 #
 # It is inspired by and based on the Netlib BLAS reference implementation:
 # http://www.netlib.org/blas/
 # ===----------------------------------------------------------------------=== #
-
 """
-Triangular Solve Operations (`level2.trsv`)
-=============================================
+Triangular Solve Operations (mojoblas.level2.trsv).
+===================================================
 Provides triangular solve operations as defined in the BLAS library standard.
 """
 
