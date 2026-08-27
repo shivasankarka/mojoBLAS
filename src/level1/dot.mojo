@@ -70,7 +70,9 @@ def _dot_serial[
         acc0 += xc.load[width=simd_width](i) * yc.load[width=simd_width](i)
         i += simd_width
 
-    var result = (acc0 + acc1 + acc2 + acc3 + acc4 + acc5 + acc6 + acc7).reduce_add()
+    var result = (
+        acc0 + acc1 + acc2 + acc3 + acc4 + acc5 + acc6 + acc7
+    ).reduce_add()
 
     while i < length:
         result += xc[i] * yc[i]
