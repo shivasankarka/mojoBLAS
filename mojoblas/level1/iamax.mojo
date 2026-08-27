@@ -17,6 +17,7 @@ from max.algorithm.backend.cpu import parallelize
 from std.sys.info import simd_width_of
 from ._tuning import IAMAX_N_THREADS, IAMAX_PAR_THRESHOLD
 from mojoblas.type_aliases import BLASPtr
+from std.memory.alloc import unsafe_alloc
 
 
 def _iamax_serial[
@@ -33,13 +34,13 @@ def _iamax_serial[
         if chunk_max > best_val:
             best_val = chunk_max
             for j in range(simd_width):
-                if abs(x[start + i + j]) == chunk_max:
+                if abs(x[unsafe_offset=start + i + j]) == chunk_max:
                     best_idx = start + i + j
                     break
         i += simd_width
 
     while i < length:
-        var cur = abs(x[start + i])
+        var cur = abs(x[unsafe_offset=start + i])
         if cur > best_val:
             best_val = cur
             best_idx = start + i
@@ -84,8 +85,8 @@ def iamax[
     comptime simd_width: Int = simd_width_of[dtype]()
 
     if incx == 1 and n > par_threshold:
-        var local_max = alloc[Scalar[dtype]](n_threads)
-        var local_idx = alloc[Int](n_threads)
+        var local_max = unsafe_alloc[Scalar[dtype]](n_threads)
+        var local_idx = unsafe_alloc[Int](n_threads)
         var chunk_size = (n + n_threads - 1) // n_threads
 
         @parameter
@@ -93,21 +94,21 @@ def iamax[
             var start = tid * chunk_size
             var end = min(start + chunk_size, n)
             if end <= start:
-                local_max[tid] = Scalar[dtype](0)
-                local_idx[tid] = start
+                local_max[unsafe_offset=tid] = Scalar[dtype](0)
+                local_idx[unsafe_offset=tid] = start
                 return
             var result = _iamax_serial[dtype, simd_width](x, start, end - start)
-            local_max[tid] = result[0]
-            local_idx[tid] = result[1]
+            local_max[unsafe_offset=tid] = result[0]
+            local_idx[unsafe_offset=tid] = result[1]
 
         parallelize[worker](n_threads)
 
-        var imax = local_idx[0]
-        var max_val = local_max[0]
+        var imax = local_idx[unsafe_offset=0]
+        var max_val = local_max[unsafe_offset=0]
         for t in range(1, n_threads):
-            if local_max[t] > max_val:
-                max_val = local_max[t]
-                imax = local_idx[t]
+            if local_max[unsafe_offset=t] > max_val:
+                max_val = local_max[unsafe_offset=t]
+                imax = local_idx[unsafe_offset=t]
 
         local_max.unsafe_free()
         local_idx.unsafe_free()
@@ -119,12 +120,12 @@ def iamax[
 
     var ix: Int = 0
     var imax: Int = 0
-    var max_val: Scalar[dtype] = abs(x[0])
+    var max_val: Scalar[dtype] = abs(x[unsafe_offset=0])
     if incx < 0:
         ix = (-n + 1) * incx
     ix += incx
     for i in range(1, n):
-        var current_abs = abs(x[ix])
+        var current_abs = abs(x[unsafe_offset=ix])
         if current_abs > max_val:
             max_val = current_abs
             imax = i

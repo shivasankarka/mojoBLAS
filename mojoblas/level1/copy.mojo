@@ -71,8 +71,8 @@ def copy[
                 var length = end - start
                 if length <= 0:
                     return
-                var xc = dx + start
-                var yc = dy + start
+                var xc = dx.unsafe_offset(start)
+                var yc = dy.unsafe_offset(start)
 
                 def closure_p[width: Int](i: Int) {yc, xc}:
                     yc.unsafe_store[width=width](i, xc.unsafe_load[width=width](i))
@@ -98,6 +98,6 @@ def copy[
         iy = (-n + 1) * incy
 
     for _ in range(n):
-        dy[iy] = dx[ix]
+        dy[unsafe_offset=iy] = dx[unsafe_offset=ix]
         ix += incx
         iy += incy

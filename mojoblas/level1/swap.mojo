@@ -70,8 +70,8 @@ def vswap[
                 var length = end - start
                 if length <= 0:
                     return
-                var xc = dx + start
-                var yc = dy + start
+                var xc = dx.unsafe_offset(start)
+                var yc = dy.unsafe_offset(start)
 
                 def closure_p[width: Int](i: Int) {xc, yc}:
                     var temp = xc.unsafe_load[width=width](i)
@@ -101,8 +101,8 @@ def vswap[
         iy = (-n + 1) * incy
 
     for _ in range(n):
-        var temp = dx[ix]
-        dx[ix] = dy[iy]
-        dy[iy] = temp
+        var temp = dx[unsafe_offset=ix]
+        dx[unsafe_offset=ix] = dy[unsafe_offset=iy]
+        dy[unsafe_offset=iy] = temp
         ix += incx
         iy += incy

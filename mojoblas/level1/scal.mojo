@@ -60,7 +60,7 @@ def scal[
                 var length = end - start
                 if length <= 0:
                     return
-                var xc = dx + start
+                var xc = dx.unsafe_offset(start)
 
                 def closure_p[width: Int](i: Int) {xc, alpha}:
                     xc.unsafe_store[width=width](i, alpha * xc.unsafe_load[width=width](i))
@@ -83,5 +83,5 @@ def scal[
         ix = (-n + 1) * incx
 
     for _ in range(n):
-        dx[ix] = alpha * dx[ix]
+        dx[unsafe_offset=ix] = alpha * dx[unsafe_offset=ix]
         ix += incx
