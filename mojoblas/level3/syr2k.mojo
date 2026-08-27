@@ -103,20 +103,20 @@ def syr2k[
         if upper:
             for j in range(n):
                 for i in range(j + 1):
-                    c[i + j * ldc] = 0
+                    c[unsafe_offset=i + j * ldc] = 0
         else:
             for j in range(n):
                 for i in range(j, n):
-                    c[i + j * ldc] = 0
+                    c[unsafe_offset=i + j * ldc] = 0
     elif beta != 1:
         if upper:
             for j in range(n):
                 for i in range(j + 1):
-                    c[i + j * ldc] = beta * c[i + j * ldc]
+                    c[unsafe_offset=i + j * ldc] = beta * c[unsafe_offset=i + j * ldc]
         else:
             for j in range(n):
                 for i in range(j, n):
-                    c[i + j * ldc] = beta * c[i + j * ldc]
+                    c[unsafe_offset=i + j * ldc] = beta * c[unsafe_offset=i + j * ldc]
 
     if alpha == 0:
         return
@@ -126,13 +126,13 @@ def syr2k[
     if no_trans:
         if upper:
             for j in range(n):
-                var cj = c + j * ldc
+                var cj = c.unsafe_offset(j * ldc)
                 for l in range(k):
-                    if a[j + l * lda] != 0 or b[j + l * ldb] != 0:
-                        var temp1: Scalar[dtype] = alpha * a[j + l * lda]
-                        var temp2: Scalar[dtype] = alpha * b[j + l * ldb]
-                        var al = a + l * lda
-                        var bl = b + l * ldb
+                    if a[unsafe_offset=j + l * lda] != 0 or b[unsafe_offset=j + l * ldb] != 0:
+                        var temp1: Scalar[dtype] = alpha * a[unsafe_offset=j + l * lda]
+                        var temp2: Scalar[dtype] = alpha * b[unsafe_offset=j + l * ldb]
+                        var al = a.unsafe_offset(l * lda)
+                        var bl = b.unsafe_offset(l * ldb)
 
                         def rank2k_upper[
                             width: Int
@@ -147,13 +147,13 @@ def syr2k[
                         vectorize[simd_width](j + 1, rank2k_upper)
         else:
             for j in range(n):
-                var cj = c + j * ldc
+                var cj = c.unsafe_offset(j * ldc)
                 for l in range(k):
-                    if a[j + l * lda] != 0 or b[j + l * ldb] != 0:
-                        var temp1: Scalar[dtype] = alpha * a[j + l * lda]
-                        var temp2: Scalar[dtype] = alpha * b[j + l * ldb]
-                        var al = a + l * lda
-                        var bl = b + l * ldb
+                    if a[unsafe_offset=j + l * lda] != 0 or b[unsafe_offset=j + l * ldb] != 0:
+                        var temp1: Scalar[dtype] = alpha * a[unsafe_offset=j + l * lda]
+                        var temp2: Scalar[dtype] = alpha * b[unsafe_offset=j + l * ldb]
+                        var al = a.unsafe_offset(l * lda)
+                        var bl = b.unsafe_offset(l * ldb)
 
                         def rank2k_lower[
                             width: Int
@@ -175,17 +175,17 @@ def syr2k[
                     var temp1: Scalar[dtype] = 0
                     var temp2: Scalar[dtype] = 0
                     for l in range(k):
-                        temp1 = temp1 + a[l + i * lda] * b[l + j * ldb]
-                        temp2 = temp2 + b[l + i * ldb] * a[l + j * lda]
-                    c[i + j * ldc] = c[i + j * ldc] + alpha * (temp1 + temp2)
+                        temp1 = temp1 + a[unsafe_offset=l + i * lda] * b[unsafe_offset=l + j * ldb]
+                        temp2 = temp2 + b[unsafe_offset=l + i * ldb] * a[unsafe_offset=l + j * lda]
+                    c[unsafe_offset=i + j * ldc] = c[unsafe_offset=i + j * ldc] + alpha * (temp1 + temp2)
         else:
             for j in range(n):
                 for i in range(j, n):
                     var temp1: Scalar[dtype] = 0
                     var temp2: Scalar[dtype] = 0
                     for l in range(k):
-                        temp1 = temp1 + a[l + i * lda] * b[l + j * ldb]
-                        temp2 = temp2 + b[l + i * ldb] * a[l + j * lda]
-                    c[i + j * ldc] = c[i + j * ldc] + alpha * (temp1 + temp2)
+                        temp1 = temp1 + a[unsafe_offset=l + i * lda] * b[unsafe_offset=l + j * ldb]
+                        temp2 = temp2 + b[unsafe_offset=l + i * ldb] * a[unsafe_offset=l + j * lda]
+                    c[unsafe_offset=i + j * ldc] = c[unsafe_offset=i + j * ldc] + alpha * (temp1 + temp2)
 
     return

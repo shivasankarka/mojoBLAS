@@ -99,11 +99,11 @@ def symm[
 
         @parameter
         def symm_left_col(j: Int):
-            var cj = c + j * ldc
-            var bj = b + j * ldb
+            var cj = c.unsafe_offset(j * ldc)
+            var bj = b.unsafe_offset(j * ldb)
             if beta == 0:
                 for i in range(m):
-                    cj[i] = 0
+                    cj[unsafe_offset=i] = 0
             elif beta != 1:
 
                 def scale_cj[width: Int](i: Int) {cj, beta}:
@@ -113,10 +113,10 @@ def symm[
 
             if upper:
                 for l in range(m - 1, -1, -1):
-                    if bj[l] != 0:
-                        var temp1: Scalar[dtype] = alpha * bj[l]
+                    if bj[unsafe_offset=l] != 0:
+                        var temp1: Scalar[dtype] = alpha * bj[unsafe_offset=l]
                         var temp2: Scalar[dtype] = 0
-                        var al = a + l * lda
+                        var al = a.unsafe_offset(l * lda)
 
                         def fused_upper[
                             width: Int
@@ -128,13 +128,13 @@ def symm[
                             temp2 += (av * bj.unsafe_load[width=width](i)).reduce_add()
 
                         vectorize[simd_width](l, fused_upper)
-                        cj[l] = cj[l] + temp1 * a[l + l * lda] + alpha * temp2
+                        cj[unsafe_offset=l] = cj[unsafe_offset=l] + temp1 * a[unsafe_offset=l + l * lda] + alpha * temp2
             else:
                 for l in range(m):
-                    if bj[l] != 0:
-                        var temp1: Scalar[dtype] = alpha * bj[l]
+                    if bj[unsafe_offset=l] != 0:
+                        var temp1: Scalar[dtype] = alpha * bj[unsafe_offset=l]
                         var temp2: Scalar[dtype] = 0
-                        var al = a + l * lda
+                        var al = a.unsafe_offset(l * lda)
 
                         def fused_lower[
                             width: Int
@@ -149,7 +149,7 @@ def symm[
                             ).reduce_add()
 
                         vectorize[simd_width](m - l - 1, fused_lower)
-                        cj[l] = cj[l] + temp1 * a[l + l * lda] + alpha * temp2
+                        cj[unsafe_offset=l] = cj[unsafe_offset=l] + temp1 * a[unsafe_offset=l + l * lda] + alpha * temp2
 
         if n >= PAR_THRESHOLD:
             parallelize[symm_left_col](n)
@@ -160,11 +160,11 @@ def symm[
 
         @parameter
         def symm_right_col(j: Int):
-            var cj = c + j * ldc
-            var bj = b + j * ldb
+            var cj = c.unsafe_offset(j * ldc)
+            var bj = b.unsafe_offset(j * ldb)
             if beta == 0:
                 for i in range(m):
-                    cj[i] = 0
+                    cj[unsafe_offset=i] = 0
             elif beta != 1:
 
                 def scale_cj_r[width: Int](i: Int) {cj, beta}:
@@ -172,7 +172,7 @@ def symm[
 
                 vectorize[simd_width](m, scale_cj_r)
 
-            var temp_diag: Scalar[dtype] = alpha * a[j + j * lda]
+            var temp_diag: Scalar[dtype] = alpha * a[unsafe_offset=j + j * lda]
 
             def axpy_diag[width: Int](i: Int) {cj, bj, temp_diag}:
                 cj.unsafe_store[width=width](
@@ -185,8 +185,8 @@ def symm[
 
             if upper:
                 for k in range(j):
-                    var temp_k: Scalar[dtype] = alpha * a[k + j * lda]
-                    var bk = b + k * ldb
+                    var temp_k: Scalar[dtype] = alpha * a[unsafe_offset=k + j * lda]
+                    var bk = b.unsafe_offset(k * ldb)
 
                     def axpy_upper_r[width: Int](i: Int) {cj, bk, temp_k}:
                         cj.unsafe_store[width=width](
@@ -197,8 +197,8 @@ def symm[
 
                     vectorize[simd_width](m, axpy_upper_r)
                 for k in range(j + 1, n):
-                    var temp_k: Scalar[dtype] = alpha * a[j + k * lda]
-                    var bk = b + k * ldb
+                    var temp_k: Scalar[dtype] = alpha * a[unsafe_offset=j + k * lda]
+                    var bk = b.unsafe_offset(k * ldb)
 
                     def axpy_upper_r2[width: Int](i: Int) {cj, bk, temp_k}:
                         cj.unsafe_store[width=width](
@@ -210,8 +210,8 @@ def symm[
                     vectorize[simd_width](m, axpy_upper_r2)
             else:
                 for k in range(j):
-                    var temp_k: Scalar[dtype] = alpha * a[j + k * lda]
-                    var bk = b + k * ldb
+                    var temp_k: Scalar[dtype] = alpha * a[unsafe_offset=j + k * lda]
+                    var bk = b.unsafe_offset(k * ldb)
 
                     def axpy_lower_r[width: Int](i: Int) {cj, bk, temp_k}:
                         cj.unsafe_store[width=width](
@@ -222,8 +222,8 @@ def symm[
 
                     vectorize[simd_width](m, axpy_lower_r)
                 for k in range(j + 1, n):
-                    var temp_k: Scalar[dtype] = alpha * a[k + j * lda]
-                    var bk = b + k * ldb
+                    var temp_k: Scalar[dtype] = alpha * a[unsafe_offset=k + j * lda]
+                    var bk = b.unsafe_offset(k * ldb)
 
                     def axpy_lower_r2[width: Int](i: Int) {cj, bk, temp_k}:
                         cj.unsafe_store[width=width](

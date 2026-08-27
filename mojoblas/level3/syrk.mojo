@@ -96,20 +96,20 @@ def syrk[
         if upper:
             for j in range(n):
                 for i in range(j + 1):
-                    c[i + j * ldc] = 0
+                    c[unsafe_offset=i + j * ldc] = 0
         else:
             for j in range(n):
                 for i in range(j, n):
-                    c[i + j * ldc] = 0
+                    c[unsafe_offset=i + j * ldc] = 0
     elif beta != 1:
         if upper:
             for j in range(n):
                 for i in range(j + 1):
-                    c[i + j * ldc] = beta * c[i + j * ldc]
+                    c[unsafe_offset=i + j * ldc] = beta * c[unsafe_offset=i + j * ldc]
         else:
             for j in range(n):
                 for i in range(j, n):
-                    c[i + j * ldc] = beta * c[i + j * ldc]
+                    c[unsafe_offset=i + j * ldc] = beta * c[unsafe_offset=i + j * ldc]
 
     if alpha == 0:
         return
@@ -121,11 +121,11 @@ def syrk[
 
             @parameter
             def syrk_nt_upper(j: Int):
-                var cj = c + j * ldc
+                var cj = c.unsafe_offset(j * ldc)
                 for l in range(k):
-                    if a[j + l * lda] != 0:
-                        var temp: Scalar[dtype] = alpha * a[j + l * lda]
-                        var al = a + l * lda
+                    if a[unsafe_offset=j + l * lda] != 0:
+                        var temp: Scalar[dtype] = alpha * a[unsafe_offset=j + l * lda]
+                        var al = a.unsafe_offset(l * lda)
 
                         def axpy_upper[width: Int](i: Int) {cj, al, temp}:
                             cj.unsafe_store[width=width](
@@ -145,11 +145,11 @@ def syrk[
 
             @parameter
             def syrk_nt_lower(j: Int):
-                var cj = c + j * ldc
+                var cj = c.unsafe_offset(j * ldc)
                 for l in range(k):
-                    if a[j + l * lda] != 0:
-                        var temp: Scalar[dtype] = alpha * a[j + l * lda]
-                        var al = a + l * lda
+                    if a[unsafe_offset=j + l * lda] != 0:
+                        var temp: Scalar[dtype] = alpha * a[unsafe_offset=j + l * lda]
+                        var al = a.unsafe_offset(l * lda)
 
                         def axpy_lower[width: Int](i: Int) {cj, al, temp, j}:
                             var ii = j + i
@@ -175,8 +175,8 @@ def syrk[
                 for i in range(j + 1):
                     var temp: Scalar[dtype] = 0
                     for l in range(k):
-                        temp = temp + a[l + i * lda] * a[l + j * lda]
-                    c[i + j * ldc] = c[i + j * ldc] + alpha * temp
+                        temp = temp + a[unsafe_offset=l + i * lda] * a[unsafe_offset=l + j * lda]
+                    c[unsafe_offset=i + j * ldc] = c[unsafe_offset=i + j * ldc] + alpha * temp
 
             if n >= PAR_THRESHOLD:
                 parallelize[syrk_t_upper](n)
@@ -190,8 +190,8 @@ def syrk[
                 for i in range(j, n):
                     var temp: Scalar[dtype] = 0
                     for l in range(k):
-                        temp = temp + a[l + i * lda] * a[l + j * lda]
-                    c[i + j * ldc] = c[i + j * ldc] + alpha * temp
+                        temp = temp + a[unsafe_offset=l + i * lda] * a[unsafe_offset=l + j * lda]
+                    c[unsafe_offset=i + j * ldc] = c[unsafe_offset=i + j * ldc] + alpha * temp
 
             if n >= PAR_THRESHOLD:
                 parallelize[syrk_t_lower](n)

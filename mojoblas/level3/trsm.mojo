@@ -96,7 +96,7 @@ def trsm[
 
     if alpha != 1:
         for j in range(n):
-            var bj = b + j * ldb
+            var bj = b.unsafe_offset(j * ldb)
 
             def scale_init[width: Int](i: Int) {bj, alpha}:
                 bj.unsafe_store[width=width](i, alpha * bj.unsafe_load[width=width](i))
@@ -112,13 +112,13 @@ def trsm[
         if no_trans:
             if upper:
                 for j in range(n):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     for l in range(m - 1, -1, -1):
-                        if bj[l] != 0:
+                        if bj[unsafe_offset=l] != 0:
                             if no_unit:
-                                bj[l] = bj[l] / a[l + l * lda]
-                            var pivot: Scalar[dtype] = bj[l]
-                            var al = a + l * lda
+                                bj[unsafe_offset=l] = bj[unsafe_offset=l] / a[unsafe_offset=l + l * lda]
+                            var pivot: Scalar[dtype] = bj[unsafe_offset=l]
+                            var al = a.unsafe_offset(l * lda)
 
                             def axpy_lu[width: Int](i: Int) {bj, al, pivot}:
                                 bj.unsafe_store[width=width](
@@ -130,13 +130,13 @@ def trsm[
                             vectorize[simd_width](l, axpy_lu)
             else:
                 for j in range(n):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     for l in range(m):
-                        if bj[l] != 0:
+                        if bj[unsafe_offset=l] != 0:
                             if no_unit:
-                                bj[l] = bj[l] / a[l + l * lda]
-                            var pivot: Scalar[dtype] = bj[l]
-                            var al = a + l * lda
+                                bj[unsafe_offset=l] = bj[unsafe_offset=l] / a[unsafe_offset=l + l * lda]
+                            var pivot: Scalar[dtype] = bj[unsafe_offset=l]
+                            var al = a.unsafe_offset(l * lda)
 
                             def axpy_ll[width: Int](i: Int) {bj, al, pivot, l}:
                                 var ii = l + 1 + i
@@ -152,32 +152,32 @@ def trsm[
             if upper:
                 # U^T[i,l] = U[l,i] = a[l + i*lda]; forward i=0..m-1, deps on l<i
                 for j in range(n):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     for i in range(m):
                         for l in range(i):
-                            bj[i] = bj[i] - a[l + i * lda] * bj[l]
+                            bj[unsafe_offset=i] = bj[unsafe_offset=i] - a[unsafe_offset=l + i * lda] * bj[unsafe_offset=l]
                         if no_unit:
-                            bj[i] = bj[i] / a[i + i * lda]
+                            bj[unsafe_offset=i] = bj[unsafe_offset=i] / a[unsafe_offset=i + i * lda]
             else:
                 # L^T[i,l] = L[l,i] = a[l + i*lda]; backward i=m-1..0, deps on l>i
                 for j in range(n):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     for i in range(m - 1, -1, -1):
                         for l in range(i + 1, m):
-                            bj[i] = bj[i] - a[l + i * lda] * bj[l]
+                            bj[unsafe_offset=i] = bj[unsafe_offset=i] - a[unsafe_offset=l + i * lda] * bj[unsafe_offset=l]
                         if no_unit:
-                            bj[i] = bj[i] / a[i + i * lda]
+                            bj[unsafe_offset=i] = bj[unsafe_offset=i] / a[unsafe_offset=i + i * lda]
     else:
         if no_trans:
             if upper:
                 # X*U=B: x_j = (b_j - sum_{l<j} X[:,l]*U[l,j]) / U[j,j], forward j
                 # U[l,j] = a[l + j*lda]
                 for j in range(n):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     var off_j = j * ldb
                     for l in range(j):
                         var off_l = l * ldb
-                        var alj: Scalar[dtype] = a[l + j * lda]
+                        var alj: Scalar[dtype] = a[unsafe_offset=l + j * lda]
 
                         def axpy_ru[width: Int](i: Int) {
                             b, off_j, off_l, alj
@@ -190,7 +190,7 @@ def trsm[
 
                         vectorize[simd_width](m, axpy_ru)
                     if no_unit:
-                        var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
+                        var inv_diag: Scalar[dtype] = 1.0 / a[unsafe_offset=j + j * lda]
 
                         def scale_u[width: Int](i: Int) {bj, inv_diag}:
                             bj.unsafe_store[width=width](
@@ -202,11 +202,11 @@ def trsm[
                 # X*L=B: x_j = (b_j - sum_{l>j} X[:,l]*L[l,j]) / L[j,j], backward j
                 # L[l,j] = a[l + j*lda]
                 for j in range(n - 1, -1, -1):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     var off_j = j * ldb
                     for l in range(j + 1, n):
                         var off_l = l * ldb
-                        var alj: Scalar[dtype] = a[l + j * lda]
+                        var alj: Scalar[dtype] = a[unsafe_offset=l + j * lda]
 
                         def axpy_rl[width: Int](i: Int) {
                             b, off_j, off_l, alj
@@ -219,7 +219,7 @@ def trsm[
 
                         vectorize[simd_width](m, axpy_rl)
                     if no_unit:
-                        var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
+                        var inv_diag: Scalar[dtype] = 1.0 / a[unsafe_offset=j + j * lda]
 
                         def scale_l[width: Int](i: Int) {bj, inv_diag}:
                             bj.unsafe_store[width=width](
@@ -231,11 +231,11 @@ def trsm[
             if upper:
                 # X*U^T=B: x_j depends on l<j (left-to-right)
                 for j in range(n):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     var off_j = j * ldb
                     for l in range(j):
                         var off_l = l * ldb
-                        var alj: Scalar[dtype] = a[l + j * lda]
+                        var alj: Scalar[dtype] = a[unsafe_offset=l + j * lda]
 
                         def axpy_rtu[width: Int](i: Int) {
                             b, off_j, off_l, alj
@@ -248,7 +248,7 @@ def trsm[
 
                         vectorize[simd_width](m, axpy_rtu)
                     if no_unit:
-                        var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
+                        var inv_diag: Scalar[dtype] = 1.0 / a[unsafe_offset=j + j * lda]
 
                         def scale_rtu[width: Int](i: Int) {bj, inv_diag}:
                             bj.unsafe_store[width=width](
@@ -259,11 +259,11 @@ def trsm[
             else:
                 # X*L^T=B: x_j depends on l>j (right-to-left)
                 for j in range(n - 1, -1, -1):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     var off_j = j * ldb
                     for l in range(j + 1, n):
                         var off_l = l * ldb
-                        var alj: Scalar[dtype] = a[l + j * lda]
+                        var alj: Scalar[dtype] = a[unsafe_offset=l + j * lda]
 
                         def axpy_rtl[width: Int](i: Int) {
                             b, off_j, off_l, alj
@@ -276,7 +276,7 @@ def trsm[
 
                         vectorize[simd_width](m, axpy_rtl)
                     if no_unit:
-                        var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
+                        var inv_diag: Scalar[dtype] = 1.0 / a[unsafe_offset=j + j * lda]
 
                         def scale_rtl[width: Int](i: Int) {bj, inv_diag}:
                             bj.unsafe_store[width=width](

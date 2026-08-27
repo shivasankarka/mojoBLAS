@@ -96,7 +96,7 @@ def trmm[
     if alpha == 0:
         for j in range(n):
             for i in range(m):
-                b[i + j * ldb] = 0
+                b[unsafe_offset=i + j * ldb] = 0
         return
 
     comptime simd_width: Int = simd_width_of[dtype]()
@@ -110,11 +110,11 @@ def trmm[
         if no_trans:
             if upper:
                 for j in range(n):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     for k in range(m):
-                        if bj[k] != 0:
-                            var temp: Scalar[dtype] = alpha * bj[k]
-                            var ak = a + k * lda
+                        if bj[unsafe_offset=k] != 0:
+                            var temp: Scalar[dtype] = alpha * bj[unsafe_offset=k]
+                            var ak = a.unsafe_offset(k * lda)
 
                             def axpy_lu[width: Int](i: Int) {bj, ak, temp}:
                                 bj.unsafe_store[width=width](
@@ -125,18 +125,18 @@ def trmm[
 
                             vectorize[simd_width](k, axpy_lu)
                             if no_unit:
-                                temp = temp * a[k + k * lda]
-                            bj[k] = temp
+                                temp = temp * a[unsafe_offset=k + k * lda]
+                            bj[unsafe_offset=k] = temp
             else:
                 for j in range(n):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     for k in range(m - 1, -1, -1):
-                        if bj[k] != 0:
-                            var temp: Scalar[dtype] = alpha * bj[k]
-                            bj[k] = temp
+                        if bj[unsafe_offset=k] != 0:
+                            var temp: Scalar[dtype] = alpha * bj[unsafe_offset=k]
+                            bj[unsafe_offset=k] = temp
                             if no_unit:
-                                bj[k] = bj[k] * a[k + k * lda]
-                            var ak = a + k * lda
+                                bj[unsafe_offset=k] = bj[unsafe_offset=k] * a[unsafe_offset=k + k * lda]
+                            var ak = a.unsafe_offset(k * lda)
 
                             def axpy_ll[width: Int](i: Int) {bj, ak, temp, k}:
                                 var ii = k + 1 + i
@@ -153,14 +153,14 @@ def trmm[
 
                 @parameter
                 def trmm_lt_upper(j: Int):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     for i in range(m - 1, -1, -1):
-                        var temp: Scalar[dtype] = bj[i]
+                        var temp: Scalar[dtype] = bj[unsafe_offset=i]
                         if no_unit:
-                            temp = temp * a[i + i * lda]
+                            temp = temp * a[unsafe_offset=i + i * lda]
                         for kk in range(i):
-                            temp = temp + a[kk + i * lda] * bj[kk]
-                        bj[i] = alpha * temp
+                            temp = temp + a[unsafe_offset=kk + i * lda] * bj[unsafe_offset=kk]
+                        bj[unsafe_offset=i] = alpha * temp
 
                 if n >= PAR_THRESHOLD:
                     parallelize[trmm_lt_upper](n)
@@ -171,14 +171,14 @@ def trmm[
 
                 @parameter
                 def trmm_lt_lower(j: Int):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     for i in range(m):
-                        var temp: Scalar[dtype] = bj[i]
+                        var temp: Scalar[dtype] = bj[unsafe_offset=i]
                         if no_unit:
-                            temp = temp * a[i + i * lda]
+                            temp = temp * a[unsafe_offset=i + i * lda]
                         for kk in range(i + 1, m):
-                            temp = temp + a[kk + i * lda] * bj[kk]
-                        bj[i] = alpha * temp
+                            temp = temp + a[unsafe_offset=kk + i * lda] * bj[unsafe_offset=kk]
+                        bj[unsafe_offset=i] = alpha * temp
 
                 if n >= PAR_THRESHOLD:
                     parallelize[trmm_lt_lower](n)
@@ -192,18 +192,18 @@ def trmm[
 
                 @parameter
                 def trmm_rn_upper(j: Int):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     var temp: Scalar[dtype] = alpha
                     if no_unit:
-                        temp = temp * a[j + j * lda]
+                        temp = temp * a[unsafe_offset=j + j * lda]
 
                     def scale_bj_u[width: Int](i: Int) {bj, temp}:
                         bj.unsafe_store[width=width](i, temp * bj.unsafe_load[width=width](i))
 
                     vectorize[simd_width](m, scale_bj_u)
                     for kk in range(j):
-                        if a[kk + j * lda] != 0:
-                            temp = alpha * a[kk + j * lda]
+                        if a[unsafe_offset=kk + j * lda] != 0:
+                            temp = alpha * a[unsafe_offset=kk + j * lda]
                             var off_j = j * ldb
                             var off_k = kk * ldb
 
@@ -225,18 +225,18 @@ def trmm[
 
                 @parameter
                 def trmm_rn_lower(j: Int):
-                    var bj = b + j * ldb
+                    var bj = b.unsafe_offset(j * ldb)
                     var temp: Scalar[dtype] = alpha
                     if no_unit:
-                        temp = temp * a[j + j * lda]
+                        temp = temp * a[unsafe_offset=j + j * lda]
 
                     def scale_bj_l[width: Int](i: Int) {bj, temp}:
                         bj.unsafe_store[width=width](i, temp * bj.unsafe_load[width=width](i))
 
                     vectorize[simd_width](m, scale_bj_l)
                     for kk in range(j + 1, n):
-                        if a[kk + j * lda] != 0:
-                            temp = alpha * a[kk + j * lda]
+                        if a[unsafe_offset=kk + j * lda] != 0:
+                            temp = alpha * a[unsafe_offset=kk + j * lda]
                             var off_j = j * ldb
                             var off_k = kk * ldb
 
@@ -257,11 +257,11 @@ def trmm[
         else:
             if upper:
                 for k in range(n):
-                    var bk = b + k * ldb
+                    var bk = b.unsafe_offset(k * ldb)
                     var off_k = k * ldb
                     for j in range(k):
-                        if a[j + k * lda] != 0:
-                            var temp: Scalar[dtype] = alpha * a[j + k * lda]
+                        if a[unsafe_offset=j + k * lda] != 0:
+                            var temp: Scalar[dtype] = alpha * a[unsafe_offset=j + k * lda]
                             var off_j = j * ldb
 
                             def axpy_rtu[width: Int](i: Int) {
@@ -276,7 +276,7 @@ def trmm[
                             vectorize[simd_width](m, axpy_rtu)
                     var temp: Scalar[dtype] = alpha
                     if no_unit:
-                        temp = temp * a[k + k * lda]
+                        temp = temp * a[unsafe_offset=k + k * lda]
                     if temp != 1:
 
                         def scale_bk_u[width: Int](i: Int) {bk, temp}:
@@ -287,11 +287,11 @@ def trmm[
                         vectorize[simd_width](m, scale_bk_u)
             else:
                 for k in range(n - 1, -1, -1):
-                    var bk = b + k * ldb
+                    var bk = b.unsafe_offset(k * ldb)
                     var off_k = k * ldb
                     for j in range(k + 1, n):
-                        if a[j + k * lda] != 0:
-                            var temp: Scalar[dtype] = alpha * a[j + k * lda]
+                        if a[unsafe_offset=j + k * lda] != 0:
+                            var temp: Scalar[dtype] = alpha * a[unsafe_offset=j + k * lda]
                             var off_j = j * ldb
 
                             def axpy_rtl[width: Int](i: Int) {
@@ -306,7 +306,7 @@ def trmm[
                             vectorize[simd_width](m, axpy_rtl)
                     var temp: Scalar[dtype] = alpha
                     if no_unit:
-                        temp = temp * a[k + k * lda]
+                        temp = temp * a[unsafe_offset=k + k * lda]
                     if temp != 1:
 
                         def scale_bk_l[width: Int](i: Int) {bk, temp}:
