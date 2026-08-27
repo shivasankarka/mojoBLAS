@@ -96,7 +96,7 @@ def symv[
             else:
 
                 def scale_y[width: Int](i: Int) {y, beta}:
-                    y.store[width=width](i, beta * y.load[width=width](i))
+                    y.unsafe_store[width=width](i, beta * y.unsafe_load[width=width](i))
 
                 vectorize[simd_width](leny, scale_y)
         else:
@@ -130,11 +130,11 @@ def symv[
                     def fused_upper[
                         width: Int
                     ](i: Int) {y, mut temp2, aj, x, temp1}:
-                        var av = aj.load[width=width](i)
-                        y.store[width=width](
-                            i, y.load[width=width](i) + temp1 * av
+                        var av = aj.unsafe_load[width=width](i)
+                        y.unsafe_store[width=width](
+                            i, y.unsafe_load[width=width](i) + temp1 * av
                         )
-                        temp2 += (av * x.load[width=width](i)).reduce_add()
+                        temp2 += (av * x.unsafe_load[width=width](i)).reduce_add()
 
                     vectorize[simd_width](j, fused_upper)
                     y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
@@ -148,7 +148,7 @@ def symv[
 
                     def dot_upper_sx[width: Int](i: Int) {mut temp2, aj, x}:
                         temp2 += (
-                            aj.load[width=width](i) * x.load[width=width](i)
+                            aj.unsafe_load[width=width](i) * x.unsafe_load[width=width](i)
                         ).reduce_add()
 
                     vectorize[simd_width](j, dot_upper_sx)
@@ -181,11 +181,11 @@ def symv[
                         width: Int
                     ](i: Int) {y, mut temp2, aj, x, temp1, j}:
                         var ii = j + 1 + i
-                        var av = aj.load[width=width](ii)
-                        y.store[width=width](
-                            ii, y.load[width=width](ii) + temp1 * av
+                        var av = aj.unsafe_load[width=width](ii)
+                        y.unsafe_store[width=width](
+                            ii, y.unsafe_load[width=width](ii) + temp1 * av
                         )
-                        temp2 += (av * x.load[width=width](ii)).reduce_add()
+                        temp2 += (av * x.unsafe_load[width=width](ii)).reduce_add()
 
                     vectorize[simd_width](n - j - 1, fused_lower)
                     y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
@@ -200,7 +200,7 @@ def symv[
                     def dot_lower_sx[width: Int](i: Int) {mut temp2, aj, x, j}:
                         var ii = j + 1 + i
                         temp2 += (
-                            aj.load[width=width](ii) * x.load[width=width](ii)
+                            aj.unsafe_load[width=width](ii) * x.unsafe_load[width=width](ii)
                         ).reduce_add()
 
                     vectorize[simd_width](n - j - 1, dot_lower_sx)

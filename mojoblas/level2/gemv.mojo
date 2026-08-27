@@ -114,7 +114,7 @@ def gemv[
             else:
 
                 def closure[width: Int](i: Int) {y, beta}:
-                    y.store[width=width](i, beta * y.load[width=width](i))
+                    y.unsafe_store[width=width](i, beta * y.unsafe_load[width=width](i))
 
                 vectorize[simd_width](leny, closure)
         else:
@@ -142,10 +142,10 @@ def gemv[
                     var aj = a + j * lda
 
                     def axpy_col[width: Int](i: Int) {y, aj, temp}:
-                        y.store[width=width](
+                        y.unsafe_store[width=width](
                             i,
-                            y.load[width=width](i)
-                            + temp * aj.load[width=width](i),
+                            y.unsafe_load[width=width](i)
+                            + temp * aj.unsafe_load[width=width](i),
                         )
 
                     vectorize[simd_width](m, axpy_col)
@@ -157,10 +157,10 @@ def gemv[
                     var aj = a + j * lda
 
                     def axpy_col_sx[width: Int](i: Int) {y, aj, temp}:
-                        y.store[width=width](
+                        y.unsafe_store[width=width](
                             i,
-                            y.load[width=width](i)
-                            + temp * aj.load[width=width](i),
+                            y.unsafe_load[width=width](i)
+                            + temp * aj.unsafe_load[width=width](i),
                         )
 
                     vectorize[simd_width](m, axpy_col_sx)
@@ -186,7 +186,7 @@ def gemv[
 
                 def dot_col[width: Int](i: Int) {mut temp, aj, x}:
                     temp += (
-                        aj.load[width=width](i) * x.load[width=width](i)
+                        aj.unsafe_load[width=width](i) * x.unsafe_load[width=width](i)
                     ).reduce_add()
 
                 vectorize[simd_width](m, dot_col)

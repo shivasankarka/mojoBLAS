@@ -85,10 +85,10 @@ def rot[
                 var yc = y + start
 
                 def closure_p[width: Int](i: Int) {yc, xc, c, s}:
-                    var xv = xc.load[width=width](i)
-                    var yv = yc.load[width=width](i)
-                    xc.store[width=width](i, c * xv + s * yv)
-                    yc.store[width=width](i, -s * xv + c * yv)
+                    var xv = xc.unsafe_load[width=width](i)
+                    var yv = yc.unsafe_load[width=width](i)
+                    xc.unsafe_store[width=width](i, c * xv + s * yv)
+                    yc.unsafe_store[width=width](i, -s * xv + c * yv)
 
                 vectorize[simd_width, unroll_factor=unroll_factor](
                     length, closure_p
@@ -98,10 +98,10 @@ def rot[
             return
 
         def closure[width: Int](i: Int) {y, x, c, s}:
-            var xv = x.load[width=width](i)
-            var yv = y.load[width=width](i)
-            x.store[width=width](i, c * xv + s * yv)
-            y.store[width=width](i, -s * xv + c * yv)
+            var xv = x.unsafe_load[width=width](i)
+            var yv = y.unsafe_load[width=width](i)
+            x.unsafe_store[width=width](i, c * xv + s * yv)
+            y.unsafe_store[width=width](i, -s * xv + c * yv)
 
         vectorize[simd_width, unroll_factor=unroll_factor](n, closure)
         return

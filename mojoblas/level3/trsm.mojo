@@ -99,7 +99,7 @@ def trsm[
             var bj = b + j * ldb
 
             def scale_init[width: Int](i: Int) {bj, alpha}:
-                bj.store[width=width](i, alpha * bj.load[width=width](i))
+                bj.unsafe_store[width=width](i, alpha * bj.unsafe_load[width=width](i))
 
             vectorize[simd_width](m, scale_init)
 
@@ -121,10 +121,10 @@ def trsm[
                             var al = a + l * lda
 
                             def axpy_lu[width: Int](i: Int) {bj, al, pivot}:
-                                bj.store[width=width](
+                                bj.unsafe_store[width=width](
                                     i,
-                                    bj.load[width=width](i)
-                                    - pivot * al.load[width=width](i),
+                                    bj.unsafe_load[width=width](i)
+                                    - pivot * al.unsafe_load[width=width](i),
                                 )
 
                             vectorize[simd_width](l, axpy_lu)
@@ -140,10 +140,10 @@ def trsm[
 
                             def axpy_ll[width: Int](i: Int) {bj, al, pivot, l}:
                                 var ii = l + 1 + i
-                                bj.store[width=width](
+                                bj.unsafe_store[width=width](
                                     ii,
-                                    bj.load[width=width](ii)
-                                    - pivot * al.load[width=width](ii),
+                                    bj.unsafe_load[width=width](ii)
+                                    - pivot * al.unsafe_load[width=width](ii),
                                 )
 
                             vectorize[simd_width](m - l - 1, axpy_ll)
@@ -182,10 +182,10 @@ def trsm[
                         def axpy_ru[width: Int](i: Int) {
                             b, off_j, off_l, alj
                         }:
-                            b.store[width=width](
+                            b.unsafe_store[width=width](
                                 off_j + i,
-                                b.load[width=width](off_j + i)
-                                - alj * b.load[width=width](off_l + i),
+                                b.unsafe_load[width=width](off_j + i)
+                                - alj * b.unsafe_load[width=width](off_l + i),
                             )
 
                         vectorize[simd_width](m, axpy_ru)
@@ -193,8 +193,8 @@ def trsm[
                         var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
 
                         def scale_u[width: Int](i: Int) {bj, inv_diag}:
-                            bj.store[width=width](
-                                i, bj.load[width=width](i) * inv_diag
+                            bj.unsafe_store[width=width](
+                                i, bj.unsafe_load[width=width](i) * inv_diag
                             )
 
                         vectorize[simd_width](m, scale_u)
@@ -211,10 +211,10 @@ def trsm[
                         def axpy_rl[width: Int](i: Int) {
                             b, off_j, off_l, alj
                         }:
-                            b.store[width=width](
+                            b.unsafe_store[width=width](
                                 off_j + i,
-                                b.load[width=width](off_j + i)
-                                - alj * b.load[width=width](off_l + i),
+                                b.unsafe_load[width=width](off_j + i)
+                                - alj * b.unsafe_load[width=width](off_l + i),
                             )
 
                         vectorize[simd_width](m, axpy_rl)
@@ -222,8 +222,8 @@ def trsm[
                         var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
 
                         def scale_l[width: Int](i: Int) {bj, inv_diag}:
-                            bj.store[width=width](
-                                i, bj.load[width=width](i) * inv_diag
+                            bj.unsafe_store[width=width](
+                                i, bj.unsafe_load[width=width](i) * inv_diag
                             )
 
                         vectorize[simd_width](m, scale_l)
@@ -240,10 +240,10 @@ def trsm[
                         def axpy_rtu[width: Int](i: Int) {
                             b, off_j, off_l, alj
                         }:
-                            b.store[width=width](
+                            b.unsafe_store[width=width](
                                 off_j + i,
-                                b.load[width=width](off_j + i)
-                                - alj * b.load[width=width](off_l + i),
+                                b.unsafe_load[width=width](off_j + i)
+                                - alj * b.unsafe_load[width=width](off_l + i),
                             )
 
                         vectorize[simd_width](m, axpy_rtu)
@@ -251,8 +251,8 @@ def trsm[
                         var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
 
                         def scale_rtu[width: Int](i: Int) {bj, inv_diag}:
-                            bj.store[width=width](
-                                i, bj.load[width=width](i) * inv_diag
+                            bj.unsafe_store[width=width](
+                                i, bj.unsafe_load[width=width](i) * inv_diag
                             )
 
                         vectorize[simd_width](m, scale_rtu)
@@ -268,10 +268,10 @@ def trsm[
                         def axpy_rtl[width: Int](i: Int) {
                             b, off_j, off_l, alj
                         }:
-                            b.store[width=width](
+                            b.unsafe_store[width=width](
                                 off_j + i,
-                                b.load[width=width](off_j + i)
-                                - alj * b.load[width=width](off_l + i),
+                                b.unsafe_load[width=width](off_j + i)
+                                - alj * b.unsafe_load[width=width](off_l + i),
                             )
 
                         vectorize[simd_width](m, axpy_rtl)
@@ -279,8 +279,8 @@ def trsm[
                         var inv_diag: Scalar[dtype] = 1.0 / a[j + j * lda]
 
                         def scale_rtl[width: Int](i: Int) {bj, inv_diag}:
-                            bj.store[width=width](
-                                i, bj.load[width=width](i) * inv_diag
+                            bj.unsafe_store[width=width](
+                                i, bj.unsafe_load[width=width](i) * inv_diag
                             )
 
                         vectorize[simd_width](m, scale_rtl)

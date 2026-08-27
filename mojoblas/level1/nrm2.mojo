@@ -33,10 +33,10 @@ def _nrm2_serial[
 
     var i = 0
     while i + stride <= length:
-        var v0 = xc.load[width=simd_width](i + 0 * simd_width)
-        var v1 = xc.load[width=simd_width](i + 1 * simd_width)
-        var v2 = xc.load[width=simd_width](i + 2 * simd_width)
-        var v3 = xc.load[width=simd_width](i + 3 * simd_width)
+        var v0 = xc.unsafe_load[width=simd_width](i + 0 * simd_width)
+        var v1 = xc.unsafe_load[width=simd_width](i + 1 * simd_width)
+        var v2 = xc.unsafe_load[width=simd_width](i + 2 * simd_width)
+        var v3 = xc.unsafe_load[width=simd_width](i + 3 * simd_width)
         acc0 += v0 * v0
         acc1 += v1 * v1
         acc2 += v2 * v2
@@ -44,7 +44,7 @@ def _nrm2_serial[
         i += stride
 
     while i + simd_width <= length:
-        var v = xc.load[width=simd_width](i)
+        var v = xc.unsafe_load[width=simd_width](i)
         acc0 += v * v
         i += simd_width
 
@@ -86,7 +86,7 @@ def nrm2[
     Returns:
         The Euclidean norm as a scalar value.
     """
-    result: Scalar[dtype] = 0
+    var result: Scalar[dtype] = 0
     if n <= 0:
         return result
 
@@ -113,7 +113,7 @@ def nrm2[
             parallelize[worker](n_threads)
             for i in range(n_threads):
                 result += partials[i]
-            partials.free()
+            partials.unsafe_free()
             return sqrt(result)
 
         return sqrt(_nrm2_serial[dtype, simd_width, n_acc](x, n))

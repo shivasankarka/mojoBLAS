@@ -137,11 +137,11 @@ def syr2k[
                         def rank2k_upper[
                             width: Int
                         ](i: Int) {cj, al, bl, temp1, temp2}:
-                            cj.store[width=width](
+                            cj.unsafe_store[width=width](
                                 i,
-                                cj.load[width=width](i)
-                                + temp1 * bl.load[width=width](i)
-                                + temp2 * al.load[width=width](i),
+                                cj.unsafe_load[width=width](i)
+                                + temp1 * bl.unsafe_load[width=width](i)
+                                + temp2 * al.unsafe_load[width=width](i),
                             )
 
                         vectorize[simd_width](j + 1, rank2k_upper)
@@ -159,11 +159,11 @@ def syr2k[
                             width: Int
                         ](i: Int) {cj, al, bl, temp1, temp2, j}:
                             var ii = j + i
-                            cj.store[width=width](
+                            cj.unsafe_store[width=width](
                                 ii,
-                                cj.load[width=width](ii)
-                                + temp1 * bl.load[width=width](ii)
-                                + temp2 * al.load[width=width](ii),
+                                cj.unsafe_load[width=width](ii)
+                                + temp1 * bl.unsafe_load[width=width](ii)
+                                + temp2 * al.unsafe_load[width=width](ii),
                             )
 
                         vectorize[simd_width](n - j, rank2k_lower)

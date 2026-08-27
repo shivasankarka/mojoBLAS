@@ -101,11 +101,11 @@ def syr2[
                     def rank2_upper[
                         width: Int
                     ](i: Int) {aj, x, y, temp1, temp2}:
-                        aj.store[width=width](
+                        aj.unsafe_store[width=width](
                             i,
-                            aj.load[width=width](i)
-                            + x.load[width=width](i) * temp1
-                            + y.load[width=width](i) * temp2,
+                            aj.unsafe_load[width=width](i)
+                            + x.unsafe_load[width=width](i) * temp1
+                            + y.unsafe_load[width=width](i) * temp2,
                         )
 
                     vectorize[simd_width](j + 1, rank2_upper)
@@ -140,11 +140,11 @@ def syr2[
                         width: Int
                     ](i: Int) {aj, x, y, temp1, temp2, j}:
                         var ii = j + i
-                        aj.store[width=width](
+                        aj.unsafe_store[width=width](
                             ii,
-                            aj.load[width=width](ii)
-                            + x.load[width=width](ii) * temp1
-                            + y.load[width=width](ii) * temp2,
+                            aj.unsafe_load[width=width](ii)
+                            + x.unsafe_load[width=width](ii) * temp1
+                            + y.unsafe_load[width=width](ii) * temp2,
                         )
 
                     vectorize[simd_width](n - j, rank2_lower)

@@ -225,7 +225,7 @@ def _gemm_naive[
                 var cj = c + j * ldc
 
                 def zero_col[width: Int](i: Int) {cj}:
-                    cj.store[width=width](i, SIMD[dtype, width](0))
+                    cj.unsafe_store[width=width](i, SIMD[dtype, width](0))
 
                 vectorize[simd_width](m, zero_col)
         elif beta != 1:
@@ -233,7 +233,7 @@ def _gemm_naive[
                 var cj = c + j * ldc
 
                 def scale_col[width: Int](i: Int) {cj, beta}:
-                    cj.store[width=width](i, beta * cj.load[width=width](i))
+                    cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
 
                 vectorize[simd_width](m, scale_col)
         return
@@ -252,13 +252,13 @@ def _gemm_naive[
                 if beta == 0:
 
                     def zero_nn[width: Int](i: Int) {cj}:
-                        cj.store[width=width](i, SIMD[dtype, width](0))
+                        cj.unsafe_store[width=width](i, SIMD[dtype, width](0))
 
                     vectorize[simd_width](m, zero_nn)
                 elif beta != 1:
 
                     def scale_nn[width: Int](i: Int) {cj, beta}:
-                        cj.store[width=width](i, beta * cj.load[width=width](i))
+                        cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
 
                     vectorize[simd_width](m, scale_nn)
                 for l in range(k):
@@ -267,10 +267,10 @@ def _gemm_naive[
                         var al = a + l * lda
 
                         def axpy_nn[width: Int](i: Int) {cj, al, temp}:
-                            cj.store[width=width](
+                            cj.unsafe_store[width=width](
                                 i,
-                                cj.load[width=width](i)
-                                + temp * al.load[width=width](i),
+                                cj.unsafe_load[width=width](i)
+                                + temp * al.unsafe_load[width=width](i),
                             )
 
                         vectorize[simd_width](m, axpy_nn)
@@ -288,13 +288,13 @@ def _gemm_naive[
                 if beta == 0:
 
                     def zero_nt[width: Int](i: Int) {cj}:
-                        cj.store[width=width](i, SIMD[dtype, width](0))
+                        cj.unsafe_store[width=width](i, SIMD[dtype, width](0))
 
                     vectorize[simd_width](m, zero_nt)
                 elif beta != 1:
 
                     def scale_nt[width: Int](i: Int) {cj, beta}:
-                        cj.store[width=width](i, beta * cj.load[width=width](i))
+                        cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
 
                     vectorize[simd_width](m, scale_nt)
                 for l in range(k):
@@ -303,10 +303,10 @@ def _gemm_naive[
                         var al = a + l * lda
 
                         def axpy_nt[width: Int](i: Int) {cj, al, temp}:
-                            cj.store[width=width](
+                            cj.unsafe_store[width=width](
                                 i,
-                                cj.load[width=width](i)
-                                + temp * al.load[width=width](i),
+                                cj.unsafe_load[width=width](i)
+                                + temp * al.unsafe_load[width=width](i),
                             )
 
                         vectorize[simd_width](m, axpy_nt)
@@ -325,13 +325,13 @@ def _gemm_naive[
                 if beta == 0:
 
                     def zero_tn[width: Int](i: Int) {cj}:
-                        cj.store[width=width](i, SIMD[dtype, width](0))
+                        cj.unsafe_store[width=width](i, SIMD[dtype, width](0))
 
                     vectorize[simd_width](m, zero_tn)
                 elif beta != 1:
 
                     def scale_tn[width: Int](i: Int) {cj, beta}:
-                        cj.store[width=width](i, beta * cj.load[width=width](i))
+                        cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
 
                     vectorize[simd_width](m, scale_tn)
                 for l in range(k):
@@ -354,13 +354,13 @@ def _gemm_naive[
                 if beta == 0:
 
                     def zero_tt[width: Int](i: Int) {cj}:
-                        cj.store[width=width](i, SIMD[dtype, width](0))
+                        cj.unsafe_store[width=width](i, SIMD[dtype, width](0))
 
                     vectorize[simd_width](m, zero_tt)
                 elif beta != 1:
 
                     def scale_tt[width: Int](i: Int) {cj, beta}:
-                        cj.store[width=width](i, beta * cj.load[width=width](i))
+                        cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
 
                     vectorize[simd_width](m, scale_tt)
                 for l in range(k):
@@ -466,7 +466,7 @@ def gemm_v3[
             var cj = c + j * ldc
 
             def zero_v3[width: Int](i: Int) {cj}:
-                cj.store[width=width](i, SIMD[dtype, width](0))
+                cj.unsafe_store[width=width](i, SIMD[dtype, width](0))
 
             vectorize[simd_width_of[dtype]()](m, zero_v3)
     elif beta != 1:
@@ -474,7 +474,7 @@ def gemm_v3[
             var cj = c + j * ldc
 
             def scale_v3[width: Int](i: Int) {cj, beta}:
-                cj.store[width=width](i, beta * cj.load[width=width](i))
+                cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
 
             vectorize[simd_width_of[dtype]()](m, scale_v3)
 
@@ -511,7 +511,7 @@ def gemm_v3[
                 var acc7 = SIMD[dtype, MR](0)
 
                 for l in range(klen):
-                    var av = alpha * (a + (k0 + l) * lda + ir).load[width=MR]()
+                    var av = alpha * (a + (k0 + l) * lda + ir).unsafe_load[width=MR]()
                     acc0 = av * b_pack[l * NR + 0] + acc0
                     acc1 = av * b_pack[l * NR + 1] + acc1
                     acc2 = av * b_pack[l * NR + 2] + acc2
@@ -522,28 +522,28 @@ def gemm_v3[
                     acc7 = av * b_pack[l * NR + 7] + acc7
 
                 var cp0 = c + (j0 + 0) * ldc + ir
-                cp0.store[width=MR](acc0 + cp0.load[width=MR]())
+                cp0.unsafe_store[width=MR](acc0 + cp0.unsafe_load[width=MR]())
                 if jlen > 1:
                     var cp1 = c + (j0 + 1) * ldc + ir
-                    cp1.store[width=MR](acc1 + cp1.load[width=MR]())
+                    cp1.unsafe_store[width=MR](acc1 + cp1.unsafe_load[width=MR]())
                 if jlen > 2:
                     var cp2 = c + (j0 + 2) * ldc + ir
-                    cp2.store[width=MR](acc2 + cp2.load[width=MR]())
+                    cp2.unsafe_store[width=MR](acc2 + cp2.unsafe_load[width=MR]())
                 if jlen > 3:
                     var cp3 = c + (j0 + 3) * ldc + ir
-                    cp3.store[width=MR](acc3 + cp3.load[width=MR]())
+                    cp3.unsafe_store[width=MR](acc3 + cp3.unsafe_load[width=MR]())
                 if jlen > 4:
                     var cp4 = c + (j0 + 4) * ldc + ir
-                    cp4.store[width=MR](acc4 + cp4.load[width=MR]())
+                    cp4.unsafe_store[width=MR](acc4 + cp4.unsafe_load[width=MR]())
                 if jlen > 5:
                     var cp5 = c + (j0 + 5) * ldc + ir
-                    cp5.store[width=MR](acc5 + cp5.load[width=MR]())
+                    cp5.unsafe_store[width=MR](acc5 + cp5.unsafe_load[width=MR]())
                 if jlen > 6:
                     var cp6 = c + (j0 + 6) * ldc + ir
-                    cp6.store[width=MR](acc6 + cp6.load[width=MR]())
+                    cp6.unsafe_store[width=MR](acc6 + cp6.unsafe_load[width=MR]())
                 if jlen > 7:
                     var cp7 = c + (j0 + 7) * ldc + ir
-                    cp7.store[width=MR](acc7 + cp7.load[width=MR]())
+                    cp7.unsafe_store[width=MR](acc7 + cp7.unsafe_load[width=MR]())
                 ir += MR
 
             while ir < m:
@@ -650,7 +650,7 @@ def gemm_v6[
             var cj = c + j * ldc
 
             def zero_v6[width: Int](i: Int) {cj}:
-                cj.store[width=width](i, SIMD[dtype, width](0))
+                cj.unsafe_store[width=width](i, SIMD[dtype, width](0))
 
             vectorize[MR](m, zero_v6)
     elif beta != 1:
@@ -658,7 +658,7 @@ def gemm_v6[
             var cj = c + j * ldc
 
             def scale_v6[width: Int](i: Int) {cj, beta}:
-                cj.store[width=width](i, beta * cj.load[width=width](i))
+                cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
 
             vectorize[MR](m, scale_v6)
 
@@ -677,9 +677,9 @@ def gemm_v6[
                 var row_count = min(MR, mc_len - ir)
                 for l in range(klen):
                     if row_count == MR:
-                        (a_pack + ir * TK + l * MR).store[width=MR](
+                        (a_pack + ir * TK + l * MR).unsafe_store[width=MR](
                             alpha
-                            * (a + (k0 + l) * lda + mc0 + ir).load[width=MR]()
+                            * (a + (k0 + l) * lda + mc0 + ir).unsafe_load[width=MR]()
                         )
                     else:
                         for rr in range(row_count):
@@ -724,7 +724,7 @@ def gemm_v6[
 
                     for l in range(klen):
                         var av = (
-                            alpha * (a_pack + ir * TK + l * MR).load[width=MR]()
+                            alpha * (a_pack + ir * TK + l * MR).unsafe_load[width=MR]()
                         )
                         acc0 = av * b_pack[l * NR + 0] + acc0
                         acc1 = av * b_pack[l * NR + 1] + acc1
@@ -745,52 +745,52 @@ def gemm_v6[
 
                     var row = mc0 + ir
                     var cp0 = c + (j0 + 0) * ldc + row
-                    cp0.store[width=MR](acc0 + cp0.load[width=MR]())
+                    cp0.unsafe_store[width=MR](acc0 + cp0.unsafe_load[width=MR]())
                     if jlen > 1:
                         var p = c + (j0 + 1) * ldc + row
-                        p.store[width=MR](acc1 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc1 + p.unsafe_load[width=MR]())
                     if jlen > 2:
                         var p = c + (j0 + 2) * ldc + row
-                        p.store[width=MR](acc2 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc2 + p.unsafe_load[width=MR]())
                     if jlen > 3:
                         var p = c + (j0 + 3) * ldc + row
-                        p.store[width=MR](acc3 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc3 + p.unsafe_load[width=MR]())
                     if jlen > 4:
                         var p = c + (j0 + 4) * ldc + row
-                        p.store[width=MR](acc4 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc4 + p.unsafe_load[width=MR]())
                     if jlen > 5:
                         var p = c + (j0 + 5) * ldc + row
-                        p.store[width=MR](acc5 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc5 + p.unsafe_load[width=MR]())
                     if jlen > 6:
                         var p = c + (j0 + 6) * ldc + row
-                        p.store[width=MR](acc6 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc6 + p.unsafe_load[width=MR]())
                     if jlen > 7:
                         var p = c + (j0 + 7) * ldc + row
-                        p.store[width=MR](acc7 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc7 + p.unsafe_load[width=MR]())
                     if jlen > 8:
                         var p = c + (j0 + 8) * ldc + row
-                        p.store[width=MR](acc8 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc8 + p.unsafe_load[width=MR]())
                     if jlen > 9:
                         var p = c + (j0 + 9) * ldc + row
-                        p.store[width=MR](acc9 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc9 + p.unsafe_load[width=MR]())
                     if jlen > 10:
                         var p = c + (j0 + 10) * ldc + row
-                        p.store[width=MR](acc10 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc10 + p.unsafe_load[width=MR]())
                     if jlen > 11:
                         var p = c + (j0 + 11) * ldc + row
-                        p.store[width=MR](acc11 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc11 + p.unsafe_load[width=MR]())
                     if jlen > 12:
                         var p = c + (j0 + 12) * ldc + row
-                        p.store[width=MR](acc12 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc12 + p.unsafe_load[width=MR]())
                     if jlen > 13:
                         var p = c + (j0 + 13) * ldc + row
-                        p.store[width=MR](acc13 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc13 + p.unsafe_load[width=MR]())
                     if jlen > 14:
                         var p = c + (j0 + 14) * ldc + row
-                        p.store[width=MR](acc14 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc14 + p.unsafe_load[width=MR]())
                     if jlen > 15:
                         var p = c + (j0 + 15) * ldc + row
-                        p.store[width=MR](acc15 + p.load[width=MR]())
+                        p.unsafe_store[width=MR](acc15 + p.unsafe_load[width=MR]())
                     ir += MR
 
                 while ir < mc_len:
@@ -808,7 +808,7 @@ def gemm_v6[
                 for jg in range(n_groups_v6):
                     col_group_v6(jg)
 
-    a_pack.free()
+    a_pack.unsafe_free()
 
 
 comptime _V7_NR: Int = GEMM_V7_NR
@@ -899,7 +899,7 @@ def gemm_v7[
             var cj = c + j * ldc
 
             def zero_v7[width: Int](i: Int) {cj}:
-                cj.store[width=width](i, SIMD[dtype, width](0))
+                cj.unsafe_store[width=width](i, SIMD[dtype, width](0))
 
             vectorize[MR](m, zero_v7)
     elif beta != 1:
@@ -907,7 +907,7 @@ def gemm_v7[
             var cj = c + j * ldc
 
             def scale_v7[width: Int](i: Int) {cj, beta}:
-                cj.store[width=width](i, beta * cj.load[width=width](i))
+                cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
 
             vectorize[MR](m, scale_v7)
 
@@ -926,8 +926,8 @@ def gemm_v7[
                 var row_count = min(MR, mc_len - ir)
                 for l in range(klen):
                     if row_count == MR:
-                        (a_pack + ir * TK + l * MR).store[width=MR](
-                            (a + (k0 + l) * lda + mc0 + ir).load[width=MR]()
+                        (a_pack + ir * TK + l * MR).unsafe_store[width=MR](
+                            (a + (k0 + l) * lda + mc0 + ir).unsafe_load[width=MR]()
                         )
                     else:
                         for rr in range(row_count):
@@ -972,7 +972,7 @@ def gemm_v7[
                         var acc15 = SIMD[dtype, MR](0)
 
                         for l in range(klen):
-                            var av = (a_pack + ir * TK + l * MR).load[
+                            var av = (a_pack + ir * TK + l * MR).unsafe_load[
                                 width=MR
                             ]()
                             acc0 = av * b_pack[l * NR + 0] + acc0
@@ -994,37 +994,37 @@ def gemm_v7[
 
                         var row = mc0 + ir
                         var p0 = c + (j0 + 0) * ldc + row
-                        p0.store[width=MR](acc0 + p0.load[width=MR]())
+                        p0.unsafe_store[width=MR](acc0 + p0.unsafe_load[width=MR]())
                         var p1 = c + (j0 + 1) * ldc + row
-                        p1.store[width=MR](acc1 + p1.load[width=MR]())
+                        p1.unsafe_store[width=MR](acc1 + p1.unsafe_load[width=MR]())
                         var p2 = c + (j0 + 2) * ldc + row
-                        p2.store[width=MR](acc2 + p2.load[width=MR]())
+                        p2.unsafe_store[width=MR](acc2 + p2.unsafe_load[width=MR]())
                         var p3 = c + (j0 + 3) * ldc + row
-                        p3.store[width=MR](acc3 + p3.load[width=MR]())
+                        p3.unsafe_store[width=MR](acc3 + p3.unsafe_load[width=MR]())
                         var p4 = c + (j0 + 4) * ldc + row
-                        p4.store[width=MR](acc4 + p4.load[width=MR]())
+                        p4.unsafe_store[width=MR](acc4 + p4.unsafe_load[width=MR]())
                         var p5 = c + (j0 + 5) * ldc + row
-                        p5.store[width=MR](acc5 + p5.load[width=MR]())
+                        p5.unsafe_store[width=MR](acc5 + p5.unsafe_load[width=MR]())
                         var p6 = c + (j0 + 6) * ldc + row
-                        p6.store[width=MR](acc6 + p6.load[width=MR]())
+                        p6.unsafe_store[width=MR](acc6 + p6.unsafe_load[width=MR]())
                         var p7 = c + (j0 + 7) * ldc + row
-                        p7.store[width=MR](acc7 + p7.load[width=MR]())
+                        p7.unsafe_store[width=MR](acc7 + p7.unsafe_load[width=MR]())
                         var p8 = c + (j0 + 8) * ldc + row
-                        p8.store[width=MR](acc8 + p8.load[width=MR]())
+                        p8.unsafe_store[width=MR](acc8 + p8.unsafe_load[width=MR]())
                         var p9 = c + (j0 + 9) * ldc + row
-                        p9.store[width=MR](acc9 + p9.load[width=MR]())
+                        p9.unsafe_store[width=MR](acc9 + p9.unsafe_load[width=MR]())
                         var p10 = c + (j0 + 10) * ldc + row
-                        p10.store[width=MR](acc10 + p10.load[width=MR]())
+                        p10.unsafe_store[width=MR](acc10 + p10.unsafe_load[width=MR]())
                         var p11 = c + (j0 + 11) * ldc + row
-                        p11.store[width=MR](acc11 + p11.load[width=MR]())
+                        p11.unsafe_store[width=MR](acc11 + p11.unsafe_load[width=MR]())
                         var p12 = c + (j0 + 12) * ldc + row
-                        p12.store[width=MR](acc12 + p12.load[width=MR]())
+                        p12.unsafe_store[width=MR](acc12 + p12.unsafe_load[width=MR]())
                         var p13 = c + (j0 + 13) * ldc + row
-                        p13.store[width=MR](acc13 + p13.load[width=MR]())
+                        p13.unsafe_store[width=MR](acc13 + p13.unsafe_load[width=MR]())
                         var p14 = c + (j0 + 14) * ldc + row
-                        p14.store[width=MR](acc14 + p14.load[width=MR]())
+                        p14.unsafe_store[width=MR](acc14 + p14.unsafe_load[width=MR]())
                         var p15 = c + (j0 + 15) * ldc + row
-                        p15.store[width=MR](acc15 + p15.load[width=MR]())
+                        p15.unsafe_store[width=MR](acc15 + p15.unsafe_load[width=MR]())
                         ir += MR
                 else:
                     while ir + MR <= mc_len:
@@ -1046,7 +1046,7 @@ def gemm_v7[
                         var acc15 = SIMD[dtype, MR](0)
 
                         for l in range(klen):
-                            var av = (a_pack + ir * TK + l * MR).load[
+                            var av = (a_pack + ir * TK + l * MR).unsafe_load[
                                 width=MR
                             ]()
                             acc0 = av * b_pack[l * NR + 0] + acc0
@@ -1068,52 +1068,52 @@ def gemm_v7[
 
                         var row = mc0 + ir
                         var cp0 = c + (j0 + 0) * ldc + row
-                        cp0.store[width=MR](acc0 + cp0.load[width=MR]())
+                        cp0.unsafe_store[width=MR](acc0 + cp0.unsafe_load[width=MR]())
                         if jlen > 1:
                             var p = c + (j0 + 1) * ldc + row
-                            p.store[width=MR](acc1 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc1 + p.unsafe_load[width=MR]())
                         if jlen > 2:
                             var p = c + (j0 + 2) * ldc + row
-                            p.store[width=MR](acc2 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc2 + p.unsafe_load[width=MR]())
                         if jlen > 3:
                             var p = c + (j0 + 3) * ldc + row
-                            p.store[width=MR](acc3 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc3 + p.unsafe_load[width=MR]())
                         if jlen > 4:
                             var p = c + (j0 + 4) * ldc + row
-                            p.store[width=MR](acc4 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc4 + p.unsafe_load[width=MR]())
                         if jlen > 5:
                             var p = c + (j0 + 5) * ldc + row
-                            p.store[width=MR](acc5 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc5 + p.unsafe_load[width=MR]())
                         if jlen > 6:
                             var p = c + (j0 + 6) * ldc + row
-                            p.store[width=MR](acc6 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc6 + p.unsafe_load[width=MR]())
                         if jlen > 7:
                             var p = c + (j0 + 7) * ldc + row
-                            p.store[width=MR](acc7 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc7 + p.unsafe_load[width=MR]())
                         if jlen > 8:
                             var p = c + (j0 + 8) * ldc + row
-                            p.store[width=MR](acc8 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc8 + p.unsafe_load[width=MR]())
                         if jlen > 9:
                             var p = c + (j0 + 9) * ldc + row
-                            p.store[width=MR](acc9 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc9 + p.unsafe_load[width=MR]())
                         if jlen > 10:
                             var p = c + (j0 + 10) * ldc + row
-                            p.store[width=MR](acc10 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc10 + p.unsafe_load[width=MR]())
                         if jlen > 11:
                             var p = c + (j0 + 11) * ldc + row
-                            p.store[width=MR](acc11 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc11 + p.unsafe_load[width=MR]())
                         if jlen > 12:
                             var p = c + (j0 + 12) * ldc + row
-                            p.store[width=MR](acc12 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc12 + p.unsafe_load[width=MR]())
                         if jlen > 13:
                             var p = c + (j0 + 13) * ldc + row
-                            p.store[width=MR](acc13 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc13 + p.unsafe_load[width=MR]())
                         if jlen > 14:
                             var p = c + (j0 + 14) * ldc + row
-                            p.store[width=MR](acc14 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc14 + p.unsafe_load[width=MR]())
                         if jlen > 15:
                             var p = c + (j0 + 15) * ldc + row
-                            p.store[width=MR](acc15 + p.load[width=MR]())
+                            p.unsafe_store[width=MR](acc15 + p.unsafe_load[width=MR]())
                         ir += MR
 
                 while ir < mc_len:
@@ -1131,7 +1131,7 @@ def gemm_v7[
                 for jg in range(n_groups_v7):
                     col_group_v7(jg)
 
-    a_pack.free()
+    a_pack.unsafe_free()
 
 
 # ── AMX helpers (inline assembly, Apple M1/M2 only) ──────────────────────────
@@ -1332,7 +1332,7 @@ def gemm_v8[
             var cj = c + j * ldc
 
             def zero_v8[width: Int](i: Int) {cj}:
-                cj.store[width=width](i, SIMD[dtype, width](0))
+                cj.unsafe_store[width=width](i, SIMD[dtype, width](0))
 
             vectorize[MR](m, zero_v8)
     elif beta != 1:
@@ -1340,7 +1340,7 @@ def gemm_v8[
             var cj = c + j * ldc
 
             def scale_v8[width: Int](i: Int) {cj, beta}:
-                cj.store[width=width](i, beta * cj.load[width=width](i))
+                cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
 
             vectorize[MR](m, scale_v8)
 
@@ -1444,7 +1444,7 @@ def gemm_v8[
                 for jg in range(n_groups_v8):
                     col_group_v8(jg)
 
-    a_pack.free()
+    a_pack.unsafe_free()
 
 
 # ── gemm_v9: AMX f32, 4-Z-tile micro-kernel, direct C writeback ───────────────
@@ -1543,7 +1543,7 @@ def gemm_v9[
             var cj = c + j * ldc
 
             def zero_v9[w: Int](i: Int) {cj}:
-                cj.store[width=w](i, SIMD[dtype, w](0))
+                cj.unsafe_store[width=w](i, SIMD[dtype, w](0))
 
             vectorize[SIMD_W](m, zero_v9)
     elif beta != 1:
@@ -1551,7 +1551,7 @@ def gemm_v9[
             var cj = c + j * ldc
 
             def scale_v9[w: Int](i: Int) {cj, beta}:
-                cj.store[width=w](i, beta * cj.load[width=w](i))
+                cj.unsafe_store[width=w](i, beta * cj.unsafe_load[width=w](i))
 
             vectorize[SIMD_W](m, scale_v9)
 
@@ -1652,9 +1652,9 @@ def gemm_v9[
                             var v = SIMD[dtype, SIMD_W](0)
                             comptime for lane in range(SIMD_W):
                                 v[lane] = c_tile[(base_row + lane) * TILE + col]
-                            c_col_ptr.store[width=SIMD_W](
+                            c_col_ptr.unsafe_store[width=SIMD_W](
                                 base_row,
-                                c_col_ptr.load[width=SIMD_W](base_row) + v,
+                                c_col_ptr.unsafe_load[width=SIMD_W](base_row) + v,
                             )
 
                     ir += MR
@@ -1678,9 +1678,9 @@ def gemm_v9[
                             var v = SIMD[dtype, SIMD_W](0)
                             comptime for lane in range(SIMD_W):
                                 v[lane] = c_tile[(base_row + lane) * TILE + col]
-                            c_col_ptr.store[width=SIMD_W](
+                            c_col_ptr.unsafe_store[width=SIMD_W](
                                 base_row,
-                                c_col_ptr.load[width=SIMD_W](base_row) + v,
+                                c_col_ptr.unsafe_load[width=SIMD_W](base_row) + v,
                             )
 
                     ir += TILE
@@ -1706,7 +1706,7 @@ def gemm_v9[
                 for jg in range(n_groups):
                     col_group_v9(jg)
 
-    a_pack.free()
+    a_pack.unsafe_free()
 
 
 # ── gemm_v10: AMX f32, 4-Z-tile + SIMD-transpose writeback ───────────────────
@@ -1754,14 +1754,14 @@ def _transpose_store_tile[
         comptime c0 = col_blk * SW
         comptime for row_blk in range(TILE // SW):
             comptime r0 = row_blk * SW
-            var r0v = z_buf.load[width=TILE](r0 * TILE).slice[SW, offset=c0]()
-            var r1v = z_buf.load[width=TILE]((r0 + 1) * TILE).slice[
+            var r0v = z_buf.unsafe_load[width=TILE](r0 * TILE).slice[SW, offset=c0]()
+            var r1v = z_buf.unsafe_load[width=TILE]((r0 + 1) * TILE).slice[
                 SW, offset=c0
             ]()
-            var r2v = z_buf.load[width=TILE]((r0 + 2) * TILE).slice[
+            var r2v = z_buf.unsafe_load[width=TILE]((r0 + 2) * TILE).slice[
                 SW, offset=c0
             ]()
-            var r3v = z_buf.load[width=TILE]((r0 + 3) * TILE).slice[
+            var r3v = z_buf.unsafe_load[width=TILE]((r0 + 3) * TILE).slice[
                 SW, offset=c0
             ]()
             var t0 = SIMD[dtype, SW](r0v[0], r1v[0], r2v[0], r3v[0])
@@ -1770,16 +1770,16 @@ def _transpose_store_tile[
             var t3 = SIMD[dtype, SW](r0v[3], r1v[3], r2v[3], r3v[3])
             if c0 < jlen:
                 var cp = c_col_base + c0 * ldc + r0
-                cp.store[width=SW](0, cp.load[width=SW](0) + t0)
+                cp.unsafe_store[width=SW](0, cp.unsafe_load[width=SW](0) + t0)
             if c0 + 1 < jlen:
                 var cp = c_col_base + (c0 + 1) * ldc + r0
-                cp.store[width=SW](0, cp.load[width=SW](0) + t1)
+                cp.unsafe_store[width=SW](0, cp.unsafe_load[width=SW](0) + t1)
             if c0 + 2 < jlen:
                 var cp = c_col_base + (c0 + 2) * ldc + r0
-                cp.store[width=SW](0, cp.load[width=SW](0) + t2)
+                cp.unsafe_store[width=SW](0, cp.unsafe_load[width=SW](0) + t2)
             if c0 + 3 < jlen:
                 var cp = c_col_base + (c0 + 3) * ldc + r0
-                cp.store[width=SW](0, cp.load[width=SW](0) + t3)
+                cp.unsafe_store[width=SW](0, cp.unsafe_load[width=SW](0) + t3)
 
 
 @always_inline
@@ -1802,14 +1802,14 @@ def _transpose_store_tile_set[
         comptime c0 = col_blk * SW
         comptime for row_blk in range(TILE // SW):
             comptime r0 = row_blk * SW
-            var r0v = z_buf.load[width=TILE](r0 * TILE).slice[SW, offset=c0]()
-            var r1v = z_buf.load[width=TILE]((r0 + 1) * TILE).slice[
+            var r0v = z_buf.unsafe_load[width=TILE](r0 * TILE).slice[SW, offset=c0]()
+            var r1v = z_buf.unsafe_load[width=TILE]((r0 + 1) * TILE).slice[
                 SW, offset=c0
             ]()
-            var r2v = z_buf.load[width=TILE]((r0 + 2) * TILE).slice[
+            var r2v = z_buf.unsafe_load[width=TILE]((r0 + 2) * TILE).slice[
                 SW, offset=c0
             ]()
-            var r3v = z_buf.load[width=TILE]((r0 + 3) * TILE).slice[
+            var r3v = z_buf.unsafe_load[width=TILE]((r0 + 3) * TILE).slice[
                 SW, offset=c0
             ]()
             var t0 = SIMD[dtype, SW](r0v[0], r1v[0], r2v[0], r3v[0])
@@ -1817,13 +1817,13 @@ def _transpose_store_tile_set[
             var t2 = SIMD[dtype, SW](r0v[2], r1v[2], r2v[2], r3v[2])
             var t3 = SIMD[dtype, SW](r0v[3], r1v[3], r2v[3], r3v[3])
             if c0 < jlen:
-                (c_col_base + c0 * ldc + r0).store[width=SW](0, t0)
+                (c_col_base + c0 * ldc + r0).unsafe_store[width=SW](0, t0)
             if c0 + 1 < jlen:
-                (c_col_base + (c0 + 1) * ldc + r0).store[width=SW](0, t1)
+                (c_col_base + (c0 + 1) * ldc + r0).unsafe_store[width=SW](0, t1)
             if c0 + 2 < jlen:
-                (c_col_base + (c0 + 2) * ldc + r0).store[width=SW](0, t2)
+                (c_col_base + (c0 + 2) * ldc + r0).unsafe_store[width=SW](0, t2)
             if c0 + 3 < jlen:
-                (c_col_base + (c0 + 3) * ldc + r0).store[width=SW](0, t3)
+                (c_col_base + (c0 + 3) * ldc + r0).unsafe_store[width=SW](0, t3)
 
 
 def gemm_v10[
@@ -1905,7 +1905,7 @@ def gemm_v10[
             var cj = c + j * ldc
 
             def zero_v10[w: Int](i: Int) {cj}:
-                cj.store[width=w](i, SIMD[dtype, w](0))
+                cj.unsafe_store[width=w](i, SIMD[dtype, w](0))
 
             vectorize[SIMD_W](m, zero_v10)
     elif beta != 1:
@@ -1913,7 +1913,7 @@ def gemm_v10[
             var cj = c + j * ldc
 
             def scale_v10[w: Int](i: Int) {cj, beta}:
-                cj.store[width=w](i, beta * cj.load[width=w](i))
+                cj.unsafe_store[width=w](i, beta * cj.unsafe_load[width=w](i))
 
             vectorize[SIMD_W](m, scale_v10)
 
@@ -2064,7 +2064,7 @@ def gemm_v10[
                 for jg in range(n_groups):
                     col_group_v10(jg)
 
-    a_pack.free()
+    a_pack.unsafe_free()
 
 
 # ── gemm_v11: AMX f32, 4-Z-tile with 4x k-unroll (X[0..3] × Y[0..3]) ──────────
@@ -2175,7 +2175,7 @@ def gemm_v11[
                 var cj = c + j * ldc
 
                 def zero_v11_empty[w: Int](i: Int) {cj}:
-                    cj.store[width=w](i, SIMD[dtype, w](0))
+                    cj.unsafe_store[width=w](i, SIMD[dtype, w](0))
 
                 vectorize[SIMD_W](m, zero_v11_empty)
         elif beta != 1:
@@ -2183,7 +2183,7 @@ def gemm_v11[
                 var cj = c + j * ldc
 
                 def scale_v11_empty[w: Int](i: Int) {cj, beta}:
-                    cj.store[width=w](i, beta * cj.load[width=w](i))
+                    cj.unsafe_store[width=w](i, beta * cj.unsafe_load[width=w](i))
 
                 vectorize[SIMD_W](m, scale_v11_empty)
         return
@@ -2196,7 +2196,7 @@ def gemm_v11[
             var cj = c + j * ldc
 
             def zero_v11[w: Int](i: Int) {cj}:
-                cj.store[width=w](i, SIMD[dtype, w](0))
+                cj.unsafe_store[width=w](i, SIMD[dtype, w](0))
 
             vectorize[SIMD_W](m, zero_v11)
     elif beta != 0 and beta != 1:
@@ -2204,7 +2204,7 @@ def gemm_v11[
             var cj = c + j * ldc
 
             def scale_v11[w: Int](i: Int) {cj, beta}:
-                cj.store[width=w](i, beta * cj.load[width=w](i))
+                cj.unsafe_store[width=w](i, beta * cj.unsafe_load[width=w](i))
 
             vectorize[SIMD_W](m, scale_v11)
 
@@ -2433,8 +2433,8 @@ def gemm_v11[
         else:
             row_block_v11(0)
 
-        a_panels.free()
-        b_panel.free()
+        a_panels.unsafe_free()
+        b_panel.unsafe_free()
 
 
 # ── gemm_v12: AMX f32, v11 large-kernel with NC-blocked B panel ───────────────
@@ -2511,7 +2511,7 @@ def gemm_v12[
                 var cj = c + j * ldc
 
                 def zero_v12_empty[w: Int](i: Int) {cj}:
-                    cj.store[width=w](i, SIMD[dtype, w](0))
+                    cj.unsafe_store[width=w](i, SIMD[dtype, w](0))
 
                 vectorize[SIMD_W](m, zero_v12_empty)
         elif beta != 1:
@@ -2519,7 +2519,7 @@ def gemm_v12[
                 var cj = c + j * ldc
 
                 def scale_v12_empty[w: Int](i: Int) {cj, beta}:
-                    cj.store[width=w](i, beta * cj.load[width=w](i))
+                    cj.unsafe_store[width=w](i, beta * cj.unsafe_load[width=w](i))
 
                 vectorize[SIMD_W](m, scale_v12_empty)
         return
@@ -2529,7 +2529,7 @@ def gemm_v12[
             var cj = c + j * ldc
 
             def zero_v12[w: Int](i: Int) {cj}:
-                cj.store[width=w](i, SIMD[dtype, w](0))
+                cj.unsafe_store[width=w](i, SIMD[dtype, w](0))
 
             vectorize[SIMD_W](m, zero_v12)
     elif beta != 1:
@@ -2537,7 +2537,7 @@ def gemm_v12[
             var cj = c + j * ldc
 
             def scale_v12[w: Int](i: Int) {cj, beta}:
-                cj.store[width=w](i, beta * cj.load[width=w](i))
+                cj.unsafe_store[width=w](i, beta * cj.unsafe_load[width=w](i))
 
             vectorize[SIMD_W](m, scale_v12)
 
@@ -2687,5 +2687,5 @@ def gemm_v12[
         else:
             row_block_v12(0)
 
-        a_panels.free()
-        b_panel.free()
+        a_panels.unsafe_free()
+        b_panel.unsafe_free()

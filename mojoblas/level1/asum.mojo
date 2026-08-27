@@ -14,6 +14,7 @@ Provides absolute sum operations as defined in the BLAS library standard.
 """
 
 from max.algorithm.backend.cpu import parallelize
+from std.memory.alloc import unsafe_alloc
 from std.sys.info import simd_width_of
 from ._tuning import ASUM_N_THREADS, ASUM_PAR_THRESHOLD, ASUM_N_ACC
 from mojoblas.type_aliases import BLASPtr
@@ -33,20 +34,20 @@ def _asum_serial[
 
     var i = 0
     while i + stride <= length:
-        acc0 += abs(xc.load[width=simd_width](i + 0 * simd_width))
-        acc1 += abs(xc.load[width=simd_width](i + 1 * simd_width))
-        acc2 += abs(xc.load[width=simd_width](i + 2 * simd_width))
-        acc3 += abs(xc.load[width=simd_width](i + 3 * simd_width))
+        acc0 += abs(xc.unsafe_load[width=simd_width](i + 0 * simd_width))
+        acc1 += abs(xc.unsafe_load[width=simd_width](i + 1 * simd_width))
+        acc2 += abs(xc.unsafe_load[width=simd_width](i + 2 * simd_width))
+        acc3 += abs(xc.unsafe_load[width=simd_width](i + 3 * simd_width))
         i += stride
 
     while i + simd_width <= length:
-        acc0 += abs(xc.load[width=simd_width](i))
+        acc0 += abs(xc.unsafe_load[width=simd_width](i))
         i += simd_width
 
     var result = (acc0 + acc1 + acc2 + acc3).reduce_add()
 
     while i < length:
-        result += abs(xc[i])
+        result += abs(xc[unsafe_offset=i])
         i += 1
 
     return result
@@ -90,9 +91,9 @@ def asum[
     if incx == 1:
         if n > par_threshold:
             # TODO: make partials stack allocated/SIMD since it's always small?
-            var partials = alloc[Scalar[dtype]](n_threads)
+            var partials = unsafe_alloc[Scalar[dtype]](n_threads)
             for i in range(n_threads):
-                partials[i] = 0
+                partials[unsafe_offset=i] = 0
             var chunk_size = (n + n_threads - 1) // n_threads
 
             @parameter
@@ -101,16 +102,16 @@ def asum[
                 var end = min(start + chunk_size, n)
                 var length = end - start
                 if length <= 0:
-                    partials[tid] = 0
+                    partials[unsafe_offset=tid] = 0
                     return
-                partials[tid] = _asum_serial[dtype, simd_width, n_acc](
-                    dx + start, length
-                )
+                partials[unsafe_offset=tid] = _asum_serial[
+                    dtype, simd_width, n_acc
+                ](dx.unsafe_offset(start), length)
 
             parallelize[worker](n_threads)
             for i in range(n_threads):
-                result += partials[i]
-            partials.free()
+                result += partials[unsafe_offset=i]
+            partials.unsafe_free()
             return result
 
         return _asum_serial[dtype, simd_width, n_acc](dx, n)
@@ -119,6 +120,6 @@ def asum[
     if incx < 0:
         ix = (-n + 1) * incx
     for _ in range(n):
-        result += abs(dx[ix])
+        result += abs(dx[unsafe_offset=ix])
         ix += incx
     return result

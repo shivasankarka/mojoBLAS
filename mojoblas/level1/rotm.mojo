@@ -110,10 +110,10 @@ def rotm[
                     def closure[
                         width: Int
                     ](i: Int) {xc, yc, h11, h12, h21, h22}:
-                        var xv = xc.load[width=width](i)
-                        var yv = yc.load[width=width](i)
-                        xc.store[width=width](i, h11 * xv + h12 * yv)
-                        yc.store[width=width](i, h21 * xv + h22 * yv)
+                        var xv = xc.unsafe_load[width=width](i)
+                        var yv = yc.unsafe_load[width=width](i)
+                        xc.unsafe_store[width=width](i, h11 * xv + h12 * yv)
+                        yc.unsafe_store[width=width](i, h21 * xv + h22 * yv)
 
                     vectorize[simd_width, unroll_factor=unroll_factor](
                         length, closure
@@ -123,10 +123,10 @@ def rotm[
             else:
 
                 def closure_neg[width: Int](i: Int) {x, y, h11, h12, h21, h22}:
-                    var xv = x.load[width=width](i)
-                    var yv = y.load[width=width](i)
-                    x.store[width=width](i, h11 * xv + h12 * yv)
-                    y.store[width=width](i, h21 * xv + h22 * yv)
+                    var xv = x.unsafe_load[width=width](i)
+                    var yv = y.unsafe_load[width=width](i)
+                    x.unsafe_store[width=width](i, h11 * xv + h12 * yv)
+                    y.unsafe_store[width=width](i, h21 * xv + h22 * yv)
 
                 vectorize[simd_width, unroll_factor=unroll_factor](
                     n, closure_neg
@@ -148,10 +148,10 @@ def rotm[
                     var yc = y + start
 
                     def closure[width: Int](i: Int) {xc, yc, h12, h21}:
-                        var xv = xc.load[width=width](i)
-                        var yv = yc.load[width=width](i)
-                        xc.store[width=width](i, xv + h12 * yv)
-                        yc.store[width=width](i, h21 * xv + yv)
+                        var xv = xc.unsafe_load[width=width](i)
+                        var yv = yc.unsafe_load[width=width](i)
+                        xc.unsafe_store[width=width](i, xv + h12 * yv)
+                        yc.unsafe_store[width=width](i, h21 * xv + yv)
 
                     vectorize[simd_width, unroll_factor=unroll_factor](
                         length, closure
@@ -161,10 +161,10 @@ def rotm[
             else:
 
                 def closure_zero[width: Int](i: Int) {x, y, h12, h21}:
-                    var xv = x.load[width=width](i)
-                    var yv = y.load[width=width](i)
-                    x.store[width=width](i, xv + h12 * yv)
-                    y.store[width=width](i, h21 * xv + yv)
+                    var xv = x.unsafe_load[width=width](i)
+                    var yv = y.unsafe_load[width=width](i)
+                    x.unsafe_store[width=width](i, xv + h12 * yv)
+                    y.unsafe_store[width=width](i, h21 * xv + yv)
 
                 vectorize[simd_width, unroll_factor=unroll_factor](
                     n, closure_zero
@@ -186,10 +186,10 @@ def rotm[
                     var yc = y + start
 
                     def closure[width: Int](i: Int) {xc, yc, h11, h22}:
-                        var xv = xc.load[width=width](i)
-                        var yv = yc.load[width=width](i)
-                        xc.store[width=width](i, h11 * xv + yv)
-                        yc.store[width=width](i, -xv + h22 * yv)
+                        var xv = xc.unsafe_load[width=width](i)
+                        var yv = yc.unsafe_load[width=width](i)
+                        xc.unsafe_store[width=width](i, h11 * xv + yv)
+                        yc.unsafe_store[width=width](i, -xv + h22 * yv)
 
                     vectorize[simd_width, unroll_factor=unroll_factor](
                         length, closure
@@ -199,10 +199,10 @@ def rotm[
             else:
 
                 def closure_pos[width: Int](i: Int) {x, y, h11, h22}:
-                    var xv = x.load[width=width](i)
-                    var yv = y.load[width=width](i)
-                    x.store[width=width](i, h11 * xv + yv)
-                    y.store[width=width](i, -xv + h22 * yv)
+                    var xv = x.unsafe_load[width=width](i)
+                    var yv = y.unsafe_load[width=width](i)
+                    x.unsafe_store[width=width](i, h11 * xv + yv)
+                    y.unsafe_store[width=width](i, -xv + h22 * yv)
 
                 vectorize[simd_width, unroll_factor=unroll_factor](
                     n, closure_pos

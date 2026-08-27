@@ -117,10 +117,10 @@ def trmm[
                             var ak = a + k * lda
 
                             def axpy_lu[width: Int](i: Int) {bj, ak, temp}:
-                                bj.store[width=width](
+                                bj.unsafe_store[width=width](
                                     i,
-                                    bj.load[width=width](i)
-                                    + temp * ak.load[width=width](i),
+                                    bj.unsafe_load[width=width](i)
+                                    + temp * ak.unsafe_load[width=width](i),
                                 )
 
                             vectorize[simd_width](k, axpy_lu)
@@ -140,10 +140,10 @@ def trmm[
 
                             def axpy_ll[width: Int](i: Int) {bj, ak, temp, k}:
                                 var ii = k + 1 + i
-                                bj.store[width=width](
+                                bj.unsafe_store[width=width](
                                     ii,
-                                    bj.load[width=width](ii)
-                                    + temp * ak.load[width=width](ii),
+                                    bj.unsafe_load[width=width](ii)
+                                    + temp * ak.unsafe_load[width=width](ii),
                                 )
 
                             vectorize[simd_width](m - k - 1, axpy_ll)
@@ -198,7 +198,7 @@ def trmm[
                         temp = temp * a[j + j * lda]
 
                     def scale_bj_u[width: Int](i: Int) {bj, temp}:
-                        bj.store[width=width](i, temp * bj.load[width=width](i))
+                        bj.unsafe_store[width=width](i, temp * bj.unsafe_load[width=width](i))
 
                     vectorize[simd_width](m, scale_bj_u)
                     for kk in range(j):
@@ -210,10 +210,10 @@ def trmm[
                             def axpy_ru[width: Int](i: Int) {
                                 b, off_j, off_k, temp
                             }:
-                                b.store[width=width](
+                                b.unsafe_store[width=width](
                                     off_j + i,
-                                    b.load[width=width](off_j + i)
-                                    + temp * b.load[width=width](off_k + i),
+                                    b.unsafe_load[width=width](off_j + i)
+                                    + temp * b.unsafe_load[width=width](off_k + i),
                                 )
 
                             vectorize[simd_width](m, axpy_ru)
@@ -231,7 +231,7 @@ def trmm[
                         temp = temp * a[j + j * lda]
 
                     def scale_bj_l[width: Int](i: Int) {bj, temp}:
-                        bj.store[width=width](i, temp * bj.load[width=width](i))
+                        bj.unsafe_store[width=width](i, temp * bj.unsafe_load[width=width](i))
 
                     vectorize[simd_width](m, scale_bj_l)
                     for kk in range(j + 1, n):
@@ -243,10 +243,10 @@ def trmm[
                             def axpy_rl[width: Int](i: Int) {
                                 b, off_j, off_k, temp
                             }:
-                                b.store[width=width](
+                                b.unsafe_store[width=width](
                                     off_j + i,
-                                    b.load[width=width](off_j + i)
-                                    + temp * b.load[width=width](off_k + i),
+                                    b.unsafe_load[width=width](off_j + i)
+                                    + temp * b.unsafe_load[width=width](off_k + i),
                                 )
 
                             vectorize[simd_width](m, axpy_rl)
@@ -267,10 +267,10 @@ def trmm[
                             def axpy_rtu[width: Int](i: Int) {
                                 b, off_j, off_k, temp
                             }:
-                                b.store[width=width](
+                                b.unsafe_store[width=width](
                                     off_j + i,
-                                    b.load[width=width](off_j + i)
-                                    + temp * b.load[width=width](off_k + i),
+                                    b.unsafe_load[width=width](off_j + i)
+                                    + temp * b.unsafe_load[width=width](off_k + i),
                                 )
 
                             vectorize[simd_width](m, axpy_rtu)
@@ -280,8 +280,8 @@ def trmm[
                     if temp != 1:
 
                         def scale_bk_u[width: Int](i: Int) {bk, temp}:
-                            bk.store[width=width](
-                                i, temp * bk.load[width=width](i)
+                            bk.unsafe_store[width=width](
+                                i, temp * bk.unsafe_load[width=width](i)
                             )
 
                         vectorize[simd_width](m, scale_bk_u)
@@ -297,10 +297,10 @@ def trmm[
                             def axpy_rtl[width: Int](i: Int) {
                                 b, off_j, off_k, temp
                             }:
-                                b.store[width=width](
+                                b.unsafe_store[width=width](
                                     off_j + i,
-                                    b.load[width=width](off_j + i)
-                                    + temp * b.load[width=width](off_k + i),
+                                    b.unsafe_load[width=width](off_j + i)
+                                    + temp * b.unsafe_load[width=width](off_k + i),
                                 )
 
                             vectorize[simd_width](m, axpy_rtl)
@@ -310,8 +310,8 @@ def trmm[
                     if temp != 1:
 
                         def scale_bk_l[width: Int](i: Int) {bk, temp}:
-                            bk.store[width=width](
-                                i, temp * bk.load[width=width](i)
+                            bk.unsafe_store[width=width](
+                                i, temp * bk.unsafe_load[width=width](i)
                             )
 
                         vectorize[simd_width](m, scale_bk_l)

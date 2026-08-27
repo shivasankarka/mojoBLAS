@@ -100,9 +100,9 @@ def ger[
                 var aj = a + j * lda
 
                 def axpy_col[width: Int](i: Int) {mut aj, x, temp}:
-                    aj.store[width=width](
+                    aj.unsafe_store[width=width](
                         i,
-                        aj.load[width=width](i) + x.load[width=width](i) * temp,
+                        aj.unsafe_load[width=width](i) + x.unsafe_load[width=width](i) * temp,
                     )
 
                 vectorize[simd_width](m, axpy_col)

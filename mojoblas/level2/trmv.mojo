@@ -102,10 +102,10 @@ def trmv[
                         var aj = a + j * lda
 
                         def axpy_upper[width: Int](i: Int) {x, aj, temp}:
-                            x.store[width=width](
+                            x.unsafe_store[width=width](
                                 i,
-                                x.load[width=width](i)
-                                + temp * aj.load[width=width](i),
+                                x.unsafe_load[width=width](i)
+                                + temp * aj.unsafe_load[width=width](i),
                             )
 
                         vectorize[simd_width](j, axpy_upper)
@@ -132,10 +132,10 @@ def trmv[
 
                         def axpy_lower[width: Int](i: Int) {x, aj, temp, j}:
                             var ii = j + 1 + i
-                            x.store[width=width](
+                            x.unsafe_store[width=width](
                                 ii,
-                                x.load[width=width](ii)
-                                + temp * aj.load[width=width](ii),
+                                x.unsafe_load[width=width](ii)
+                                + temp * aj.unsafe_load[width=width](ii),
                             )
 
                         vectorize[simd_width](n - j - 1, axpy_lower)
@@ -165,7 +165,7 @@ def trmv[
 
                     def dot_upper[width: Int](i: Int) {mut temp, aj, x}:
                         temp += (
-                            aj.load[width=width](i) * x.load[width=width](i)
+                            aj.unsafe_load[width=width](i) * x.unsafe_load[width=width](i)
                         ).reduce_add()
 
                     vectorize[simd_width](j, dot_upper)
@@ -193,7 +193,7 @@ def trmv[
                     def dot_lower[width: Int](i: Int) {mut temp, aj, x, j}:
                         var ii = j + 1 + i
                         temp += (
-                            aj.load[width=width](ii) * x.load[width=width](ii)
+                            aj.unsafe_load[width=width](ii) * x.unsafe_load[width=width](ii)
                         ).reduce_add()
 
                     vectorize[simd_width](n - j - 1, dot_lower)

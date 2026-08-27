@@ -75,7 +75,7 @@ def copy[
                 var yc = dy + start
 
                 def closure_p[width: Int](i: Int) {yc, xc}:
-                    yc.store[width=width](i, xc.load[width=width](i))
+                    yc.unsafe_store[width=width](i, xc.unsafe_load[width=width](i))
 
                 vectorize[simd_width, unroll_factor=unroll_factor](
                     length, closure_p
@@ -85,7 +85,7 @@ def copy[
             return
 
         def closure[width: Int](i: Int) {dy, dx}:
-            dy.store[width=width](i, dx.load[width=width](i))
+            dy.unsafe_store[width=width](i, dx.unsafe_load[width=width](i))
 
         vectorize[simd_width, unroll_factor=unroll_factor](n, closure)
         return

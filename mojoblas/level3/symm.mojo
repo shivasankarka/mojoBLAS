@@ -107,7 +107,7 @@ def symm[
             elif beta != 1:
 
                 def scale_cj[width: Int](i: Int) {cj, beta}:
-                    cj.store[width=width](i, beta * cj.load[width=width](i))
+                    cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
 
                 vectorize[simd_width](m, scale_cj)
 
@@ -121,11 +121,11 @@ def symm[
                         def fused_upper[
                             width: Int
                         ](i: Int) {cj, mut temp2, al, bj, temp1}:
-                            var av = al.load[width=width](i)
-                            cj.store[width=width](
-                                i, cj.load[width=width](i) + temp1 * av
+                            var av = al.unsafe_load[width=width](i)
+                            cj.unsafe_store[width=width](
+                                i, cj.unsafe_load[width=width](i) + temp1 * av
                             )
-                            temp2 += (av * bj.load[width=width](i)).reduce_add()
+                            temp2 += (av * bj.unsafe_load[width=width](i)).reduce_add()
 
                         vectorize[simd_width](l, fused_upper)
                         cj[l] = cj[l] + temp1 * a[l + l * lda] + alpha * temp2
@@ -140,12 +140,12 @@ def symm[
                             width: Int
                         ](i: Int) {cj, mut temp2, al, bj, temp1, l}:
                             var ii = l + 1 + i
-                            var av = al.load[width=width](ii)
-                            cj.store[width=width](
-                                ii, cj.load[width=width](ii) + temp1 * av
+                            var av = al.unsafe_load[width=width](ii)
+                            cj.unsafe_store[width=width](
+                                ii, cj.unsafe_load[width=width](ii) + temp1 * av
                             )
                             temp2 += (
-                                av * bj.load[width=width](ii)
+                                av * bj.unsafe_load[width=width](ii)
                             ).reduce_add()
 
                         vectorize[simd_width](m - l - 1, fused_lower)
@@ -168,17 +168,17 @@ def symm[
             elif beta != 1:
 
                 def scale_cj_r[width: Int](i: Int) {cj, beta}:
-                    cj.store[width=width](i, beta * cj.load[width=width](i))
+                    cj.unsafe_store[width=width](i, beta * cj.unsafe_load[width=width](i))
 
                 vectorize[simd_width](m, scale_cj_r)
 
             var temp_diag: Scalar[dtype] = alpha * a[j + j * lda]
 
             def axpy_diag[width: Int](i: Int) {cj, bj, temp_diag}:
-                cj.store[width=width](
+                cj.unsafe_store[width=width](
                     i,
-                    cj.load[width=width](i)
-                    + temp_diag * bj.load[width=width](i),
+                    cj.unsafe_load[width=width](i)
+                    + temp_diag * bj.unsafe_load[width=width](i),
                 )
 
             vectorize[simd_width](m, axpy_diag)
@@ -189,10 +189,10 @@ def symm[
                     var bk = b + k * ldb
 
                     def axpy_upper_r[width: Int](i: Int) {cj, bk, temp_k}:
-                        cj.store[width=width](
+                        cj.unsafe_store[width=width](
                             i,
-                            cj.load[width=width](i)
-                            + temp_k * bk.load[width=width](i),
+                            cj.unsafe_load[width=width](i)
+                            + temp_k * bk.unsafe_load[width=width](i),
                         )
 
                     vectorize[simd_width](m, axpy_upper_r)
@@ -201,10 +201,10 @@ def symm[
                     var bk = b + k * ldb
 
                     def axpy_upper_r2[width: Int](i: Int) {cj, bk, temp_k}:
-                        cj.store[width=width](
+                        cj.unsafe_store[width=width](
                             i,
-                            cj.load[width=width](i)
-                            + temp_k * bk.load[width=width](i),
+                            cj.unsafe_load[width=width](i)
+                            + temp_k * bk.unsafe_load[width=width](i),
                         )
 
                     vectorize[simd_width](m, axpy_upper_r2)
@@ -214,10 +214,10 @@ def symm[
                     var bk = b + k * ldb
 
                     def axpy_lower_r[width: Int](i: Int) {cj, bk, temp_k}:
-                        cj.store[width=width](
+                        cj.unsafe_store[width=width](
                             i,
-                            cj.load[width=width](i)
-                            + temp_k * bk.load[width=width](i),
+                            cj.unsafe_load[width=width](i)
+                            + temp_k * bk.unsafe_load[width=width](i),
                         )
 
                     vectorize[simd_width](m, axpy_lower_r)
@@ -226,10 +226,10 @@ def symm[
                     var bk = b + k * ldb
 
                     def axpy_lower_r2[width: Int](i: Int) {cj, bk, temp_k}:
-                        cj.store[width=width](
+                        cj.unsafe_store[width=width](
                             i,
-                            cj.load[width=width](i)
-                            + temp_k * bk.load[width=width](i),
+                            cj.unsafe_load[width=width](i)
+                            + temp_k * bk.unsafe_load[width=width](i),
                         )
 
                     vectorize[simd_width](m, axpy_lower_r2)

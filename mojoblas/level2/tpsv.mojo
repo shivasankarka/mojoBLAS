@@ -182,4 +182,4 @@ def tpsv[
         x[ix] = xbuf[i]
         ix += incx
 
-    xbuf.free()
+    xbuf.unsafe_free()

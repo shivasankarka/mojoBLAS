@@ -28,7 +28,7 @@ def _iamax_serial[
     var i = 0
 
     while i + simd_width <= length:
-        var av = abs(x.load[width=simd_width](start + i))
+        var av = abs(x.unsafe_load[width=simd_width](start + i))
         var chunk_max = av.reduce_max()
         if chunk_max > best_val:
             best_val = chunk_max
@@ -109,8 +109,8 @@ def iamax[
                 max_val = local_max[t]
                 imax = local_idx[t]
 
-        local_max.free()
-        local_idx.free()
+        local_max.unsafe_free()
+        local_idx.unsafe_free()
         return imax
 
     if incx == 1:

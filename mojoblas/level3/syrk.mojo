@@ -128,10 +128,10 @@ def syrk[
                         var al = a + l * lda
 
                         def axpy_upper[width: Int](i: Int) {cj, al, temp}:
-                            cj.store[width=width](
+                            cj.unsafe_store[width=width](
                                 i,
-                                cj.load[width=width](i)
-                                + temp * al.load[width=width](i),
+                                cj.unsafe_load[width=width](i)
+                                + temp * al.unsafe_load[width=width](i),
                             )
 
                         vectorize[simd_width](j + 1, axpy_upper)
@@ -153,10 +153,10 @@ def syrk[
 
                         def axpy_lower[width: Int](i: Int) {cj, al, temp, j}:
                             var ii = j + i
-                            cj.store[width=width](
+                            cj.unsafe_store[width=width](
                                 ii,
-                                cj.load[width=width](ii)
-                                + temp * al.load[width=width](ii),
+                                cj.unsafe_load[width=width](ii)
+                                + temp * al.unsafe_load[width=width](ii),
                             )
 
                         vectorize[simd_width](n - j, axpy_lower)

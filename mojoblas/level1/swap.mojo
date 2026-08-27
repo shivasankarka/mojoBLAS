@@ -74,9 +74,9 @@ def vswap[
                 var yc = dy + start
 
                 def closure_p[width: Int](i: Int) {xc, yc}:
-                    var temp = xc.load[width=width](i)
-                    xc.store[width=width](i, yc.load[width=width](i))
-                    yc.store[width=width](i, temp)
+                    var temp = xc.unsafe_load[width=width](i)
+                    xc.unsafe_store[width=width](i, yc.unsafe_load[width=width](i))
+                    yc.unsafe_store[width=width](i, temp)
 
                 vectorize[simd_width, unroll_factor=unroll_factor](
                     length, closure_p
@@ -86,9 +86,9 @@ def vswap[
             return
 
         def closure[width: Int](i: Int) {dx, dy}:
-            var temp = dx.load[width=width](i)
-            dx.store[width=width](i, dy.load[width=width](i))
-            dy.store[width=width](i, temp)
+            var temp = dx.unsafe_load[width=width](i)
+            dx.unsafe_store[width=width](i, dy.unsafe_load[width=width](i))
+            dy.unsafe_store[width=width](i, temp)
 
         vectorize[simd_width, unroll_factor=unroll_factor](n, closure)
         return

@@ -123,8 +123,8 @@ def tpmv[
 
         for i in range(n):
             x[i] = x_out[i]
-        x_in.free()
-        x_out.free()
+        x_in.unsafe_free()
+        x_out.unsafe_free()
         return
 
     var x_in = alloc[Scalar[dtype]](n)
@@ -165,5 +165,5 @@ def tpmv[
         x[ix] = x_out[i]
         ix += incx
 
-    x_in.free()
-    x_out.free()
+    x_in.unsafe_free()
+    x_out.unsafe_free()

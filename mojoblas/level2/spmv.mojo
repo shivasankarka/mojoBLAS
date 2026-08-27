@@ -152,5 +152,5 @@ def spmv[
         y[iy] = ybuf[i]
         iy += incy
 
-    xbuf.free()
-    ybuf.free()
+    xbuf.unsafe_free()
+    ybuf.unsafe_free()
