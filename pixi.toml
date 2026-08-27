@@ -45,7 +45,7 @@ benchmark_level2 = "mojo run -I ./ ./benchmarks/benchmark_level2.mojo"
 benchmark_level3 = "mojo run -I ./ ./benchmarks/benchmark_level3.mojo"
 
 [dependencies]
-mojo = ">=1.0.0b2,<2"
+mojo = ">=1.0.0,<2"
 
 [feature.bench.dependencies]
 openblas = ">=0.3.32,<0.4"
