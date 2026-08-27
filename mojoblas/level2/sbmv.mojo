@@ -92,19 +92,19 @@ def sbmv[
         if incy == 1:
             if beta == 0:
                 for i in range(leny):
-                    y[i] = 0
+                    y[unsafe_offset=i] = 0
             else:
                 for i in range(leny):
-                    y[i] = beta * y[i]
+                    y[unsafe_offset=i] = beta * y[unsafe_offset=i]
         else:
             var iy: Int = ky
             if beta == 0:
                 for _ in range(leny):
-                    y[iy - 1] = 0
+                    y[unsafe_offset=iy - 1] = 0
                     iy += incy
             else:
                 for _ in range(leny):
-                    y[iy - 1] = beta * y[iy - 1]
+                    y[unsafe_offset=iy - 1] = beta * y[unsafe_offset=iy - 1]
                     iy += incy
 
     if alpha == 0:
@@ -119,46 +119,46 @@ def sbmv[
     if upper:
         if incx == 1:
             for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[j]
+                var temp1: Scalar[dtype] = alpha * x[unsafe_offset=j]
                 var temp2: Scalar[dtype] = 0
                 var j_offset: Int = k - j
                 for i in range(max(0, j - k), j):
-                    y[i] = y[i] + temp1 * a[j_offset + i + j * lda]
-                    temp2 = temp2 + a[j_offset + i + j * lda] * x[i]
-                y[j] = y[j] + temp1 * a[k + j * lda] + alpha * temp2
+                    y[unsafe_offset=i] = y[unsafe_offset=i] + temp1 * a[unsafe_offset=j_offset + i + j * lda]
+                    temp2 = temp2 + a[unsafe_offset=j_offset + i + j * lda] * x[unsafe_offset=i]
+                y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * a[unsafe_offset=k + j * lda] + alpha * temp2
         else:
             var jx: Int = kx
             for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[jx - 1]
+                var temp1: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                 var temp2: Scalar[dtype] = 0
                 var ix: Int = kx + max(0, j - k) * incx
                 var j_offset: Int = k - j
                 for i in range(max(0, j - k), j):
-                    y[i] = y[i] + temp1 * a[j_offset + i + j * lda]
-                    temp2 = temp2 + a[j_offset + i + j * lda] * x[ix - 1]
+                    y[unsafe_offset=i] = y[unsafe_offset=i] + temp1 * a[unsafe_offset=j_offset + i + j * lda]
+                    temp2 = temp2 + a[unsafe_offset=j_offset + i + j * lda] * x[unsafe_offset=ix - 1]
                     ix += incx
-                y[j] = y[j] + temp1 * a[k + j * lda] + alpha * temp2
+                y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * a[unsafe_offset=k + j * lda] + alpha * temp2
                 jx += incx
     else:
         if incx == 1:
             for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[j]
+                var temp1: Scalar[dtype] = alpha * x[unsafe_offset=j]
                 var temp2: Scalar[dtype] = 0
                 for i in range(j + 1, min(n, j + k + 1)):
-                    y[i] = y[i] + temp1 * a[i - j + j * lda]
-                    temp2 = temp2 + a[i - j + j * lda] * x[i]
-                y[j] = y[j] + temp1 * a[j * lda] + alpha * temp2
+                    y[unsafe_offset=i] = y[unsafe_offset=i] + temp1 * a[unsafe_offset=i - j + j * lda]
+                    temp2 = temp2 + a[unsafe_offset=i - j + j * lda] * x[unsafe_offset=i]
+                y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * a[unsafe_offset=j * lda] + alpha * temp2
         else:
             var jx: Int = kx
             for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[jx - 1]
+                var temp1: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                 var temp2: Scalar[dtype] = 0
                 var ix: Int = jx + incx
                 for i in range(j + 1, min(n, j + k + 1)):
-                    y[i] = y[i] + temp1 * a[i - j + j * lda]
-                    temp2 = temp2 + a[i - j + j * lda] * x[ix - 1]
+                    y[unsafe_offset=i] = y[unsafe_offset=i] + temp1 * a[unsafe_offset=i - j + j * lda]
+                    temp2 = temp2 + a[unsafe_offset=i - j + j * lda] * x[unsafe_offset=ix - 1]
                     ix += incx
-                y[j] = y[j] + temp1 * a[j * lda] + alpha * temp2
+                y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * a[unsafe_offset=j * lda] + alpha * temp2
                 jx += incx
 
     return

@@ -79,9 +79,9 @@ def syr[
     if upper:
         if incx == 1:
             for j in range(n):
-                if x[j] != 0:
-                    var temp: Scalar[dtype] = alpha * x[j]
-                    var aj = a + j * lda
+                if x[unsafe_offset=j] != 0:
+                    var temp: Scalar[dtype] = alpha * x[unsafe_offset=j]
+                    var aj = a.unsafe_offset(j * lda)
 
                     def axpy_upper[width: Int](i: Int) {aj, x, temp}:
                         aj.unsafe_store[width=width](
@@ -94,19 +94,19 @@ def syr[
         else:
             var jx: Int = kx
             for j in range(n):
-                if x[jx - 1] != 0:
-                    var temp: Scalar[dtype] = alpha * x[jx - 1]
+                if x[unsafe_offset=jx - 1] != 0:
+                    var temp: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                     var ix: Int = kx
                     for i in range(j + 1):
-                        a[i + j * lda] = a[i + j * lda] + x[ix - 1] * temp
+                        a[unsafe_offset=i + j * lda] = a[unsafe_offset=i + j * lda] + x[unsafe_offset=ix - 1] * temp
                         ix += incx
                 jx += incx
     else:
         if incx == 1:
             for j in range(n):
-                if x[j] != 0:
-                    var temp: Scalar[dtype] = alpha * x[j]
-                    var aj = a + j * lda
+                if x[unsafe_offset=j] != 0:
+                    var temp: Scalar[dtype] = alpha * x[unsafe_offset=j]
+                    var aj = a.unsafe_offset(j * lda)
 
                     def axpy_lower[width: Int](i: Int) {aj, x, temp, j}:
                         var ii = j + i
@@ -120,11 +120,11 @@ def syr[
         else:
             var jx: Int = kx
             for j in range(n):
-                if x[jx - 1] != 0:
-                    var temp: Scalar[dtype] = alpha * x[jx - 1]
+                if x[unsafe_offset=jx - 1] != 0:
+                    var temp: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                     var ix: Int = jx
                     for i in range(j, n):
-                        a[i + j * lda] = a[i + j * lda] + x[ix - 1] * temp
+                        a[unsafe_offset=i + j * lda] = a[unsafe_offset=i + j * lda] + x[unsafe_offset=ix - 1] * temp
                         ix += incx
                 jx += incx
 

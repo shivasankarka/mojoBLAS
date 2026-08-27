@@ -52,38 +52,38 @@ def spr[
     if upper:
         if incx == 1:
             for j in range(n):
-                if x[j] != 0:
-                    var temp: Scalar[dtype] = alpha * x[j]
+                if x[unsafe_offset=j] != 0:
+                    var temp: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     for i in range(j + 1):
-                        ap[kk + i] = ap[kk + i] + x[i] * temp
+                        ap[unsafe_offset=kk + i] = ap[unsafe_offset=kk + i] + x[unsafe_offset=i] * temp
                 kk += j + 1
         else:
             var jx: Int = kx
             for j in range(n):
-                if x[jx] != 0:
-                    var temp: Scalar[dtype] = alpha * x[jx]
+                if x[unsafe_offset=jx] != 0:
+                    var temp: Scalar[dtype] = alpha * x[unsafe_offset=jx]
                     var ix: Int = kx
                     for k in range(kk, kk + j + 1):
-                        ap[k] = ap[k] + x[ix] * temp
+                        ap[unsafe_offset=k] = ap[unsafe_offset=k] + x[unsafe_offset=ix] * temp
                         ix += incx
                 jx += incx
                 kk += j + 1
     else:
         if incx == 1:
             for j in range(n):
-                if x[j] != 0:
-                    var temp: Scalar[dtype] = alpha * x[j]
+                if x[unsafe_offset=j] != 0:
+                    var temp: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     for i in range(j, n):
-                        ap[kk + i - j] = ap[kk + i - j] + x[i] * temp
+                        ap[unsafe_offset=kk + i - j] = ap[unsafe_offset=kk + i - j] + x[unsafe_offset=i] * temp
                 kk += n - j
         else:
             var jx: Int = kx
             for j in range(n):
-                if x[jx] != 0:
-                    var temp: Scalar[dtype] = alpha * x[jx]
+                if x[unsafe_offset=jx] != 0:
+                    var temp: Scalar[dtype] = alpha * x[unsafe_offset=jx]
                     var ix: Int = jx
                     for k in range(kk, kk + n - j):
-                        ap[k] = ap[k] + x[ix] * temp
+                        ap[unsafe_offset=k] = ap[unsafe_offset=k] + x[unsafe_offset=ix] * temp
                         ix += incx
                 jx += incx
                 kk += n - j

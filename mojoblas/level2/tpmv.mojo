@@ -14,6 +14,7 @@ Provides triangular packed matrix-vector operations as defined in the BLAS libra
 """
 
 from mojoblas.type_aliases import BLASPtr
+from std.memory.alloc import unsafe_alloc
 
 
 def tpmv[
@@ -81,10 +82,10 @@ def tpmv[
     var no_trans = trans == "N" or trans == "n"
 
     if incx == 1:
-        var x_in = alloc[Scalar[dtype]](n)
-        var x_out = alloc[Scalar[dtype]](n)
+        var x_in = unsafe_alloc[Scalar[dtype]](n)
+        var x_out = unsafe_alloc[Scalar[dtype]](n)
         for i in range(n):
-            x_in[i] = x[i]
+            x_in[unsafe_offset=i] = x[unsafe_offset=i]
 
         if no_trans:
             for i in range(n):
@@ -93,16 +94,16 @@ def tpmv[
                     for j in range(i, n):
                         var aij: Scalar[dtype] = 1 if (
                             i == j and not no_unit
-                        ) else ap[(j * (j + 1)) // 2 + i]
-                        sum = sum + aij * x_in[j]
+                        ) else ap[unsafe_offset=(j * (j + 1)) // 2 + i]
+                        sum = sum + aij * x_in[unsafe_offset=j]
                 else:
                     for j in range(i + 1):
                         var start = j * n - (j * (j - 1)) // 2
                         var aij: Scalar[dtype] = 1 if (
                             i == j and not no_unit
-                        ) else ap[start + (i - j)]
-                        sum = sum + aij * x_in[j]
-                x_out[i] = sum
+                        ) else ap[unsafe_offset=start + (i - j)]
+                        sum = sum + aij * x_in[unsafe_offset=j]
+                x_out[unsafe_offset=i] = sum
         else:
             for i in range(n):
                 var sum: Scalar[dtype] = 0
@@ -110,30 +111,30 @@ def tpmv[
                     for j in range(i + 1):
                         var aji: Scalar[dtype] = 1 if (
                             i == j and not no_unit
-                        ) else ap[(i * (i + 1)) // 2 + j]
-                        sum = sum + aji * x_in[j]
+                        ) else ap[unsafe_offset=(i * (i + 1)) // 2 + j]
+                        sum = sum + aji * x_in[unsafe_offset=j]
                 else:
                     for j in range(i, n):
                         var start = i * n - (i * (i - 1)) // 2
                         var aji: Scalar[dtype] = 1 if (
                             i == j and not no_unit
-                        ) else ap[start + (j - i)]
-                        sum = sum + aji * x_in[j]
-                x_out[i] = sum
+                        ) else ap[unsafe_offset=start + (j - i)]
+                        sum = sum + aji * x_in[unsafe_offset=j]
+                x_out[unsafe_offset=i] = sum
 
         for i in range(n):
-            x[i] = x_out[i]
+            x[unsafe_offset=i] = x_out[unsafe_offset=i]
         x_in.unsafe_free()
         x_out.unsafe_free()
         return
 
-    var x_in = alloc[Scalar[dtype]](n)
-    var x_out = alloc[Scalar[dtype]](n)
+    var x_in = unsafe_alloc[Scalar[dtype]](n)
+    var x_out = unsafe_alloc[Scalar[dtype]](n)
 
     var kx: Int = 0 if incx > 0 else (1 - n) * incx
     var ix: Int = kx
     for i in range(n):
-        x_in[i] = x[ix]
+        x_in[unsafe_offset=i] = x[unsafe_offset=ix]
         ix += incx
 
     def a_at(
@@ -145,24 +146,24 @@ def tpmv[
             if i > j:
                 return 0
             var idx = (j * (j + 1)) // 2 + i
-            return ap[idx]
+            return ap[unsafe_offset=idx]
         if i < j:
             return 0
         var start = j * n - (j * (j - 1)) // 2
-        return ap[start + (i - j)]
+        return ap[unsafe_offset=start + (i - j)]
 
     for i in range(n):
         var sum: Scalar[dtype] = 0
         for j in range(n):
             if no_trans:
-                sum = sum + a_at(i, j) * x_in[j]
+                sum = sum + a_at(i, j) * x_in[unsafe_offset=j]
             else:
-                sum = sum + a_at(j, i) * x_in[j]
-        x_out[i] = sum
+                sum = sum + a_at(j, i) * x_in[unsafe_offset=j]
+        x_out[unsafe_offset=i] = sum
 
     ix = kx
     for i in range(n):
-        x[ix] = x_out[i]
+        x[unsafe_offset=ix] = x_out[unsafe_offset=i]
         ix += incx
 
     x_in.unsafe_free()

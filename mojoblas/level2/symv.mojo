@@ -92,7 +92,7 @@ def symv[
         if incy == 1:
             if beta == 0:
                 for i in range(leny):
-                    y[i] = 0
+                    y[unsafe_offset=i] = 0
             else:
 
                 def scale_y[width: Int](i: Int) {y, beta}:
@@ -103,11 +103,11 @@ def symv[
             var iy: Int = ky
             if beta == 0:
                 for _ in range(leny):
-                    y[iy - 1] = 0
+                    y[unsafe_offset=iy - 1] = 0
                     iy += incy
             else:
                 for _ in range(leny):
-                    y[iy - 1] = beta * y[iy - 1]
+                    y[unsafe_offset=iy - 1] = beta * y[unsafe_offset=iy - 1]
                     iy += incy
 
     if alpha == 0:
@@ -122,10 +122,10 @@ def symv[
     if upper:
         if incx == 1 and incy == 1:
             for j in range(n):
-                if x[j] != 0:
-                    var temp1: Scalar[dtype] = alpha * x[j]
+                if x[unsafe_offset=j] != 0:
+                    var temp1: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     var temp2: Scalar[dtype] = 0
-                    var aj = a + j * lda
+                    var aj = a.unsafe_offset(j * lda)
 
                     def fused_upper[
                         width: Int
@@ -137,13 +137,13 @@ def symv[
                         temp2 += (av * x.unsafe_load[width=width](i)).reduce_add()
 
                     vectorize[simd_width](j, fused_upper)
-                    y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
+                    y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * a[unsafe_offset=j + j * lda] + alpha * temp2
         elif incx == 1:
             for j in range(n):
-                if x[j] != 0:
-                    var temp1: Scalar[dtype] = alpha * x[j]
+                if x[unsafe_offset=j] != 0:
+                    var temp1: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     var temp2: Scalar[dtype] = 0
-                    var aj = a + j * lda
+                    var aj = a.unsafe_offset(j * lda)
                     var iy: Int = ky
 
                     def dot_upper_sx[width: Int](i: Int) {mut temp2, aj, x}:
@@ -153,29 +153,29 @@ def symv[
 
                     vectorize[simd_width](j, dot_upper_sx)
                     for i in range(j):
-                        y[iy - 1] = y[iy - 1] + temp1 * a[i + j * lda]
+                        y[unsafe_offset=iy - 1] = y[unsafe_offset=iy - 1] + temp1 * a[unsafe_offset=i + j * lda]
                         iy += incy
-                    y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
+                    y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * a[unsafe_offset=j + j * lda] + alpha * temp2
         else:
             var jx: Int = kx
             for j in range(n):
-                if x[jx - 1] != 0:
-                    var temp1: Scalar[dtype] = alpha * x[jx - 1]
+                if x[unsafe_offset=jx - 1] != 0:
+                    var temp1: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                     var temp2: Scalar[dtype] = 0
                     var ix: Int = kx
                     for i in range(j):
-                        y[i] = y[i] + temp1 * a[i + j * lda]
-                        temp2 = temp2 + a[i + j * lda] * x[ix - 1]
+                        y[unsafe_offset=i] = y[unsafe_offset=i] + temp1 * a[unsafe_offset=i + j * lda]
+                        temp2 = temp2 + a[unsafe_offset=i + j * lda] * x[unsafe_offset=ix - 1]
                         ix += incx
-                    y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
+                    y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * a[unsafe_offset=j + j * lda] + alpha * temp2
                 jx += incx
     else:
         if incx == 1 and incy == 1:
             for j in range(n):
-                if x[j] != 0:
-                    var temp1: Scalar[dtype] = alpha * x[j]
+                if x[unsafe_offset=j] != 0:
+                    var temp1: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     var temp2: Scalar[dtype] = 0
-                    var aj = a + j * lda
+                    var aj = a.unsafe_offset(j * lda)
 
                     def fused_lower[
                         width: Int
@@ -188,13 +188,13 @@ def symv[
                         temp2 += (av * x.unsafe_load[width=width](ii)).reduce_add()
 
                     vectorize[simd_width](n - j - 1, fused_lower)
-                    y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
+                    y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * a[unsafe_offset=j + j * lda] + alpha * temp2
         elif incx == 1:
             for j in range(n):
-                if x[j] != 0:
-                    var temp1: Scalar[dtype] = alpha * x[j]
+                if x[unsafe_offset=j] != 0:
+                    var temp1: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     var temp2: Scalar[dtype] = 0
-                    var aj = a + j * lda
+                    var aj = a.unsafe_offset(j * lda)
                     var iy: Int = ky + (j + 1) * incy
 
                     def dot_lower_sx[width: Int](i: Int) {mut temp2, aj, x, j}:
@@ -205,21 +205,21 @@ def symv[
 
                     vectorize[simd_width](n - j - 1, dot_lower_sx)
                     for i in range(j + 1, n):
-                        y[iy - 1] = y[iy - 1] + temp1 * a[i + j * lda]
+                        y[unsafe_offset=iy - 1] = y[unsafe_offset=iy - 1] + temp1 * a[unsafe_offset=i + j * lda]
                         iy += incy
-                    y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
+                    y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * a[unsafe_offset=j + j * lda] + alpha * temp2
         else:
             var jx: Int = kx
             for j in range(n):
-                if x[jx - 1] != 0:
-                    var temp1: Scalar[dtype] = alpha * x[jx - 1]
+                if x[unsafe_offset=jx - 1] != 0:
+                    var temp1: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                     var temp2: Scalar[dtype] = 0
                     var ix: Int = kx
                     for i in range(j + 1, n):
-                        y[i] = y[i] + temp1 * a[i + j * lda]
-                        temp2 = temp2 + a[i + j * lda] * x[ix - 1]
+                        y[unsafe_offset=i] = y[unsafe_offset=i] + temp1 * a[unsafe_offset=i + j * lda]
+                        temp2 = temp2 + a[unsafe_offset=i + j * lda] * x[unsafe_offset=ix - 1]
                         ix += incx
-                    y[j] = y[j] + temp1 * a[j + j * lda] + alpha * temp2
+                    y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * a[unsafe_offset=j + j * lda] + alpha * temp2
                 jx += incx
 
     return

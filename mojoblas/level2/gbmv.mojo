@@ -119,19 +119,19 @@ def gbmv[
         if incy == 1:
             if beta == 0:
                 for i in range(leny):
-                    y[i] = 0
+                    y[unsafe_offset=i] = 0
             else:
                 for i in range(leny):
-                    y[i] = beta * y[i]
+                    y[unsafe_offset=i] = beta * y[unsafe_offset=i]
         else:
             var iy: Int = ky
             if beta == 0:
                 for _ in range(leny):
-                    y[iy - 1] = 0
+                    y[unsafe_offset=iy - 1] = 0
                     iy += incy
             else:
                 for _ in range(leny):
-                    y[iy - 1] = beta * y[iy - 1]
+                    y[unsafe_offset=iy - 1] = beta * y[unsafe_offset=iy - 1]
                     iy += incy
 
     if alpha == 0:
@@ -143,22 +143,22 @@ def gbmv[
         var jx: Int = kx
         if incy == 1:
             for j in range(n):
-                if x[jx - 1] != 0:
-                    var temp: Scalar[dtype] = alpha * x[jx - 1]
+                if x[unsafe_offset=jx - 1] != 0:
+                    var temp: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                     var i_start: Int = max(0, j - ku)
                     var i_end: Int = min(m, j + kl + 1)
                     for i in range(i_start, i_end):
-                        y[i] = y[i] + temp * a[ku - j + i + j * lda]
+                        y[unsafe_offset=i] = y[unsafe_offset=i] + temp * a[unsafe_offset=ku - j + i + j * lda]
                 jx += incx
         else:
             for j in range(n):
-                if x[jx - 1] != 0:
-                    var temp: Scalar[dtype] = alpha * x[jx - 1]
+                if x[unsafe_offset=jx - 1] != 0:
+                    var temp: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                     var iy: Int = ky
                     var i_start: Int = max(0, j - ku)
                     var i_end: Int = min(m, j + kl + 1)
                     for i in range(i_start, i_end):
-                        y[iy - 1] = y[iy - 1] + temp * a[ku - j + i + j * lda]
+                        y[unsafe_offset=iy - 1] = y[unsafe_offset=iy - 1] + temp * a[unsafe_offset=ku - j + i + j * lda]
                         iy += incy
                 jx += incx
     else:
@@ -169,8 +169,8 @@ def gbmv[
                 var i_start: Int = max(0, j - ku)
                 var i_end: Int = min(m, j + kl + 1)
                 for i in range(i_start, i_end):
-                    temp = temp + a[ku - j + i + j * lda] * x[i]
-                y[jy - 1] = y[jy - 1] + alpha * temp
+                    temp = temp + a[unsafe_offset=ku - j + i + j * lda] * x[unsafe_offset=i]
+                y[unsafe_offset=jy - 1] = y[unsafe_offset=jy - 1] + alpha * temp
                 jy += incy
         else:
             for j in range(n):
@@ -179,9 +179,9 @@ def gbmv[
                 var i_start: Int = max(0, j - ku)
                 var i_end: Int = min(m, j + kl + 1)
                 for i in range(i_start, i_end):
-                    temp = temp + a[ku - j + i + j * lda] * x[ix - 1]
+                    temp = temp + a[unsafe_offset=ku - j + i + j * lda] * x[unsafe_offset=ix - 1]
                     ix += incx
-                y[jy - 1] = y[jy - 1] + alpha * temp
+                y[unsafe_offset=jy - 1] = y[unsafe_offset=jy - 1] + alpha * temp
                 jy += incy
 
     return

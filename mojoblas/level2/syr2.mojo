@@ -93,10 +93,10 @@ def syr2[
     if upper:
         if incx == 1 and incy == 1:
             for j in range(n):
-                if x[j] != 0 or y[j] != 0:
-                    var temp1: Scalar[dtype] = alpha * y[j]
-                    var temp2: Scalar[dtype] = alpha * x[j]
-                    var aj = a + j * lda
+                if x[unsafe_offset=j] != 0 or y[unsafe_offset=j] != 0:
+                    var temp1: Scalar[dtype] = alpha * y[unsafe_offset=j]
+                    var temp2: Scalar[dtype] = alpha * x[unsafe_offset=j]
+                    var aj = a.unsafe_offset(j * lda)
 
                     def rank2_upper[
                         width: Int
@@ -113,16 +113,16 @@ def syr2[
             var jx: Int = kx
             var jy: Int = ky
             for j in range(n):
-                if x[jx - 1] != 0 or y[jy - 1] != 0:
-                    var temp1: Scalar[dtype] = alpha * y[jy - 1]
-                    var temp2: Scalar[dtype] = alpha * x[jx - 1]
+                if x[unsafe_offset=jx - 1] != 0 or y[unsafe_offset=jy - 1] != 0:
+                    var temp1: Scalar[dtype] = alpha * y[unsafe_offset=jy - 1]
+                    var temp2: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                     var ix: Int = kx
                     var iy: Int = ky
                     for i in range(j + 1):
-                        a[i + j * lda] = (
-                            a[i + j * lda]
-                            + x[ix - 1] * temp1
-                            + y[iy - 1] * temp2
+                        a[unsafe_offset=i + j * lda] = (
+                            a[unsafe_offset=i + j * lda]
+                            + x[unsafe_offset=ix - 1] * temp1
+                            + y[unsafe_offset=iy - 1] * temp2
                         )
                         ix += incx
                         iy += incy
@@ -131,10 +131,10 @@ def syr2[
     else:
         if incx == 1 and incy == 1:
             for j in range(n):
-                if x[j] != 0 or y[j] != 0:
-                    var temp1: Scalar[dtype] = alpha * y[j]
-                    var temp2: Scalar[dtype] = alpha * x[j]
-                    var aj = a + j * lda
+                if x[unsafe_offset=j] != 0 or y[unsafe_offset=j] != 0:
+                    var temp1: Scalar[dtype] = alpha * y[unsafe_offset=j]
+                    var temp2: Scalar[dtype] = alpha * x[unsafe_offset=j]
+                    var aj = a.unsafe_offset(j * lda)
 
                     def rank2_lower[
                         width: Int
@@ -152,16 +152,16 @@ def syr2[
             var jx: Int = kx
             var jy: Int = ky
             for j in range(n):
-                if x[jx - 1] != 0 or y[jy - 1] != 0:
-                    var temp1: Scalar[dtype] = alpha * y[jy - 1]
-                    var temp2: Scalar[dtype] = alpha * x[jx - 1]
+                if x[unsafe_offset=jx - 1] != 0 or y[unsafe_offset=jy - 1] != 0:
+                    var temp1: Scalar[dtype] = alpha * y[unsafe_offset=jy - 1]
+                    var temp2: Scalar[dtype] = alpha * x[unsafe_offset=jx - 1]
                     var ix: Int = jx
                     var iy: Int = jy
                     for i in range(j, n):
-                        a[i + j * lda] = (
-                            a[i + j * lda]
-                            + x[ix - 1] * temp1
-                            + y[iy - 1] * temp2
+                        a[unsafe_offset=i + j * lda] = (
+                            a[unsafe_offset=i + j * lda]
+                            + x[unsafe_offset=ix - 1] * temp1
+                            + y[unsafe_offset=iy - 1] * temp2
                         )
                         ix += incx
                         iy += incy

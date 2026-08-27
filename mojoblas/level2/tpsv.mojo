@@ -14,6 +14,7 @@ Provides triangular packed solve operations as defined in the BLAS library stand
 """
 
 from mojoblas.type_aliases import BLASPtr
+from std.memory.alloc import unsafe_alloc
 
 
 def tpsv[
@@ -84,47 +85,47 @@ def tpsv[
         if no_trans:
             if upper:
                 for i in range(n - 1, -1, -1):
-                    var sum: Scalar[dtype] = x[i]
+                    var sum: Scalar[dtype] = x[unsafe_offset=i]
                     for j in range(i + 1, n):
-                        sum = sum - ap[(j * (j + 1)) // 2 + i] * x[j]
+                        sum = sum - ap[unsafe_offset=(j * (j + 1)) // 2 + i] * x[unsafe_offset=j]
                     if no_unit:
-                        sum = sum / ap[(i * (i + 1)) // 2 + i]
-                    x[i] = sum
+                        sum = sum / ap[unsafe_offset=(i * (i + 1)) // 2 + i]
+                    x[unsafe_offset=i] = sum
             else:
                 for i in range(n):
-                    var sum: Scalar[dtype] = x[i]
+                    var sum: Scalar[dtype] = x[unsafe_offset=i]
                     for j in range(i):
                         var start = j * n - (j * (j - 1)) // 2
-                        sum = sum - ap[start + (i - j)] * x[j]
+                        sum = sum - ap[unsafe_offset=start + (i - j)] * x[unsafe_offset=j]
                     if no_unit:
                         var start_i = i * n - (i * (i - 1)) // 2
-                        sum = sum / ap[start_i]
-                    x[i] = sum
+                        sum = sum / ap[unsafe_offset=start_i]
+                    x[unsafe_offset=i] = sum
         else:
             if upper:
                 for i in range(n):
-                    var sum: Scalar[dtype] = x[i]
+                    var sum: Scalar[dtype] = x[unsafe_offset=i]
                     for j in range(i):
-                        sum = sum - ap[(i * (i + 1)) // 2 + j] * x[j]
+                        sum = sum - ap[unsafe_offset=(i * (i + 1)) // 2 + j] * x[unsafe_offset=j]
                     if no_unit:
-                        sum = sum / ap[(i * (i + 1)) // 2 + i]
-                    x[i] = sum
+                        sum = sum / ap[unsafe_offset=(i * (i + 1)) // 2 + i]
+                    x[unsafe_offset=i] = sum
             else:
                 for i in range(n - 1, -1, -1):
-                    var sum: Scalar[dtype] = x[i]
+                    var sum: Scalar[dtype] = x[unsafe_offset=i]
                     var start_i = i * n - (i * (i - 1)) // 2
                     for j in range(i + 1, n):
-                        sum = sum - ap[start_i + (j - i)] * x[j]
+                        sum = sum - ap[unsafe_offset=start_i + (j - i)] * x[unsafe_offset=j]
                     if no_unit:
-                        sum = sum / ap[start_i]
-                    x[i] = sum
+                        sum = sum / ap[unsafe_offset=start_i]
+                    x[unsafe_offset=i] = sum
         return
 
-    var xbuf = alloc[Scalar[dtype]](n)
+    var xbuf = unsafe_alloc[Scalar[dtype]](n)
     var kx: Int = 0 if incx > 0 else (1 - n) * incx
     var ix: Int = kx
     for i in range(n):
-        xbuf[i] = x[ix]
+        xbuf[unsafe_offset=i] = x[unsafe_offset=ix]
         ix += incx
 
     def a_at(
@@ -136,50 +137,50 @@ def tpsv[
             if i > j:
                 return 0
             var idx = (j * (j + 1)) // 2 + i
-            return ap[idx]
+            return ap[unsafe_offset=idx]
         if i < j:
             return 0
         var start = j * n - (j * (j - 1)) // 2
-        return ap[start + (i - j)]
+        return ap[unsafe_offset=start + (i - j)]
 
     if no_trans:
         if upper:
             for i in range(n - 1, -1, -1):
-                var sum: Scalar[dtype] = xbuf[i]
+                var sum: Scalar[dtype] = xbuf[unsafe_offset=i]
                 for j in range(i + 1, n):
-                    sum = sum - a_at(i, j) * xbuf[j]
+                    sum = sum - a_at(i, j) * xbuf[unsafe_offset=j]
                 if no_unit:
                     sum = sum / a_at(i, i)
-                xbuf[i] = sum
+                xbuf[unsafe_offset=i] = sum
         else:
             for i in range(n):
-                var sum: Scalar[dtype] = xbuf[i]
+                var sum: Scalar[dtype] = xbuf[unsafe_offset=i]
                 for j in range(i):
-                    sum = sum - a_at(i, j) * xbuf[j]
+                    sum = sum - a_at(i, j) * xbuf[unsafe_offset=j]
                 if no_unit:
                     sum = sum / a_at(i, i)
-                xbuf[i] = sum
+                xbuf[unsafe_offset=i] = sum
     else:
         if upper:
             for i in range(n):
-                var sum: Scalar[dtype] = xbuf[i]
+                var sum: Scalar[dtype] = xbuf[unsafe_offset=i]
                 for j in range(i):
-                    sum = sum - a_at(j, i) * xbuf[j]
+                    sum = sum - a_at(j, i) * xbuf[unsafe_offset=j]
                 if no_unit:
                     sum = sum / a_at(i, i)
-                xbuf[i] = sum
+                xbuf[unsafe_offset=i] = sum
         else:
             for i in range(n - 1, -1, -1):
-                var sum: Scalar[dtype] = xbuf[i]
+                var sum: Scalar[dtype] = xbuf[unsafe_offset=i]
                 for j in range(i + 1, n):
-                    sum = sum - a_at(j, i) * xbuf[j]
+                    sum = sum - a_at(j, i) * xbuf[unsafe_offset=j]
                 if no_unit:
                     sum = sum / a_at(i, i)
-                xbuf[i] = sum
+                xbuf[unsafe_offset=i] = sum
 
     ix = kx
     for i in range(n):
-        x[ix] = xbuf[i]
+        x[unsafe_offset=ix] = xbuf[unsafe_offset=i]
         ix += incx
 
     xbuf.unsafe_free()

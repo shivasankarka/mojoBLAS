@@ -14,6 +14,7 @@ Provides symmetric packed matrix-vector operations as defined in the BLAS librar
 """
 
 from mojoblas.type_aliases import BLASPtr
+from std.memory.alloc import unsafe_alloc
 
 
 def spmv[
@@ -80,10 +81,10 @@ def spmv[
     if incx == 1 and incy == 1:
         if beta == 0:
             for i in range(n):
-                y[i] = 0
+                y[unsafe_offset=i] = 0
         elif beta != 1:
             for i in range(n):
-                y[i] = beta * y[i]
+                y[unsafe_offset=i] = beta * y[unsafe_offset=i]
 
         if alpha == 0:
             return
@@ -91,30 +92,30 @@ def spmv[
         if upper:
             var kk: Int = 0
             for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[j]
+                var temp1: Scalar[dtype] = alpha * x[unsafe_offset=j]
                 var temp2: Scalar[dtype] = 0
                 for i in range(j):
-                    var aij = ap[kk + i]
-                    y[i] = y[i] + temp1 * aij
-                    temp2 = temp2 + aij * x[i]
-                y[j] = y[j] + temp1 * ap[kk + j] + alpha * temp2
+                    var aij = ap[unsafe_offset=kk + i]
+                    y[unsafe_offset=i] = y[unsafe_offset=i] + temp1 * aij
+                    temp2 = temp2 + aij * x[unsafe_offset=i]
+                y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * ap[unsafe_offset=kk + j] + alpha * temp2
                 kk += j + 1
         else:
             var kk: Int = 0
             for j in range(n):
-                var temp1: Scalar[dtype] = alpha * x[j]
+                var temp1: Scalar[dtype] = alpha * x[unsafe_offset=j]
                 var temp2: Scalar[dtype] = 0
-                y[j] = y[j] + temp1 * ap[kk]
+                y[unsafe_offset=j] = y[unsafe_offset=j] + temp1 * ap[unsafe_offset=kk]
                 for i in range(j + 1, n):
-                    var aij = ap[kk + i - j]
-                    y[i] = y[i] + temp1 * aij
-                    temp2 = temp2 + aij * x[i]
-                y[j] = y[j] + alpha * temp2
+                    var aij = ap[unsafe_offset=kk + i - j]
+                    y[unsafe_offset=i] = y[unsafe_offset=i] + temp1 * aij
+                    temp2 = temp2 + aij * x[unsafe_offset=i]
+                y[unsafe_offset=j] = y[unsafe_offset=j] + alpha * temp2
                 kk += n - j
         return
 
-    var xbuf = alloc[Scalar[dtype]](n)
-    var ybuf = alloc[Scalar[dtype]](n)
+    var xbuf = unsafe_alloc[Scalar[dtype]](n)
+    var ybuf = unsafe_alloc[Scalar[dtype]](n)
 
     var kx: Int = 0 if incx > 0 else (1 - n) * incx
     var ky: Int = 0 if incy > 0 else (1 - n) * incy
@@ -122,8 +123,8 @@ def spmv[
     var ix: Int = kx
     var iy: Int = ky
     for i in range(n):
-        xbuf[i] = x[ix]
-        ybuf[i] = y[iy]
+        xbuf[unsafe_offset=i] = x[unsafe_offset=ix]
+        ybuf[unsafe_offset=i] = y[unsafe_offset=iy]
         ix += incx
         iy += incy
 
@@ -137,19 +138,19 @@ def spmv[
                     ii = j
                     jj = i
                 var idx = (jj * (jj + 1)) // 2 + ii
-                sum = sum + ap[idx] * xbuf[j]
+                sum = sum + ap[unsafe_offset=idx] * xbuf[unsafe_offset=j]
             else:
                 if ii < jj:
                     ii = j
                     jj = i
                 var start = jj * n - (jj * (jj - 1)) // 2
                 var idx = start + (ii - jj)
-                sum = sum + ap[idx] * xbuf[j]
-        ybuf[i] = alpha * sum + beta * ybuf[i]
+                sum = sum + ap[unsafe_offset=idx] * xbuf[unsafe_offset=j]
+        ybuf[unsafe_offset=i] = alpha * sum + beta * ybuf[unsafe_offset=i]
 
     iy = ky
     for i in range(n):
-        y[iy] = ybuf[i]
+        y[unsafe_offset=iy] = ybuf[unsafe_offset=i]
         iy += incy
 
     xbuf.unsafe_free()

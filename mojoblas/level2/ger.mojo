@@ -95,9 +95,9 @@ def ger[
         # Both contiguous — vectorized column axpy, each j independent → parallelize
         @parameter
         def ger_col(j: Int):
-            if y[j] != 0:
-                var temp: Scalar[dtype] = alpha * y[j]
-                var aj = a + j * lda
+            if y[unsafe_offset=j] != 0:
+                var temp: Scalar[dtype] = alpha * y[unsafe_offset=j]
+                var aj = a.unsafe_offset(j * lda)
 
                 def axpy_col[width: Int](i: Int) {mut aj, x, temp}:
                     aj.unsafe_store[width=width](
@@ -116,11 +116,11 @@ def ger[
         # y contiguous, x strided — scalar inner loop, j independent → parallelize
         @parameter
         def ger_col_sx(j: Int):
-            if y[j] != 0:
-                var temp: Scalar[dtype] = alpha * y[j]
+            if y[unsafe_offset=j] != 0:
+                var temp: Scalar[dtype] = alpha * y[unsafe_offset=j]
                 var ix: Int = kx
                 for i in range(m):
-                    a[i + j * lda] = a[i + j * lda] + x[ix - 1] * temp
+                    a[unsafe_offset=i + j * lda] = a[unsafe_offset=i + j * lda] + x[unsafe_offset=ix - 1] * temp
                     ix += incx
 
         if n >= PAR_THRESHOLD:
@@ -131,11 +131,11 @@ def ger[
     else:
         var jy: Int = ky
         for j in range(n):
-            if y[jy - 1] != 0:
-                var temp: Scalar[dtype] = alpha * y[jy - 1]
+            if y[unsafe_offset=jy - 1] != 0:
+                var temp: Scalar[dtype] = alpha * y[unsafe_offset=jy - 1]
                 var ix: Int = kx
                 for i in range(m):
-                    a[i + j * lda] = a[i + j * lda] + x[ix - 1] * temp
+                    a[unsafe_offset=i + j * lda] = a[unsafe_offset=i + j * lda] + x[unsafe_offset=ix - 1] * temp
                     ix += incx
             jy += incy
 

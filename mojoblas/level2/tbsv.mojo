@@ -96,101 +96,101 @@ def tbsv[
         if upper:
             if incx == 1:
                 for j in range(n - 1, -1, -1):
-                    if x[j] != 0:
+                    if x[unsafe_offset=j] != 0:
                         if no_unit:
-                            x[j] = x[j] / a[k + j * lda]
-                        var temp: Scalar[dtype] = x[j]
+                            x[unsafe_offset=j] = x[unsafe_offset=j] / a[unsafe_offset=k + j * lda]
+                        var temp: Scalar[dtype] = x[unsafe_offset=j]
                         var i_start: Int = max(0, j - k)
                         for i in range(j - 1, i_start - 1, -1):
-                            x[i] = x[i] - temp * a[k - j + i + j * lda]
+                            x[unsafe_offset=i] = x[unsafe_offset=i] - temp * a[unsafe_offset=k - j + i + j * lda]
             else:
                 var kx_plus: Int = kx + (n - 1) * incx
                 var jx: Int = kx_plus
                 for j in range(n - 1, -1, -1):
                     jx -= incx
-                    if x[jx - 1] != 0:
+                    if x[unsafe_offset=jx - 1] != 0:
                         if no_unit:
-                            x[jx - 1] = x[jx - 1] / a[k + j * lda]
-                        var temp: Scalar[dtype] = x[jx - 1]
+                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] / a[unsafe_offset=k + j * lda]
+                        var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                         var ix: Int = jx
                         var i_start: Int = max(0, j - k)
                         for i in range(j - 1, i_start - 1, -1):
                             ix -= incx
-                            x[ix - 1] = (
-                                x[ix - 1] - temp * a[k - j + i + j * lda]
+                            x[unsafe_offset=ix - 1] = (
+                                x[unsafe_offset=ix - 1] - temp * a[unsafe_offset=k - j + i + j * lda]
                             )
         else:
             if incx == 1:
                 for j in range(n):
-                    if x[j] != 0:
+                    if x[unsafe_offset=j] != 0:
                         if no_unit:
-                            x[j] = x[j] / a[k + j * lda]
-                        var temp: Scalar[dtype] = x[j]
+                            x[unsafe_offset=j] = x[unsafe_offset=j] / a[unsafe_offset=k + j * lda]
+                        var temp: Scalar[dtype] = x[unsafe_offset=j]
                         var i_end: Int = min(n, j + k + 1)
                         for i in range(j + 1, i_end):
-                            x[i] = x[i] - temp * a[k - j + i + j * lda]
+                            x[unsafe_offset=i] = x[unsafe_offset=i] - temp * a[unsafe_offset=k - j + i + j * lda]
             else:
                 var jx: Int = kx
                 for j in range(n):
-                    if x[jx - 1] != 0:
+                    if x[unsafe_offset=jx - 1] != 0:
                         if no_unit:
-                            x[jx - 1] = x[jx - 1] / a[k + j * lda]
-                        var temp: Scalar[dtype] = x[jx - 1]
+                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] / a[unsafe_offset=k + j * lda]
+                        var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                         var ix: Int = jx
                         var i_end: Int = min(n, j + k + 1)
                         for i in range(j + 1, i_end):
                             ix += incx
-                            x[ix - 1] = (
-                                x[ix - 1] - temp * a[k - j + i + j * lda]
+                            x[unsafe_offset=ix - 1] = (
+                                x[unsafe_offset=ix - 1] - temp * a[unsafe_offset=k - j + i + j * lda]
                             )
                     jx += incx
     else:
         if upper:
             if incx == 1:
                 for j in range(n):
-                    var temp: Scalar[dtype] = x[j]
+                    var temp: Scalar[dtype] = x[unsafe_offset=j]
                     var i_start: Int = max(0, j - k)
                     for i in range(i_start, j):
-                        temp = temp - a[k - j + i + j * lda] * x[i]
+                        temp = temp - a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=i]
                     if no_unit:
-                        temp = temp / a[k + j * lda]
-                    x[j] = temp
+                        temp = temp / a[unsafe_offset=k + j * lda]
+                    x[unsafe_offset=j] = temp
             else:
                 var jx: Int = kx
                 for j in range(n):
                     var ix: Int = kx
-                    var temp: Scalar[dtype] = x[jx - 1]
+                    var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                     var i_start: Int = max(0, j - k)
                     for i in range(i_start, j):
-                        temp = temp - a[k - j + i + j * lda] * x[ix - 1]
+                        temp = temp - a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=ix - 1]
                         ix += incx
                     if no_unit:
-                        temp = temp / a[k + j * lda]
-                    x[jx - 1] = temp
+                        temp = temp / a[unsafe_offset=k + j * lda]
+                    x[unsafe_offset=jx - 1] = temp
                     jx += incx
         else:
             if incx == 1:
                 for j in range(n - 1, -1, -1):
-                    var temp: Scalar[dtype] = x[j]
+                    var temp: Scalar[dtype] = x[unsafe_offset=j]
                     var i_end: Int = min(n, j + k + 1)
                     for i in range(j + 1, i_end):
-                        temp = temp - a[k - j + i + j * lda] * x[i]
+                        temp = temp - a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=i]
                     if no_unit:
-                        temp = temp / a[k + j * lda]
-                    x[j] = temp
+                        temp = temp / a[unsafe_offset=k + j * lda]
+                    x[unsafe_offset=j] = temp
             else:
                 var kx_plus: Int = kx + (n - 1) * incx
                 var jx: Int = kx_plus
                 for j in range(n - 1, -1, -1):
                     var ix: Int = kx_plus
-                    var temp: Scalar[dtype] = x[jx - 1]
+                    var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                     var i_end: Int = min(n, j + k + 1)
                     for i in range(j + 1, i_end):
-                        temp = temp - a[k - j + i + j * lda] * x[ix - 1]
+                        temp = temp - a[unsafe_offset=k - j + i + j * lda] * x[unsafe_offset=ix - 1]
                         ix -= incx
                     if no_unit:
-                        temp = temp / a[k + j * lda]
-                    x[jx - 1] = temp
+                        temp = temp / a[unsafe_offset=k + j * lda]
+                    x[unsafe_offset=jx - 1] = temp
                     jx -= incx
 
     return

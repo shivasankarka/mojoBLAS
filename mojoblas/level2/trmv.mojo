@@ -97,9 +97,9 @@ def trmv[
         if upper:
             if incx == 1:
                 for j in range(n):
-                    if x[j] != 0:
-                        var temp: Scalar[dtype] = x[j]
-                        var aj = a + j * lda
+                    if x[unsafe_offset=j] != 0:
+                        var temp: Scalar[dtype] = x[unsafe_offset=j]
+                        var aj = a.unsafe_offset(j * lda)
 
                         def axpy_upper[width: Int](i: Int) {x, aj, temp}:
                             x.unsafe_store[width=width](
@@ -110,25 +110,25 @@ def trmv[
 
                         vectorize[simd_width](j, axpy_upper)
                         if no_unit:
-                            x[j] = x[j] * a[j + j * lda]
+                            x[unsafe_offset=j] = x[unsafe_offset=j] * a[unsafe_offset=j + j * lda]
             else:
                 var jx: Int = kx
                 for j in range(n):
-                    if x[jx - 1] != 0:
-                        var temp: Scalar[dtype] = x[jx - 1]
+                    if x[unsafe_offset=jx - 1] != 0:
+                        var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                         var ix: Int = kx
                         for i in range(j):
-                            x[ix - 1] = x[ix - 1] + temp * a[i + j * lda]
+                            x[unsafe_offset=ix - 1] = x[unsafe_offset=ix - 1] + temp * a[unsafe_offset=i + j * lda]
                             ix += incx
                         if no_unit:
-                            x[jx - 1] = x[jx - 1] * a[j + j * lda]
+                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] * a[unsafe_offset=j + j * lda]
                     jx += incx
         else:
             if incx == 1:
                 for j in range(n - 1, -1, -1):
-                    if x[j] != 0:
-                        var temp: Scalar[dtype] = x[j]
-                        var aj = a + j * lda
+                    if x[unsafe_offset=j] != 0:
+                        var temp: Scalar[dtype] = x[unsafe_offset=j]
+                        var aj = a.unsafe_offset(j * lda)
 
                         def axpy_lower[width: Int](i: Int) {x, aj, temp, j}:
                             var ii = j + 1 + i
@@ -140,28 +140,28 @@ def trmv[
 
                         vectorize[simd_width](n - j - 1, axpy_lower)
                         if no_unit:
-                            x[j] = x[j] * a[j + j * lda]
+                            x[unsafe_offset=j] = x[unsafe_offset=j] * a[unsafe_offset=j + j * lda]
             else:
                 var kx_plus: Int = kx + (n - 1) * incx
                 var jx: Int = kx_plus
                 for j in range(n - 1, -1, -1):
-                    if x[jx - 1] != 0:
-                        var temp: Scalar[dtype] = x[jx - 1]
+                    if x[unsafe_offset=jx - 1] != 0:
+                        var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                         var ix: Int = kx_plus
                         for i in range(n - 1, j, -1):
-                            x[ix - 1] = x[ix - 1] + temp * a[i + j * lda]
+                            x[unsafe_offset=ix - 1] = x[unsafe_offset=ix - 1] + temp * a[unsafe_offset=i + j * lda]
                             ix -= incx
                         if no_unit:
-                            x[jx - 1] = x[jx - 1] * a[j + j * lda]
+                            x[unsafe_offset=jx - 1] = x[unsafe_offset=jx - 1] * a[unsafe_offset=j + j * lda]
                     jx -= incx
     else:
         if upper:
             if incx == 1:
                 for j in range(n - 1, -1, -1):
-                    var temp: Scalar[dtype] = x[j]
+                    var temp: Scalar[dtype] = x[unsafe_offset=j]
                     if no_unit:
-                        temp = temp * a[j + j * lda]
-                    var aj = a + j * lda
+                        temp = temp * a[unsafe_offset=j + j * lda]
+                    var aj = a.unsafe_offset(j * lda)
 
                     def dot_upper[width: Int](i: Int) {mut temp, aj, x}:
                         temp += (
@@ -169,26 +169,26 @@ def trmv[
                         ).reduce_add()
 
                     vectorize[simd_width](j, dot_upper)
-                    x[j] = temp
+                    x[unsafe_offset=j] = temp
             else:
                 var jx: Int = kx + (n - 1) * incx
                 for j in range(n - 1, -1, -1):
                     var ix: Int = jx
-                    var temp: Scalar[dtype] = x[jx - 1]
+                    var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                     if no_unit:
-                        temp = temp * a[j + j * lda]
+                        temp = temp * a[unsafe_offset=j + j * lda]
                     for i in range(j - 1, -1, -1):
                         ix -= incx
-                        temp = temp + a[i + j * lda] * x[ix - 1]
-                    x[jx - 1] = temp
+                        temp = temp + a[unsafe_offset=i + j * lda] * x[unsafe_offset=ix - 1]
+                    x[unsafe_offset=jx - 1] = temp
                     jx -= incx
         else:
             if incx == 1:
                 for j in range(n):
-                    var temp: Scalar[dtype] = x[j]
+                    var temp: Scalar[dtype] = x[unsafe_offset=j]
                     if no_unit:
-                        temp = temp * a[j + j * lda]
-                    var aj = a + j * lda
+                        temp = temp * a[unsafe_offset=j + j * lda]
+                    var aj = a.unsafe_offset(j * lda)
 
                     def dot_lower[width: Int](i: Int) {mut temp, aj, x, j}:
                         var ii = j + 1 + i
@@ -197,18 +197,18 @@ def trmv[
                         ).reduce_add()
 
                     vectorize[simd_width](n - j - 1, dot_lower)
-                    x[j] = temp
+                    x[unsafe_offset=j] = temp
             else:
                 var jx: Int = kx
                 for j in range(n):
                     var ix: Int = jx
-                    var temp: Scalar[dtype] = x[jx - 1]
+                    var temp: Scalar[dtype] = x[unsafe_offset=jx - 1]
                     if no_unit:
-                        temp = temp * a[j + j * lda]
+                        temp = temp * a[unsafe_offset=j + j * lda]
                     for i in range(j + 1, n):
                         ix += incx
-                        temp = temp + a[i + j * lda] * x[ix - 1]
-                    x[jx - 1] = temp
+                        temp = temp + a[unsafe_offset=i + j * lda] * x[unsafe_offset=ix - 1]
+                    x[unsafe_offset=jx - 1] = temp
                     jx += incx
 
     return

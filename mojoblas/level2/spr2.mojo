@@ -59,23 +59,23 @@ def spr2[
     if upper:
         if incx == 1 and incy == 1:
             for j in range(n):
-                if x[j] != 0 or y[j] != 0:
-                    var temp1: Scalar[dtype] = alpha * y[j]
-                    var temp2: Scalar[dtype] = alpha * x[j]
+                if x[unsafe_offset=j] != 0 or y[unsafe_offset=j] != 0:
+                    var temp1: Scalar[dtype] = alpha * y[unsafe_offset=j]
+                    var temp2: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     for i in range(j + 1):
-                        ap[kk + i] = ap[kk + i] + x[i] * temp1 + y[i] * temp2
+                        ap[unsafe_offset=kk + i] = ap[unsafe_offset=kk + i] + x[unsafe_offset=i] * temp1 + y[unsafe_offset=i] * temp2
                 kk += j + 1
         else:
             var jx: Int = kx
             var jy: Int = ky
             for j in range(n):
-                if x[jx] != 0 or y[jy] != 0:
-                    var temp1: Scalar[dtype] = alpha * y[jy]
-                    var temp2: Scalar[dtype] = alpha * x[jx]
+                if x[unsafe_offset=jx] != 0 or y[unsafe_offset=jy] != 0:
+                    var temp1: Scalar[dtype] = alpha * y[unsafe_offset=jy]
+                    var temp2: Scalar[dtype] = alpha * x[unsafe_offset=jx]
                     var ix: Int = kx
                     var iy: Int = ky
                     for k in range(kk, kk + j + 1):
-                        ap[k] = ap[k] + x[ix] * temp1 + y[iy] * temp2
+                        ap[unsafe_offset=k] = ap[unsafe_offset=k] + x[unsafe_offset=ix] * temp1 + y[unsafe_offset=iy] * temp2
                         ix += incx
                         iy += incy
                 jx += incx
@@ -84,25 +84,25 @@ def spr2[
     else:
         if incx == 1 and incy == 1:
             for j in range(n):
-                if x[j] != 0 or y[j] != 0:
-                    var temp1: Scalar[dtype] = alpha * y[j]
-                    var temp2: Scalar[dtype] = alpha * x[j]
+                if x[unsafe_offset=j] != 0 or y[unsafe_offset=j] != 0:
+                    var temp1: Scalar[dtype] = alpha * y[unsafe_offset=j]
+                    var temp2: Scalar[dtype] = alpha * x[unsafe_offset=j]
                     for i in range(j, n):
-                        ap[kk + i - j] = (
-                            ap[kk + i - j] + x[i] * temp1 + y[i] * temp2
+                        ap[unsafe_offset=kk + i - j] = (
+                            ap[unsafe_offset=kk + i - j] + x[unsafe_offset=i] * temp1 + y[unsafe_offset=i] * temp2
                         )
                 kk += n - j
         else:
             var jx: Int = kx
             var jy: Int = ky
             for j in range(n):
-                if x[jx] != 0 or y[jy] != 0:
-                    var temp1: Scalar[dtype] = alpha * y[jy]
-                    var temp2: Scalar[dtype] = alpha * x[jx]
+                if x[unsafe_offset=jx] != 0 or y[unsafe_offset=jy] != 0:
+                    var temp1: Scalar[dtype] = alpha * y[unsafe_offset=jy]
+                    var temp2: Scalar[dtype] = alpha * x[unsafe_offset=jx]
                     var ix: Int = jx
                     var iy: Int = jy
                     for k in range(kk, kk + n - j):
-                        ap[k] = ap[k] + x[ix] * temp1 + y[iy] * temp2
+                        ap[unsafe_offset=k] = ap[unsafe_offset=k] + x[unsafe_offset=ix] * temp1 + y[unsafe_offset=iy] * temp2
                         ix += incx
                         iy += incy
                 jx += incx

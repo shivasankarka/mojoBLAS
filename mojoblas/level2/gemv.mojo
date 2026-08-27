@@ -110,7 +110,7 @@ def gemv[
         if incy == 1:
             if beta == 0:
                 for i in range(leny):
-                    y[i] = 0
+                    y[unsafe_offset=i] = 0
             else:
 
                 def closure[width: Int](i: Int) {y, beta}:
@@ -121,11 +121,11 @@ def gemv[
             var iy: Int = ky
             if beta == 0:
                 for _ in range(leny):
-                    y[iy - 1] = 0
+                    y[unsafe_offset=iy - 1] = 0
                     iy += incy
             else:
                 for _ in range(leny):
-                    y[iy - 1] = beta * y[iy - 1]
+                    y[unsafe_offset=iy - 1] = beta * y[unsafe_offset=iy - 1]
                     iy += incy
     if alpha == 0:
         return
@@ -136,10 +136,10 @@ def gemv[
         var jx: Int = kx
         if incx == 1 and incy == 1:
             for j in range(n):
-                var xj = x[j]
+                var xj = x[unsafe_offset=j]
                 if xj != 0:
                     var temp: Scalar[dtype] = alpha * xj
-                    var aj = a + j * lda
+                    var aj = a.unsafe_offset(j * lda)
 
                     def axpy_col[width: Int](i: Int) {y, aj, temp}:
                         y.unsafe_store[width=width](
@@ -151,10 +151,10 @@ def gemv[
                     vectorize[simd_width](m, axpy_col)
         elif incy == 1:
             for j in range(n):
-                var xj = x[jx - 1]
+                var xj = x[unsafe_offset=jx - 1]
                 if xj != 0:
                     var temp: Scalar[dtype] = alpha * xj
-                    var aj = a + j * lda
+                    var aj = a.unsafe_offset(j * lda)
 
                     def axpy_col_sx[width: Int](i: Int) {y, aj, temp}:
                         y.unsafe_store[width=width](
@@ -167,12 +167,12 @@ def gemv[
                 jx += incx
         else:
             for j in range(n):
-                var xj = x[jx - 1]
+                var xj = x[unsafe_offset=jx - 1]
                 if xj != 0:
                     var temp: Scalar[dtype] = alpha * xj
                     var iy: Int = ky
                     for i in range(m):
-                        y[iy - 1] = y[iy - 1] + temp * a[i + j * lda]
+                        y[unsafe_offset=iy - 1] = y[unsafe_offset=iy - 1] + temp * a[unsafe_offset=i + j * lda]
                         iy += incy
                 jx += incx
     else:
@@ -182,7 +182,7 @@ def gemv[
             @parameter
             def gemv_trans_col(j: Int):
                 var temp: Scalar[dtype] = 0
-                var aj = a + j * lda
+                var aj = a.unsafe_offset(j * lda)
 
                 def dot_col[width: Int](i: Int) {mut temp, aj, x}:
                     temp += (
@@ -192,7 +192,7 @@ def gemv[
                 vectorize[simd_width](m, dot_col)
                 if temp != 0:
                     var jy_idx = ky - 1 + j * incy
-                    y[jy_idx] = y[jy_idx] + alpha * temp
+                    y[unsafe_offset=jy_idx] = y[unsafe_offset=jy_idx] + alpha * temp
 
             if n >= PAR_THRESHOLD:
                 parallelize[gemv_trans_col](n)
@@ -205,10 +205,10 @@ def gemv[
                 var temp: Scalar[dtype] = 0
                 var ix: Int = kx
                 for i in range(m):
-                    temp = temp + a[i + j * lda] * x[ix - 1]
+                    temp = temp + a[unsafe_offset=i + j * lda] * x[unsafe_offset=ix - 1]
                     ix += incx
                 if temp != 0:
-                    y[jy - 1] = y[jy - 1] + alpha * temp
+                    y[unsafe_offset=jy - 1] = y[unsafe_offset=jy - 1] + alpha * temp
                 jy += incy
 
     return
