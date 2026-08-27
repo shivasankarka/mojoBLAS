@@ -26,8 +26,8 @@ BANNER_RE = re.compile(r"^# ===-+===\s*#?\s*$")
 GROUP_TITLES = {
     0: "Stdlib",
     1: "External",
-    2: "mojoBLAS",
-    4: "mojoBLAS",
+    2: "Max",
+    3: "mojoBLAS",
 }
 
 
@@ -262,14 +262,27 @@ def find_import_block(lines: list[str]) -> tuple[int, int, list[str]] | None:
         if is_import_section_comment(lines, idx):
             idx += 3
             continue
-        if stripped.startswith("#"):
-            saw_comment = True
-            idx += 1
-            continue
         if lines[idx].startswith("from ") or lines[idx].startswith("import "):
             text, idx = collect_import_statement(lines, idx)
             statements.append(text)
             continue
+        if stripped.startswith("#"):
+            # A comment directly followed by another import belongs to the
+            # import block (e.g. a banner not yet in the recognized
+            # three-line form); a comment followed by non-import code (a
+            # docstring for the next def/struct, etc.) means we've walked
+            # past the import block entirely — stop here rather than
+            # bailing out on the whole file.
+            j = idx + 1
+            while j < len(lines) and lines[j].strip() == "":
+                j += 1
+            if j < len(lines) and (
+                lines[j].startswith("from ") or lines[j].startswith("import ")
+            ):
+                saw_comment = True
+                idx += 1
+                continue
+            break
         break
 
     if saw_comment:
@@ -277,18 +290,65 @@ def find_import_block(lines: list[str]) -> tuple[int, int, list[str]] | None:
     return start, idx, statements
 
 
+def find_package_root(file_path: Path) -> Path | None:
+    """Walk up from `file_path`'s directory while each level has an
+    `__init__.mojo`, returning the top-most such directory (the package
+    root, e.g. `mojoblas/`). Returns None if `file_path`'s own directory
+    has no `__init__.mojo` (not part of a package)."""
+    current = file_path.parent
+    if not (current / "__init__.mojo").exists():
+        return None
+    root = current
+    while (current.parent / "__init__.mojo").exists():
+        current = current.parent
+        root = current
+    return root
+
+
+def resolve_relative_module(module: str, file_path: Path, package_root: Path) -> str:
+    """Rewrite a relative import module (`.x`, `..x`, `.`) to its absolute
+    `mojoblas.`-rooted form, based on where `file_path` sits under
+    `package_root`. Non-relative modules are returned unchanged.
+
+    mojoBLAS convention: all internal imports are absolute
+    (`from mojoblas.level1._tuning import X`), never relative
+    (`from ._tuning import X` / `from .._tuning import X`).
+    """
+    if not module.startswith("."):
+        return module
+
+    num_dots = len(module) - len(module.lstrip("."))
+    rest = module[num_dots:]  # module name after the leading dots, may be ""
+
+    # file_path's directory, relative to package_root's parent, as dotted
+    # package path (e.g. mojoblas/level1/dot.mojo -> ["mojoblas", "level1"]).
+    rel_dir = file_path.parent.relative_to(package_root.parent)
+    parts = list(rel_dir.parts)
+
+    # One leading dot = "this package" (the file's own directory); each
+    # additional dot climbs one package level further up, matching Python's
+    # relative-import semantics.
+    climb = num_dots - 1
+    if climb > 0:
+        parts = parts[: len(parts) - climb] if climb < len(parts) else []
+
+    if rest:
+        parts.append(rest)
+    return ".".join(parts)
+
+
 def import_group(module: str) -> int:
     if module.startswith("."):
-        return 4
+        return 3
     root = module.split(".", 1)[0].split(",", 1)[0]
     if root == "std":
         return 0
     if root == "max":
-        return 1
-    if root == "mojoblas":
         return 2
+    if root == "mojoblas":
+        return 3
     if root == "utils_for_test":
-        return 4
+        return 3
     return 1
 
 
@@ -489,6 +549,27 @@ def organize_file(path: Path, *, keep_unused: bool) -> str | None:
         path.name == "__init__.mojo" or keep_unused or not body.strip()
     )
     statements = remove_unused_imports(statements, body, skip_unused=skip_unused)
+
+    # mojoBLAS convention: internal imports are absolute (`mojoblas.x`),
+    # never relative (`.x` / `..x`) — resolve relative modules if we can
+    # determine the enclosing package root; otherwise leave them as-is
+    # (e.g. this file isn't part of a package, or is a top-level script).
+    package_root = find_package_root(path)
+    if package_root is not None:
+        statements = [
+            ImportStatement(
+                text=stmt.text,
+                kind=stmt.kind,
+                module=resolve_relative_module(stmt.module, path, package_root),
+                imported=stmt.imported,
+                sortable=stmt.sortable,
+                force_parenthesized=stmt.force_parenthesized,
+            )
+            if stmt.module.startswith(".")
+            else stmt
+            for stmt in statements
+        ]
+
     new_block = organized_import_block(statements)
     tail = "".join(lines[end:]).lstrip("\n")
     if new_block and tail.strip():

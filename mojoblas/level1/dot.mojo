@@ -20,14 +20,14 @@ from std.memory.alloc import unsafe_alloc
 from std.sys.info import simd_width_of
 
 # ===----------------------------------------------------------------------=== #
-# External
+# Max
 # ===----------------------------------------------------------------------=== #
 from max.algorithm.backend.cpu import parallelize
 
 # ===----------------------------------------------------------------------=== #
 # mojoBLAS
 # ===----------------------------------------------------------------------=== #
-from ._tuning import (
+from mojoblas.level1._tuning import (
     DOT_N_ACC,
     DOT_N_THREADS,
     DOT_PAR_THRESHOLD,

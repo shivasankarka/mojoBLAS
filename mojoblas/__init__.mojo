@@ -24,4 +24,4 @@ For more information about BLAS, see: http://www.netlib.org/blas/.
 # ===----------------------------------------------------------------------=== #
 # mojoBLAS
 # ===----------------------------------------------------------------------=== #
-from .type_aliases import BLASPtr
+from mojoblas.type_aliases import BLASPtr

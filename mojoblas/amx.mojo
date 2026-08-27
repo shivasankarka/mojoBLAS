@@ -17,13 +17,15 @@
 #
 # ===-----------------------------------------------------------------------===#
 
-from std.sys._assembly import inlined_assembly
-
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.memory import (
+    stack_allocation,
     unsafe_memcpy,
     unsafe_memset_zero,
-    stack_allocation,
 )
+from std.sys._assembly import inlined_assembly
 
 
 # All AMX instructions are of the form

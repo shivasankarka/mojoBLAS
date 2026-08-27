@@ -13,10 +13,25 @@ Vector Swap Operations (`level1.swap`)
 Provides vector swap operations as defined in the BLAS library standard.
 """
 
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.algorithm.functional import vectorize
-from max.algorithm.backend.cpu import parallelize
 from std.sys.info import simd_width_of
-from ._tuning import SWAP_N_THREADS, SWAP_PAR_THRESHOLD, SWAP_UNROLL
+
+# ===----------------------------------------------------------------------=== #
+# Max
+# ===----------------------------------------------------------------------=== #
+from max.algorithm.backend.cpu import parallelize
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
+from mojoblas.level1._tuning import (
+    SWAP_N_THREADS,
+    SWAP_PAR_THRESHOLD,
+    SWAP_UNROLL,
+)
 from mojoblas.type_aliases import BLASPtr
 
 

@@ -18,19 +18,19 @@ such as matrix-vector multiplication and triangular solving.
 # ===----------------------------------------------------------------------=== #
 # mojoBLAS
 # ===----------------------------------------------------------------------=== #
-from .gbmv import gbmv
-from .gemv import gemv
-from .ger import ger
-from .sbmv import sbmv
-from .spmv import spmv
-from .spr import spr
-from .spr2 import spr2
-from .symv import symv
-from .syr import syr
-from .syr2 import syr2
-from .tbmv import tbmv
-from .tbsv import tbsv
-from .tpmv import tpmv
-from .tpsv import tpsv
-from .trmv import trmv
-from .trsv import trsv
+from mojoblas.level2.gbmv import gbmv
+from mojoblas.level2.gemv import gemv
+from mojoblas.level2.ger import ger
+from mojoblas.level2.sbmv import sbmv
+from mojoblas.level2.spmv import spmv
+from mojoblas.level2.spr import spr
+from mojoblas.level2.spr2 import spr2
+from mojoblas.level2.symv import symv
+from mojoblas.level2.syr import syr
+from mojoblas.level2.syr2 import syr2
+from mojoblas.level2.tbmv import tbmv
+from mojoblas.level2.tbsv import tbsv
+from mojoblas.level2.tpmv import tpmv
+from mojoblas.level2.tpsv import tpsv
+from mojoblas.level2.trmv import trmv
+from mojoblas.level2.trsv import trsv

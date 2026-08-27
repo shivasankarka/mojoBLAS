@@ -19,14 +19,14 @@ Provides vector alpha plus operations as defined in the BLAS library standard.
 from std.sys.info import simd_width_of
 
 # ===----------------------------------------------------------------------=== #
-# External
+# Max
 # ===----------------------------------------------------------------------=== #
 from max.algorithm.backend.cpu import parallelize
 
 # ===----------------------------------------------------------------------=== #
 # mojoBLAS
 # ===----------------------------------------------------------------------=== #
-from ._tuning import (
+from mojoblas.level1._tuning import (
     AXPY_MIN_CHUNK_PER_THREAD,
     AXPY_N_ACC,
     AXPY_N_THREADS,

@@ -29,7 +29,7 @@ Exports:
 # ===----------------------------------------------------------------------=== #
 # mojoBLAS
 # ===----------------------------------------------------------------------=== #
-from .gemm import (
+from mojoblas.level3.gemm import (
     gemm,
     gemm_v10,
     gemm_v11,
@@ -40,8 +40,8 @@ from .gemm import (
     gemm_v8,
     gemm_v9,
 )
-from .symm import symm
-from .syr2k import syr2k
-from .syrk import syrk
-from .trmm import trmm
-from .trsm import trsm
+from mojoblas.level3.symm import symm
+from mojoblas.level3.syr2k import syr2k
+from mojoblas.level3.syrk import syrk
+from mojoblas.level3.trmm import trmm
+from mojoblas.level3.trsm import trsm

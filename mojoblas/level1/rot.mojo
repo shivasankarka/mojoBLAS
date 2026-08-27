@@ -20,14 +20,14 @@ from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of
 
 # ===----------------------------------------------------------------------=== #
-# External
+# Max
 # ===----------------------------------------------------------------------=== #
 from max.algorithm.backend.cpu import parallelize
 
 # ===----------------------------------------------------------------------=== #
 # mojoBLAS
 # ===----------------------------------------------------------------------=== #
-from ._tuning import (
+from mojoblas.level1._tuning import (
     ROT_N_THREADS,
     ROT_PAR_THRESHOLD,
     ROT_UNROLL,

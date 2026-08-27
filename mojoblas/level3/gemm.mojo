@@ -23,14 +23,14 @@ from std.sys._assembly import inlined_assembly
 from std.sys.info import simd_width_of
 
 # ===----------------------------------------------------------------------=== #
-# External
+# Max
 # ===----------------------------------------------------------------------=== #
 from max.algorithm.backend.cpu import parallelize
 
 # ===----------------------------------------------------------------------=== #
 # mojoBLAS
 # ===----------------------------------------------------------------------=== #
-from ._tuning import (
+from mojoblas.level3._tuning import (
     GEMM_DISPATCH_THRESHOLD,
     GEMM_V10_MC,
     GEMM_V10_NZ,

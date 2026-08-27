@@ -18,15 +18,15 @@ such as dot products, norms, and rotations.
 # ===----------------------------------------------------------------------=== #
 # mojoBLAS
 # ===----------------------------------------------------------------------=== #
-from .asum import asum
-from .axpy import axpy
-from .copy import copy
-from .dot import dot
-from .iamax import iamax
-from .nrm2 import nrm2
-from .rot import rot
-from .rotg import rotg
-from .rotm import rotm
-from .rotmg import rotmg
-from .scal import scal
-from .swap import vswap
+from mojoblas.level1.asum import asum
+from mojoblas.level1.axpy import axpy
+from mojoblas.level1.copy import copy
+from mojoblas.level1.dot import dot
+from mojoblas.level1.iamax import iamax
+from mojoblas.level1.nrm2 import nrm2
+from mojoblas.level1.rot import rot
+from mojoblas.level1.rotg import rotg
+from mojoblas.level1.rotm import rotm
+from mojoblas.level1.rotmg import rotmg
+from mojoblas.level1.scal import scal
+from mojoblas.level1.swap import vswap
