@@ -13,11 +13,26 @@ Euclidean Norm Operations (`level1.nrm2`)
 Provides Euclidean norm operations as defined in the BLAS library standard.
 """
 
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.math import sqrt
-from max.algorithm.backend.cpu import parallelize
 from std.memory.alloc import unsafe_alloc
 from std.sys.info import simd_width_of
-from ._tuning import NRM2_N_THREADS, NRM2_PAR_THRESHOLD, NRM2_N_ACC
+
+# ===----------------------------------------------------------------------=== #
+# External
+# ===----------------------------------------------------------------------=== #
+from max.algorithm.backend.cpu import parallelize
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
+from ._tuning import (
+    NRM2_N_ACC,
+    NRM2_N_THREADS,
+    NRM2_PAR_THRESHOLD,
+)
 from mojoblas.type_aliases import BLASPtr
 
 

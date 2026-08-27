@@ -26,19 +26,22 @@ Exports:
     trsm: Triangular matrix solve
 """
 
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
 from .gemm import (
     gemm,
+    gemm_v10,
+    gemm_v11,
+    gemm_v12,
     gemm_v3,
     gemm_v6,
     gemm_v7,
     gemm_v8,
     gemm_v9,
-    gemm_v10,
-    gemm_v11,
-    gemm_v12,
 )
 from .symm import symm
-from .syrk import syrk
 from .syr2k import syr2k
+from .syrk import syrk
 from .trmm import trmm
 from .trsm import trsm

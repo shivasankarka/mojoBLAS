@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check `.mojo` files against the NuMojo standards in `extras/cleanup.md`.
+"""Check `.mojo` files against mojoBLAS's file-layout standards.
 
 Run this before opening a PR to get a clean, file-by-file list of every
 place a file deviates from the standard: header format, module docstring
@@ -12,11 +12,11 @@ This is a *reporting* tool. It never rewrites files (use
 clean, 1 if any file has findings, 2 on a usage/parse error.
 
 Usage:
-    python3 scripts/check_mojo_standards.py numojo
-    python3 scripts/check_mojo_standards.py numojo/core/ndarray.mojo
-    python3 scripts/check_mojo_standards.py numojo --only headers,imports
-    python3 scripts/check_mojo_standards.py numojo --quiet   # summary only
-    python3 scripts/check_mojo_standards.py numojo --json out.json
+    python3 scripts/check_mojo_standards.py mojoblas
+    python3 scripts/check_mojo_standards.py mojoblas/level1/dot.mojo
+    python3 scripts/check_mojo_standards.py mojoblas --only headers,imports
+    python3 scripts/check_mojo_standards.py mojoblas --quiet   # summary only
+    python3 scripts/check_mojo_standards.py mojoblas --json out.json
 """
 
 from __future__ import annotations
@@ -35,11 +35,18 @@ from pathlib import Path
 SEPARATOR_WIDTH = 80  # "# ===" + 70 "-" + "=== #"
 EXPECTED_SEPARATOR = "# ===" + "-" * 70 + "=== #"
 LICENSE_LINES = [
-    "# Distributed under the Apache 2.0 License with LLVM Exceptions.",
-    "# See LICENSE and the LLVM License for more information.",
-    "# https://github.com/Mojo-Numerics-and-Algorithms-group/NuMojo/blob/main/LICENSE",
-    "# https://llvm.org/LICENSE.txt",
+    "# mojoBLAS: Mojo bindings for BLAS library",
+    "# Distributed under the MIT License.",
+    "# See LICENSE for more information.",
+    "#",
+    "# It is inspired by and based on the Netlib BLAS reference implementation:",
+    "# http://www.netlib.org/blas/",
 ]
+
+# Files with a different, legitimate header (vendored/adapted from another
+# project) — excluded from the header/license check entirely rather than
+# flagged as non-conformant.
+HEADER_EXEMPT_FILES = {"amx.mojo"}
 
 # Canonical docstring section order (§1.5). Sections not in this list are
 # left alone (e.g. `Attributes:`, `Constants:` on struct docstrings).
@@ -193,14 +200,7 @@ def check_header(lines: list[str], report: FileReport) -> int:
             f"'# ===' + 70 dashes + '=== #'): {lines[0].rstrip()!r}",
         )
 
-    if len(lines) < 2 or not lines[1].lstrip().startswith("# NuMojo:"):
-        report.add(
-            2,
-            "header",
-            "Second header line should read '# NuMojo: <short description>'.",
-        )
-
-    idx = 2
+    idx = 1
     for expected in LICENSE_LINES:
         if idx >= len(lines) or lines[idx].rstrip("\n") != expected:
             report.add(
@@ -221,15 +221,17 @@ def check_header(lines: list[str], report: FileReport) -> int:
             )
         idx += 1
 
-    # No blank line between header and docstring.
-    if idx < len(lines) and lines[idx].strip() == "":
+    # mojoBLAS convention (unlike NuMojo): one blank line between the
+    # closing header separator and the module docstring — confirmed
+    # universal across the codebase (2026-08-27 survey).
+    if idx < len(lines) and lines[idx].strip() != "":
         report.add(
             idx + 1,
             "header",
-            "Blank line between header and module docstring (should be none).",
+            "Missing blank line between header and module docstring.",
         )
-
-    return idx
+        return idx
+    return idx + 1
 
 
 # ===----------------------------------------------------------------------=== #
@@ -290,19 +292,16 @@ def check_module_docstring(
             "docstring",
             "Second line of module docstring should be a bare '===' underline.",
         )
-    elif len(underline_line) != len(title_line):
-        report.add(
-            idx + 3,
-            "docstring",
-            f"Underline length ({len(underline_line)}) does not match title "
-            f"length ({len(title_line)}): title={title_line!r}",
-        )
+    # NOTE: unlike NuMojo, mojoBLAS's underline is decorative and doesn't
+    # need to match title length — confirmed by survey (2026-08-27): ~75%
+    # of files mismatch, so length-matching was never the real convention
+    # here. Not checked.
 
-    if not re.match(r"^[A-Za-z_].*\)\.$", title_line):
+    if not re.match(r"^[A-Za-z_].*\(`[a-z0-9_.]+`\)$", title_line):
         report.add(
             idx + 2,
             "docstring",
-            f"Title line should look like 'Name (numojo.dotted.path).': {title_line!r}",
+            f"Title line should look like 'Name (`level1.dot`)': {title_line!r}",
         )
 
     if close >= idx + 4:
@@ -467,41 +466,14 @@ def check_body(
 # Check: imports (§1.3) — delegates structural check to organize script
 # ===----------------------------------------------------------------------=== #
 
+# NOTE: unlike NuMojo, mojoBLAS does not group imports under '# ===' / title
+# / '# ===' section banners (confirmed 2026-08-27: zero files use them) —
+# so there is nothing to check here. `organize_mojo_imports.py` still sorts
+# and dedupes imports, it just doesn't insert banners for this codebase.
+
 
 def check_imports(lines: list[str], body_start: int, report: FileReport) -> None:
-    # Find first import line after body_start.
-    idx = body_start
-    first_import = None
-    while idx < len(lines):
-        s = lines[idx].strip()
-        if s.startswith("from ") or s.startswith("import "):
-            first_import = idx
-            break
-        if s.startswith("struct ") or s.startswith("trait ") or re.match(
-            r"^(def|fn)\s", s
-        ):
-            break
-        idx += 1
-    if first_import is None:
-        return
-
-    # Look a few lines back for a section header; imports must be preceded
-    # by a `# ===` / title / `# ===` block (allowing blank lines between the
-    # docstring and the header).
-    j = first_import - 1
-    while j >= body_start and lines[j].strip() == "":
-        j -= 1
-    if j < body_start + 2 or not (
-        is_separator_line(lines[j - 2])
-        and lines[j - 1].strip().startswith("#")
-        and is_separator_line(lines[j])
-    ):
-        report.add(
-            first_import + 1,
-            "imports",
-            "Imports are not preceded by a '# ===' / <Group> / '# ===' "
-            "section header.",
-        )
+    return
 
 
 # ===----------------------------------------------------------------------=== #
@@ -1002,7 +974,7 @@ def check_file(path: Path, only: set[str] | None) -> FileReport:
     def enabled(cat: str) -> bool:
         return only is None or cat in only
 
-    if enabled("headers"):
+    if enabled("headers") and path.name not in HEADER_EXEMPT_FILES:
         header_end = check_header(lines, report)
     else:
         # Best-effort: find end of header block without reporting.

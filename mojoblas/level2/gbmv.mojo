@@ -13,6 +13,9 @@ Band Matrix-Vector Operations (`level2.gbmv`)
 Provides band matrix-vector operations as defined in the BLAS library standard.
 """
 
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
 from mojoblas.type_aliases import BLASPtr
 
 

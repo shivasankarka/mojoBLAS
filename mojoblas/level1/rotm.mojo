@@ -13,10 +13,25 @@ Modified Givens Rotation Operations (`level1.rotm`)
 Provides modified Givens rotation operations as defined in the BLAS library standard.
 """
 
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.algorithm.functional import vectorize
-from max.algorithm.backend.cpu import parallelize
 from std.sys.info import simd_width_of
-from ._tuning import ROTM_N_THREADS, ROTM_PAR_THRESHOLD, ROTM_UNROLL
+
+# ===----------------------------------------------------------------------=== #
+# External
+# ===----------------------------------------------------------------------=== #
+from max.algorithm.backend.cpu import parallelize
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
+from ._tuning import (
+    ROTM_N_THREADS,
+    ROTM_PAR_THRESHOLD,
+    ROTM_UNROLL,
+)
 from mojoblas.type_aliases import BLASPtr
 
 

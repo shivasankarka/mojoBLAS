@@ -13,9 +13,20 @@ Symmetric Rank-k Operations (`level3.syrk`)
 Provides symmetric rank-k operations as defined in the BLAS library standard.
 """
 
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.algorithm.functional import vectorize
-from max.algorithm.backend.cpu import parallelize
 from std.sys.info import simd_width_of
+
+# ===----------------------------------------------------------------------=== #
+# External
+# ===----------------------------------------------------------------------=== #
+from max.algorithm.backend.cpu import parallelize
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
 from mojoblas.type_aliases import BLASPtr
 
 

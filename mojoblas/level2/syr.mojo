@@ -13,8 +13,15 @@ Symmetric Rank-1 Operations (`level2.syr`)
 Provides symmetric rank-1 operations as defined in the BLAS library standard.
 """
 
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
 from mojoblas.type_aliases import BLASPtr
 
 

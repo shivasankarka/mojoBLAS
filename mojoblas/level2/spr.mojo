@@ -13,6 +13,9 @@ Symmetric Packed Rank-1 Operations (`level2.spr`)
 Provides symmetric packed rank-1 operations as defined in the BLAS library standard.
 """
 
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
 from mojoblas.type_aliases import BLASPtr
 
 

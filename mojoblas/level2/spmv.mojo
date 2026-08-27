@@ -13,8 +13,15 @@ Symmetric Packed Matrix-Vector Operations (`level2.spmv`)
 Provides symmetric packed matrix-vector operations as defined in the BLAS library standard.
 """
 
-from mojoblas.type_aliases import BLASPtr
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.memory.alloc import unsafe_alloc
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
+from mojoblas.type_aliases import BLASPtr
 
 
 def spmv[

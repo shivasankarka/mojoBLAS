@@ -13,8 +13,15 @@ Triangular Packed Solve Operations (`level2.tpsv`)
 Provides triangular packed solve operations as defined in the BLAS library standard.
 """
 
-from mojoblas.type_aliases import BLASPtr
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.memory.alloc import unsafe_alloc
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
+from mojoblas.type_aliases import BLASPtr
 
 
 def tpsv[

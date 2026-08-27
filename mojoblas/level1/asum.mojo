@@ -13,10 +13,25 @@ Absolute Sum Operations (`level1.asum`)
 Provides absolute sum operations as defined in the BLAS library standard.
 """
 
-from max.algorithm.backend.cpu import parallelize
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.memory.alloc import unsafe_alloc
 from std.sys.info import simd_width_of
-from ._tuning import ASUM_N_THREADS, ASUM_PAR_THRESHOLD, ASUM_N_ACC
+
+# ===----------------------------------------------------------------------=== #
+# External
+# ===----------------------------------------------------------------------=== #
+from max.algorithm.backend.cpu import parallelize
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
+from ._tuning import (
+    ASUM_N_ACC,
+    ASUM_N_THREADS,
+    ASUM_PAR_THRESHOLD,
+)
 from mojoblas.type_aliases import BLASPtr
 
 

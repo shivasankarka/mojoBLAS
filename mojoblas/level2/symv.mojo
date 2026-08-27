@@ -13,8 +13,15 @@ Symmetric Matrix-Vector Operations (`level2.symv`)
 Provides symmetric matrix-vector operations as defined in the BLAS library standard.
 """
 
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.algorithm.functional import vectorize
 from std.sys.info import simd_width_of
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
 from mojoblas.type_aliases import BLASPtr
 
 

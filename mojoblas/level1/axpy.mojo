@@ -13,15 +13,26 @@ Vector Alpha Plus Operations (`level1.axpy`)
 Provides vector alpha plus operations as defined in the BLAS library standard.
 """
 
-from max.algorithm.backend.cpu import parallelize
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.sys.info import simd_width_of
-from mojoblas.type_aliases import BLASPtr
+
+# ===----------------------------------------------------------------------=== #
+# External
+# ===----------------------------------------------------------------------=== #
+from max.algorithm.backend.cpu import parallelize
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
 from ._tuning import (
-    AXPY_N_THREADS,
-    AXPY_PAR_THRESHOLD,
     AXPY_MIN_CHUNK_PER_THREAD,
     AXPY_N_ACC,
+    AXPY_N_THREADS,
+    AXPY_PAR_THRESHOLD,
 )
+from mojoblas.type_aliases import BLASPtr
 
 
 def _axpy_serial[

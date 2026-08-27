@@ -13,47 +13,58 @@ General Matrix-Matrix Operations (`level3.gemm`)
 Provides general matrix-matrix operations as defined in the BLAS library standard.
 """
 
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.algorithm.functional import vectorize
-from max.algorithm.backend.cpu import parallelize
-from std.sys.info import simd_width_of
-from std.memory import stack_allocation, memset_zero
-from std.sys._assembly import inlined_assembly
-from mojoblas.type_aliases import BLASPtr
+from std.memory import stack_allocation
 from std.memory.alloc import unsafe_alloc
+from std.sys._assembly import inlined_assembly
+from std.sys.info import simd_width_of
+
+# ===----------------------------------------------------------------------=== #
+# External
+# ===----------------------------------------------------------------------=== #
+from max.algorithm.backend.cpu import parallelize
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
 from ._tuning import (
-    GEMM_V6_NR,
-    GEMM_V6_TK,
-    GEMM_V6_MC,
-    GEMM_V6_PAR_THRESHOLD,
-    GEMM_V7_NR,
-    GEMM_V7_TK,
-    GEMM_V7_MC,
-    GEMM_V7_PAR_THRESHOLD,
-    GEMM_V8_MC,
-    GEMM_V8_TK,
-    GEMM_V8_PAR_THRESHOLD,
-    GEMM_V9_TILE,
-    GEMM_V9_NZ,
-    GEMM_V9_MC,
-    GEMM_V9_TK,
-    GEMM_V9_PAR_THRESHOLD,
-    GEMM_V10_TILE,
-    GEMM_V10_NZ,
+    GEMM_DISPATCH_THRESHOLD,
     GEMM_V10_MC,
-    GEMM_V10_TK,
+    GEMM_V10_NZ,
     GEMM_V10_PAR_THRESHOLD,
-    GEMM_V11_NZ,
-    GEMM_V11_UK,
+    GEMM_V10_TILE,
+    GEMM_V10_TK,
     GEMM_V11_MC,
-    GEMM_V11_TK,
+    GEMM_V11_NZ,
+    GEMM_V11_PAR_THRESHOLD,
     GEMM_V11_ROW_PAR_THRESHOLD,
     GEMM_V11_SMALL_MC,
-    GEMM_V11_PAR_THRESHOLD,
+    GEMM_V11_TK,
+    GEMM_V11_UK,
     GEMM_V12_MC,
     GEMM_V12_NC,
     GEMM_V12_TK,
-    GEMM_DISPATCH_THRESHOLD,
+    GEMM_V6_MC,
+    GEMM_V6_NR,
+    GEMM_V6_PAR_THRESHOLD,
+    GEMM_V6_TK,
+    GEMM_V7_MC,
+    GEMM_V7_NR,
+    GEMM_V7_PAR_THRESHOLD,
+    GEMM_V7_TK,
+    GEMM_V8_MC,
+    GEMM_V8_PAR_THRESHOLD,
+    GEMM_V8_TK,
+    GEMM_V9_MC,
+    GEMM_V9_NZ,
+    GEMM_V9_PAR_THRESHOLD,
+    GEMM_V9_TILE,
+    GEMM_V9_TK,
 )
+from mojoblas.type_aliases import BLASPtr
 
 
 def gemm[

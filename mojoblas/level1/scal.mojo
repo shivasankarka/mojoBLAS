@@ -13,10 +13,25 @@ Vector Scale Operations (`level1.scal`)
 Provides vector scale operations as defined in the BLAS library standard.
 """
 
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.algorithm.functional import vectorize
-from max.algorithm.backend.cpu import parallelize
 from std.sys.info import simd_width_of
-from ._tuning import SCAL_N_THREADS, SCAL_PAR_THRESHOLD, SCAL_UNROLL
+
+# ===----------------------------------------------------------------------=== #
+# External
+# ===----------------------------------------------------------------------=== #
+from max.algorithm.backend.cpu import parallelize
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
+from ._tuning import (
+    SCAL_N_THREADS,
+    SCAL_PAR_THRESHOLD,
+    SCAL_UNROLL,
+)
 from mojoblas.type_aliases import BLASPtr
 
 

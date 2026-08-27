@@ -13,10 +13,25 @@ Dot Product Operations (`level1.dot`)
 Provides dot product operations as defined in the BLAS library standard.
 """
 
-from max.algorithm.backend.cpu import parallelize
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.memory.alloc import unsafe_alloc
 from std.sys.info import simd_width_of
-from ._tuning import DOT_N_THREADS, DOT_PAR_THRESHOLD, DOT_N_ACC
+
+# ===----------------------------------------------------------------------=== #
+# External
+# ===----------------------------------------------------------------------=== #
+from max.algorithm.backend.cpu import parallelize
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
+from ._tuning import (
+    DOT_N_ACC,
+    DOT_N_THREADS,
+    DOT_PAR_THRESHOLD,
+)
 from mojoblas.type_aliases import BLASPtr
 
 

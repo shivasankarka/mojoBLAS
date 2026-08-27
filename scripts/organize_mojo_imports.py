@@ -2,7 +2,7 @@
 """Organize Mojo imports and remove unused imported names.
 
 Usage:
-    python3 scripts/organize_mojo_imports.py numojo
+    python3 scripts/organize_mojo_imports.py mojoblas
 
 The script rewrites `.mojo` files under the given path by default. Use
 `--check` or `--diff` for dry runs.
@@ -26,8 +26,8 @@ BANNER_RE = re.compile(r"^# ===-+===\s*#?\s*$")
 GROUP_TITLES = {
     0: "Stdlib",
     1: "External",
-    2: "NuMojo",
-    4: "NuMojo",
+    2: "mojoBLAS",
+    4: "mojoBLAS",
 }
 
 
@@ -285,7 +285,7 @@ def import_group(module: str) -> int:
         return 0
     if root == "max":
         return 1
-    if root == "numojo":
+    if root == "mojoblas":
         return 2
     if root == "utils_for_test":
         return 4
@@ -432,20 +432,33 @@ def merge_from_imports(statements: list[ImportStatement]) -> list[ImportStatemen
 
 def organized_import_block(statements: list[ImportStatement]) -> str:
     statements = merge_from_imports(statements)
-    grouped: dict[int, list[ImportStatement]] = {}
+    # Group by (sort key, title) rather than raw numeric group id: two
+    # different numeric groups (e.g. absolute vs. relative local imports)
+    # can share the same rendered title and must merge under one banner
+    # instead of printing the same title twice.
+    grouped: dict[tuple[int, str], list[ImportStatement]] = {}
     for statement in statements:
-        grouped.setdefault(import_group(statement.module), []).append(statement)
+        group = import_group(statement.module)
+        title = GROUP_TITLES.get(group, "Imports")
+        grouped.setdefault((group, title), []).append(statement)
+
+    merged_by_title: dict[str, list[ImportStatement]] = {}
+    order: list[str] = []
+    for (group, title) in sorted(grouped):
+        if title not in merged_by_title:
+            merged_by_title[title] = []
+            order.append(title)
+        merged_by_title[title].extend(grouped[(group, title)])
 
     rendered_groups: list[str] = []
-    for group in sorted(grouped):
+    for title in order:
         ordered = sorted(
-            grouped[group],
+            merged_by_title[title],
             key=lambda stmt: (
                 stmt.module.replace("`", "").lower(),
                 render_import_statement(stmt).lower(),
             ),
         )
-        title = GROUP_TITLES.get(group, "Imports")
         header = (
             "# ===----------------------------------------------------------------------=== #\n"
             f"# {title}\n"

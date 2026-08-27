@@ -15,16 +15,19 @@ implemented in Mojo. Level 2 BLAS includes vector-matrix operations
 such as matrix-vector multiplication and triangular solving.
 """
 
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
+from .gbmv import gbmv
 from .gemv import gemv
 from .ger import ger
-from .gbmv import gbmv
 from .sbmv import sbmv
 from .spmv import spmv
+from .spr import spr
+from .spr2 import spr2
 from .symv import symv
 from .syr import syr
 from .syr2 import syr2
-from .spr import spr
-from .spr2 import spr2
 from .tbmv import tbmv
 from .tbsv import tbsv
 from .tpmv import tpmv

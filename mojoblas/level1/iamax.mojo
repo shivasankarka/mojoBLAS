@@ -13,11 +13,25 @@ Index of Maximum Absolute Value (`level1.iamax`)
 Provides index of maximum absolute value operations as defined in the BLAS library standard.
 """
 
-from max.algorithm.backend.cpu import parallelize
-from std.sys.info import simd_width_of
-from ._tuning import IAMAX_N_THREADS, IAMAX_PAR_THRESHOLD
-from mojoblas.type_aliases import BLASPtr
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.memory.alloc import unsafe_alloc
+from std.sys.info import simd_width_of
+
+# ===----------------------------------------------------------------------=== #
+# External
+# ===----------------------------------------------------------------------=== #
+from max.algorithm.backend.cpu import parallelize
+
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
+from ._tuning import (
+    IAMAX_N_THREADS,
+    IAMAX_PAR_THRESHOLD,
+)
+from mojoblas.type_aliases import BLASPtr
 
 
 def _iamax_serial[
