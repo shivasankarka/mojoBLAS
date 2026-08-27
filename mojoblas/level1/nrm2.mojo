@@ -15,6 +15,7 @@ Provides Euclidean norm operations as defined in the BLAS library standard.
 
 from std.math import sqrt
 from max.algorithm.backend.cpu import parallelize
+from std.memory.alloc import unsafe_alloc
 from std.sys.info import simd_width_of
 from ._tuning import NRM2_N_THREADS, NRM2_PAR_THRESHOLD, NRM2_N_ACC
 from mojoblas.type_aliases import BLASPtr
@@ -51,7 +52,7 @@ def _nrm2_serial[
     var result = (acc0 + acc1 + acc2 + acc3).reduce_add()
 
     while i < length:
-        result += xc[i] * xc[i]
+        result += xc[unsafe_offset=i] * xc[unsafe_offset=i]
         i += 1
 
     return result
@@ -93,9 +94,9 @@ def nrm2[
     comptime simd_width: Int = simd_width_of[dtype]()
     if incx == 1:
         if n > par_threshold:
-            var partials = alloc[Scalar[dtype]](n_threads)
+            var partials = unsafe_alloc[Scalar[dtype]](n_threads)
             for i in range(n_threads):
-                partials[i] = 0
+                partials[unsafe_offset=i] = 0
             var chunk_size = (n + n_threads - 1) // n_threads
 
             @parameter
@@ -104,15 +105,15 @@ def nrm2[
                 var end = min(start + chunk_size, n)
                 var length = end - start
                 if length <= 0:
-                    partials[tid] = 0
+                    partials[unsafe_offset=tid] = 0
                     return
-                partials[tid] = _nrm2_serial[dtype, simd_width, n_acc](
-                    x + start, length
-                )
+                partials[unsafe_offset=tid] = _nrm2_serial[
+                    dtype, simd_width, n_acc
+                ](x.unsafe_offset(start), length)
 
             parallelize[worker](n_threads)
             for i in range(n_threads):
-                result += partials[i]
+                result += partials[unsafe_offset=i]
             partials.unsafe_free()
             return sqrt(result)
 
@@ -122,6 +123,6 @@ def nrm2[
     if incx < 0:
         ix = (-n + 1) * incx
     for _ in range(n):
-        result += x[ix] * x[ix]
+        result += x[unsafe_offset=ix] * x[unsafe_offset=ix]
         ix += incx
     return sqrt(result)

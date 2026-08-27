@@ -14,6 +14,7 @@ Provides dot product operations as defined in the BLAS library standard.
 """
 
 from max.algorithm.backend.cpu import parallelize
+from std.memory.alloc import unsafe_alloc
 from std.sys.info import simd_width_of
 from ._tuning import DOT_N_THREADS, DOT_PAR_THRESHOLD, DOT_N_ACC
 from mojoblas.type_aliases import BLASPtr
@@ -76,7 +77,7 @@ def _dot_serial[
     ).reduce_add()
 
     while i < length:
-        result += xc[i] * yc[i]
+        result += xc[unsafe_offset=i] * yc[unsafe_offset=i]
         i += 1
 
     return result
@@ -132,9 +133,9 @@ def dot[
 
     if incx == 1 and incy == 1:
         if n > par_threshold:
-            var partials = alloc[Scalar[dtype]](n_threads)
+            var partials = unsafe_alloc[Scalar[dtype]](n_threads)
             for i in range(n_threads):
-                partials[i] = 0
+                partials[unsafe_offset=i] = 0
             var chunk_size = (n + n_threads - 1) // n_threads
 
             @parameter
@@ -143,15 +144,15 @@ def dot[
                 var end = min(start + chunk_size, n)
                 var length = end - start
                 if length <= 0:
-                    partials[tid] = 0
+                    partials[unsafe_offset=tid] = 0
                     return
-                partials[tid] = _dot_serial[dtype, simd_width, n_acc](
-                    dx + start, dy + start, length
-                )
+                partials[unsafe_offset=tid] = _dot_serial[
+                    dtype, simd_width, n_acc
+                ](dx.unsafe_offset(start), dy.unsafe_offset(start), length)
 
             parallelize[worker](n_threads)
             for i in range(n_threads):
-                result += partials[i]
+                result += partials[unsafe_offset=i]
             partials.unsafe_free()
             return result
 
@@ -165,7 +166,7 @@ def dot[
         iy = (-n + 1) * incy
 
     for _ in range(n):
-        result += dx[ix] * dy[iy]
+        result += dx[unsafe_offset=ix] * dy[unsafe_offset=iy]
         ix += incx
         iy += incy
 
