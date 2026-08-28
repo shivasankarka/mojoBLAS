@@ -15,7 +15,7 @@
 # For information on the Apple AMX instruction set, see
 # https://www.notion.so/modularai/Apple-AMX-Resources-2cc523b9c851498787dfloat946ebb09930e.
 #
-# ===-----------------------------------------------------------------------===#
+# ===----------------------------------------------------------------------=== #
 
 # ===----------------------------------------------------------------------=== #
 # Stdlib
@@ -216,14 +216,14 @@ def genlut(gpr: Int):
     _op_gpr[22](Int64(gpr))
 
 
-# ===-----------------------------------------------------------------------===#
+# ===----------------------------------------------------------------------=== #
 # Full operand encodings for the AMX instructions, reverse-engineered by
 # corsix (https://github.com/corsix/amx). Bit positions below are referenced
 # from that project's per-instruction docs (fma.md, fms.md, mac16.md,
 # vecint.md, vecfp.md, matint.md, matfp.md, extr_x/y/h/v.md, genlut.md).
 # These wrappers expose the *raw* bitfields of each instruction; callers are
 # expected to know the legal combinations for their target dtype/mode.
-# ===-----------------------------------------------------------------------===#
+# ===----------------------------------------------------------------------=== #
 
 comptime AMX_VECTOR_MODE: Int = 1 << 63
 comptime AMX_SKIP_X: Int = 1 << 29
