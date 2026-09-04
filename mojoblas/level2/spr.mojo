@@ -32,6 +32,24 @@ def spr[
     incx: Int,
     ap: BLASPtr[dtype, origin_ap],
 ):
+    """
+    Performs the symmetric packed rank 1 operation A := alpha*x*x^T + A,
+    where A is an n by n symmetric matrix supplied in packed form.
+
+    Parameters:
+        mut_x: Indicates whether the pointer x is mutable (True) or immutable (False).
+        origin_x: Memory origin of the pointer x.
+        origin_ap: Memory origin of the pointer ap (mutable, input/output).
+        dtype: The data type of the elements (e.g., Float32, Float64).
+
+    Args:
+        uplo: Specifies whether A is upper ('U') or lower ('L') triangular.
+        n: The order of the matrix A.
+        alpha: The scalar multiplier for the rank-1 update.
+        x: A pointer to the first element of the vector x.
+        incx: The increment for the elements of x.
+        ap: A pointer to the first element of the packed matrix A (input/output).
+    """
     var info: Int = 0
     if uplo != "U" and uplo != "u" and uplo != "L" and uplo != "l":
         info = 1

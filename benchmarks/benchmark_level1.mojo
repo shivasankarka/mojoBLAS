@@ -1,50 +1,60 @@
-import std.benchmark as benchmark
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.benchmark import keep
+import std.benchmark as benchmark
+from std.memory.alloc import unsafe_alloc
 
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
 from mojoblas.level1 import (
+    asum,
     axpy,
     copy,
-    scal,
     dot,
-    nrm2,
-    asum,
-    vswap,
     iamax,
-    rotg,
+    nrm2,
     rot,
+    rotg,
     rotm,
     rotmg,
+    scal,
+    vswap,
 )
+
+
 comptime f64 = DType.float64
 
+
 def bench_daxpy[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[f64]](current_size)
-    var y = alloc[Scalar[f64]](current_size)
+    var x = unsafe_alloc[Scalar[f64]](current_size)
+    var y = unsafe_alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float64(i + 1)
-        y[i] = Float64((i + 1) * 10)
+        x[unsafe_offset=i] = Float64(i + 1)
+        y[unsafe_offset=i] = Float64((i + 1) * 10)
 
     @parameter
     def daxpy_only() -> None:
         axpy[f64](current_size, Float64(2.0), x, 1, y, 1)
-        keep(y) # to prevent compiler optimization while doing parallelization
+        keep(y)  # to prevent compiler optimization while doing parallelization
         # (idk why it happens only with parallelization.)
 
     var report = benchmark.run[daxpy_only](max_runtime_secs=1)
 
     keep(x)
     keep(y)
-    x.free()
-    y.free()
+    x.unsafe_free()
+    y.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_dcopy[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[f64]](current_size)
-    var y = alloc[Scalar[f64]](current_size)
+    var x = unsafe_alloc[Scalar[f64]](current_size)
+    var y = unsafe_alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dcopy_only() -> None:
@@ -54,16 +64,16 @@ def bench_dcopy[current_size: Int]() raises -> Float64:
 
     keep(x)
     keep(y)
-    x.free()
-    y.free()
+    x.unsafe_free()
+    y.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_dscal[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[f64]](current_size)
+    var x = unsafe_alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dscal_only() -> None:
@@ -72,17 +82,17 @@ def bench_dscal[current_size: Int]() raises -> Float64:
     var report = benchmark.run[dscal_only](max_runtime_secs=1)
 
     keep(x)
-    x.free()
+    x.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_ddot[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[f64]](current_size)
-    var y = alloc[Scalar[f64]](current_size)
+    var x = unsafe_alloc[Scalar[f64]](current_size)
+    var y = unsafe_alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float64(i + 1)
-        y[i] = Float64(i + 2)
+        x[unsafe_offset=i] = Float64(i + 1)
+        y[unsafe_offset=i] = Float64(i + 2)
 
     @parameter
     def ddot_only() -> None:
@@ -93,16 +103,16 @@ def bench_ddot[current_size: Int]() raises -> Float64:
 
     keep(x)
     keep(y)
-    x.free()
-    y.free()
+    x.unsafe_free()
+    y.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_dasum[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[f64]](current_size)
+    var x = unsafe_alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float64(i + 1) if i % 2 == 0 else Float64(-(i + 1))
+        x[unsafe_offset=i] = Float64(i + 1) if i % 2 == 0 else Float64(-(i + 1))
 
     @parameter
     def dasum_only() -> None:
@@ -112,15 +122,15 @@ def bench_dasum[current_size: Int]() raises -> Float64:
     var report = benchmark.run[dasum_only](max_runtime_secs=1)
 
     keep(x)
-    x.free()
+    x.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_dnrm2[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[f64]](current_size)
+    var x = unsafe_alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dnrm2_only() -> None:
@@ -130,17 +140,17 @@ def bench_dnrm2[current_size: Int]() raises -> Float64:
     var report = benchmark.run[dnrm2_only](max_runtime_secs=1)
 
     keep(x)
-    x.free()
+    x.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_dswap[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[f64]](current_size)
-    var y = alloc[Scalar[f64]](current_size)
+    var x = unsafe_alloc[Scalar[f64]](current_size)
+    var y = unsafe_alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float64(i + 1)
-        y[i] = Float64((i + 1) * 10)
+        x[unsafe_offset=i] = Float64(i + 1)
+        y[unsafe_offset=i] = Float64((i + 1) * 10)
 
     @parameter
     def dswap_only() -> None:
@@ -150,16 +160,18 @@ def bench_dswap[current_size: Int]() raises -> Float64:
 
     keep(x)
     keep(y)
-    x.free()
-    y.free()
+    x.unsafe_free()
+    y.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_diamax[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[f64]](current_size)
+    var x = unsafe_alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float64(i + 1) if i != current_size // 2 else Float64(current_size * 2)
+        x[unsafe_offset=i] = Float64(
+            i + 1
+        ) if i != current_size // 2 else Float64(current_size * 2)
 
     @parameter
     def diamax_only() -> None:
@@ -169,17 +181,17 @@ def bench_diamax[current_size: Int]() raises -> Float64:
     var report = benchmark.run[diamax_only](max_runtime_secs=1)
 
     keep(x)
-    x.free()
+    x.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_drot[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[f64]](current_size)
-    var y = alloc[Scalar[f64]](current_size)
+    var x = unsafe_alloc[Scalar[f64]](current_size)
+    var y = unsafe_alloc[Scalar[f64]](current_size)
     for i in range(current_size):
-        x[i] = Float64(i + 1)
-        y[i] = Float64((i + 1) * 2)
+        x[unsafe_offset=i] = Float64(i + 1)
+        y[unsafe_offset=i] = Float64((i + 1) * 2)
 
     @parameter
     def drot_only() -> None:
@@ -189,20 +201,20 @@ def bench_drot[current_size: Int]() raises -> Float64:
 
     keep(x)
     keep(y)
-    x.free()
-    y.free()
+    x.unsafe_free()
+    y.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_drotg[current_size: Int]() raises -> Float64:
-    var a = alloc[Scalar[f64]](1)
-    var b = alloc[Scalar[f64]](1)
-    var c = alloc[Scalar[f64]](1)
-    var s = alloc[Scalar[f64]](1)
+    var a = unsafe_alloc[Scalar[f64]](1)
+    var b = unsafe_alloc[Scalar[f64]](1)
+    var c = unsafe_alloc[Scalar[f64]](1)
+    var s = unsafe_alloc[Scalar[f64]](1)
 
-    a[0] = Float64(3.0)
-    b[0] = Float64(4.0)
+    a[unsafe_offset=0] = Float64(3.0)
+    b[unsafe_offset=0] = Float64(4.0)
 
     @parameter
     def drotg_only() -> None:
@@ -214,28 +226,28 @@ def bench_drotg[current_size: Int]() raises -> Float64:
     keep(b)
     keep(c)
     keep(s)
-    a.free()
-    b.free()
-    c.free()
-    s.free()
+    a.unsafe_free()
+    b.unsafe_free()
+    c.unsafe_free()
+    s.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_drotm[current_size: Int]() raises -> Float64:
-    var x = alloc[Scalar[f64]](current_size)
-    var y = alloc[Scalar[f64]](current_size)
-    var p = alloc[Scalar[f64]](5)
+    var x = unsafe_alloc[Scalar[f64]](current_size)
+    var y = unsafe_alloc[Scalar[f64]](current_size)
+    var p = unsafe_alloc[Scalar[f64]](5)
 
     for i in range(current_size):
-        x[i] = Float64(i + 1)
-        y[i] = Float64(i + 2)
+        x[unsafe_offset=i] = Float64(i + 1)
+        y[unsafe_offset=i] = Float64(i + 2)
 
-    p[0] = -1.0
-    p[1] = 1.0
-    p[2] = 2.0
-    p[3] = 3.0
-    p[4] = 4.0
+    p[unsafe_offset=0] = -1.0
+    p[unsafe_offset=1] = 1.0
+    p[unsafe_offset=2] = 2.0
+    p[unsafe_offset=3] = 3.0
+    p[unsafe_offset=4] = 4.0
 
     @parameter
     def drotm_only() -> None:
@@ -246,24 +258,24 @@ def bench_drotm[current_size: Int]() raises -> Float64:
     keep(x)
     keep(y)
     keep(p)
-    x.free()
-    y.free()
-    p.free()
+    x.unsafe_free()
+    y.unsafe_free()
+    p.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_drotmg[current_size: Int]() raises -> Float64:
-    var d1 = alloc[Scalar[f64]](1)
-    var d2 = alloc[Scalar[f64]](1)
-    var x1 = alloc[Scalar[f64]](1)
-    var y1 = alloc[Scalar[f64]](1)
-    var p = alloc[Scalar[f64]](5)
+    var d1 = unsafe_alloc[Scalar[f64]](1)
+    var d2 = unsafe_alloc[Scalar[f64]](1)
+    var x1 = unsafe_alloc[Scalar[f64]](1)
+    var y1 = unsafe_alloc[Scalar[f64]](1)
+    var p = unsafe_alloc[Scalar[f64]](5)
 
-    d1[0] = 2.0
-    d2[0] = 3.0
-    x1[0] = 4.0
-    y1[0] = 5.0
+    d1[unsafe_offset=0] = 2.0
+    d2[unsafe_offset=0] = 3.0
+    x1[unsafe_offset=0] = 4.0
+    y1[unsafe_offset=0] = 5.0
 
     @parameter
     def drotmg_only() -> None:
@@ -276,16 +288,29 @@ def bench_drotmg[current_size: Int]() raises -> Float64:
     keep(x1)
     keep(y1)
     keep(p)
-    d1.free()
-    d2.free()
-    x1.free()
-    y1.free()
-    p.free()
+    d1.unsafe_free()
+    d2.unsafe_free()
+    x1.unsafe_free()
+    y1.unsafe_free()
+    p.unsafe_free()
 
     return report.mean("ns")
 
 
-comptime sizes: List[Int] = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144]
+comptime sizes: List[Int] = [
+    256,
+    512,
+    1024,
+    2048,
+    4096,
+    8192,
+    16384,
+    32768,
+    65536,
+    131072,
+    262144,
+]
+
 
 def benchmark_axpy() raises -> List[Float64]:
     var times: List[Float64] = []
@@ -386,13 +411,16 @@ def main() raises:
     var idx = 0
 
     print("{")
-    print("  \"metadata\": {")
-    print("    \"min_n\": ", min_n, ",")
-    print("    \"max_n\": ", max_n, ",")
-    print("    \"step\": ", step, ",")
-    print("    \"sizes\": [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144]")
+    print('  "metadata": {')
+    print('    "min_n": ', min_n, ",")
+    print('    "max_n": ', max_n, ",")
+    print('    "step": ', step, ",")
+    print(
+        '    "sizes": [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,'
+        " 131072, 262144]"
+    )
     print("  },")
-    print("  \"results\": [")
+    print('  "results": [')
 
     comptime for size in materialize[sizes]():
         var axpy_ns_value = axpy_ns[idx]
@@ -411,19 +439,75 @@ def main() raises:
         if not first:
             print(",")
         first = False
-        print("    {\"lib\":\"mojo\",\"op\":\"axpy\",\"n\":", size, ",\"avg_ns\":", axpy_ns_value, ",\"avg_seconds\":", axpy_s, "}")
+        print(
+            '    {"lib":"mojo","op":"axpy","n":',
+            size,
+            ',"avg_ns":',
+            axpy_ns_value,
+            ',"avg_seconds":',
+            axpy_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"scal\",\"n\":", size, ",\"avg_ns\":", scal_ns_value, ",\"avg_seconds\":", scal_s, "}")
+        print(
+            '    {"lib":"mojo","op":"scal","n":',
+            size,
+            ',"avg_ns":',
+            scal_ns_value,
+            ',"avg_seconds":',
+            scal_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"dot\",\"n\":", size, ",\"avg_ns\":", dot_ns_value, ",\"avg_seconds\":", dot_s, "}")
+        print(
+            '    {"lib":"mojo","op":"dot","n":',
+            size,
+            ',"avg_ns":',
+            dot_ns_value,
+            ',"avg_seconds":',
+            dot_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"nrm2\",\"n\":", size, ",\"avg_ns\":", nrm2_ns_value, ",\"avg_seconds\":", nrm2_s, "}")
+        print(
+            '    {"lib":"mojo","op":"nrm2","n":',
+            size,
+            ',"avg_ns":',
+            nrm2_ns_value,
+            ',"avg_seconds":',
+            nrm2_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"sum\",\"n\":", size, ",\"avg_ns\":", sum_ns_value, ",\"avg_seconds\":", sum_s, "}")
+        print(
+            '    {"lib":"mojo","op":"sum","n":',
+            size,
+            ',"avg_ns":',
+            sum_ns_value,
+            ',"avg_seconds":',
+            sum_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"rotm\",\"n\":", size, ",\"avg_ns\":", rotm_ns[idx], ",\"avg_seconds\":", rotm_s, "}")
+        print(
+            '    {"lib":"mojo","op":"rotm","n":',
+            size,
+            ',"avg_ns":',
+            rotm_ns[idx],
+            ',"avg_seconds":',
+            rotm_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"rotmg\",\"n\":", size, ",\"avg_ns\":", rotmg_ns[idx], ",\"avg_seconds\":", rotmg_s, "}")
+        print(
+            '    {"lib":"mojo","op":"rotmg","n":',
+            size,
+            ',"avg_ns":',
+            rotmg_ns[idx],
+            ',"avg_seconds":',
+            rotmg_s,
+            "}",
+        )
 
         idx += 1
 

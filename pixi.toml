@@ -8,13 +8,13 @@ channels = [
 ]
 name = "mojoblas"
 platforms = ["osx-arm64", "linux-64"]
-version = "0.1.0"
+version = "0.2.0"
 preview = ["pixi-build"]
 license = "MIT"
 
 [package]
 name = "mojoblas"
-version = "0.1.0"
+version = "0.2.0"
 
 [package.build]
 backend = { name = "pixi-build-mojo", version = "0.*", channels = [

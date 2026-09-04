@@ -1,9 +1,18 @@
-import std.benchmark as benchmark
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.benchmark import keep
+import std.benchmark as benchmark
+from std.memory.alloc import unsafe_alloc
 
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
 from mojoblas.level3 import *
 
+
 comptime f64 = DType.float64
+
 
 def bench_dgemm[current_size: Int]() raises -> Float64:
     var m = current_size
@@ -12,42 +21,57 @@ def bench_dgemm[current_size: Int]() raises -> Float64:
     var lda = m
     var ldb = k
     var ldc = m
-    var a = alloc[Scalar[f64]](lda * k)
-    var b = alloc[Scalar[f64]](ldb * n)
-    var c = alloc[Scalar[f64]](ldc * n)
+    var a = unsafe_alloc[Scalar[f64]](lda * k)
+    var b = unsafe_alloc[Scalar[f64]](ldb * n)
+    var c = unsafe_alloc[Scalar[f64]](ldc * n)
     for i in range(lda * k):
-        a[i] = Float64(i + 1)
+        a[unsafe_offset=i] = Float64(i + 1)
     for i in range(ldb * n):
-        b[i] = Float64(i + 1)
+        b[unsafe_offset=i] = Float64(i + 1)
     for i in range(ldc * n):
-        c[i] = Float64(i + 1)
+        c[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
-    def dgemm_only()  -> None:
-        gemm[f64]("N", "N", m, n, k, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc)
+    def dgemm_only() -> None:
+        gemm[f64](
+            "N",
+            "N",
+            m,
+            n,
+            k,
+            Float64(1.0),
+            a,
+            lda,
+            b,
+            ldb,
+            Float64(1.0),
+            c,
+            ldc,
+        )
 
     var report = benchmark.run[dgemm_only](max_runtime_secs=1)
 
     keep(a)
     keep(b)
     keep(c)
-    a.free()
-    b.free()
-    c.free()
+    a.unsafe_free()
+    b.unsafe_free()
+    c.unsafe_free()
 
     return report.mean("ns")
+
 
 def bench_dsyrk[current_size: Int]() raises -> Float64:
     var n = current_size
     var k = current_size
     var lda = n
     var ldc = n
-    var a = alloc[Scalar[f64]](lda * k)
-    var c = alloc[Scalar[f64]](ldc * n)
+    var a = unsafe_alloc[Scalar[f64]](lda * k)
+    var c = unsafe_alloc[Scalar[f64]](ldc * n)
     for i in range(lda * k):
-        a[i] = Float64(i + 1)
+        a[unsafe_offset=i] = Float64(i + 1)
     for i in range(ldc * n):
-        c[i] = Float64(i + 1)
+        c[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dsyrk_only() -> None:
@@ -57,10 +81,11 @@ def bench_dsyrk[current_size: Int]() raises -> Float64:
 
     keep(a)
     keep(c)
-    a.free()
-    c.free()
+    a.unsafe_free()
+    c.unsafe_free()
 
     return report.mean("ns")
+
 
 def bench_dsyr2k[current_size: Int]() raises -> Float64:
     var n = current_size
@@ -68,30 +93,33 @@ def bench_dsyr2k[current_size: Int]() raises -> Float64:
     var lda = n
     var ldb = n
     var ldc = n
-    var a = alloc[Scalar[f64]](lda * k)
-    var b = alloc[Scalar[f64]](ldb * k)
-    var c = alloc[Scalar[f64]](ldc * n)
+    var a = unsafe_alloc[Scalar[f64]](lda * k)
+    var b = unsafe_alloc[Scalar[f64]](ldb * k)
+    var c = unsafe_alloc[Scalar[f64]](ldc * n)
     for i in range(lda * k):
-        a[i] = Float64(i + 1)
+        a[unsafe_offset=i] = Float64(i + 1)
     for i in range(ldb * k):
-        b[i] = Float64(i + 1)
+        b[unsafe_offset=i] = Float64(i + 1)
     for i in range(ldc * n):
-        c[i] = Float64(i + 1)
+        c[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dsyr2k_only() -> None:
-        syr2k[f64]("U", "N", n, k, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc)
+        syr2k[f64](
+            "U", "N", n, k, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc
+        )
 
     var report = benchmark.run[dsyr2k_only](max_runtime_secs=1)
 
     keep(a)
     keep(b)
     keep(c)
-    a.free()
-    b.free()
-    c.free()
+    a.unsafe_free()
+    b.unsafe_free()
+    c.unsafe_free()
 
     return report.mean("ns")
+
 
 def bench_dsymm[current_size: Int]() raises -> Float64:
     var m = current_size
@@ -99,55 +127,60 @@ def bench_dsymm[current_size: Int]() raises -> Float64:
     var lda = m
     var ldb = m
     var ldc = m
-    var a = alloc[Scalar[f64]](lda * m)
-    var b = alloc[Scalar[f64]](ldb * n)
-    var c = alloc[Scalar[f64]](ldc * n)
+    var a = unsafe_alloc[Scalar[f64]](lda * m)
+    var b = unsafe_alloc[Scalar[f64]](ldb * n)
+    var c = unsafe_alloc[Scalar[f64]](ldc * n)
     # A must be symmetric (side=Left, uplo=Upper): fill both triangles, dominant diagonal
     for j in range(m):
         for i in range(j + 1):
             var v = Float64((i + j) % 11 + 1)
             if i == j:
                 v = Float64(m + i + 1)
-            a[i + j * lda] = v
-            a[j + i * lda] = v
+            a[unsafe_offset=i + j * lda] = v
+            a[unsafe_offset=j + i * lda] = v
     for i in range(ldb * n):
-        b[i] = Float64(i + 1)
+        b[unsafe_offset=i] = Float64(i + 1)
     for i in range(ldc * n):
-        c[i] = Float64(0.0)
+        c[unsafe_offset=i] = Float64(0.0)
 
     @parameter
     def dsymm_only() -> None:
-        symm[f64]("L", "U", m, n, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc)
+        symm[f64](
+            "L", "U", m, n, Float64(1.0), a, lda, b, ldb, Float64(1.0), c, ldc
+        )
 
     var report = benchmark.run[dsymm_only](max_runtime_secs=1)
 
     keep(a)
     keep(b)
     keep(c)
-    a.free()
-    b.free()
-    c.free()
+    a.unsafe_free()
+    b.unsafe_free()
+    c.unsafe_free()
 
     return report.mean("ns")
+
 
 def bench_dtrmm[current_size: Int]() raises -> Float64:
     var m = current_size
     var n = current_size
     var lda = m
     var ldb = m
-    var a = alloc[Scalar[f64]](lda * m)
-    var b = alloc[Scalar[f64]](ldb * n)
+    var a = unsafe_alloc[Scalar[f64]](lda * m)
+    var b = unsafe_alloc[Scalar[f64]](ldb * n)
     # A must be upper triangular (side=Left, uplo=Upper): zero lower triangle, dominant diagonal
     for j in range(m):
         for i in range(m):
             if i > j:
-                a[i + j * lda] = Float64(0.0)
+                a[unsafe_offset=i + j * lda] = Float64(0.0)
             elif i == j:
-                a[i + j * lda] = Float64(m + i + 1)
+                a[unsafe_offset=i + j * lda] = Float64(m + i + 1)
             else:
-                a[i + j * lda] = Float64((i + j) % 7 + 1) * Float64(0.1)
+                a[unsafe_offset=i + j * lda] = Float64(
+                    (i + j) % 7 + 1
+                ) * Float64(0.1)
     for i in range(ldb * n):
-        b[i] = Float64(i + 1)
+        b[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dtrmm_only() -> None:
@@ -157,28 +190,35 @@ def bench_dtrmm[current_size: Int]() raises -> Float64:
 
     keep(a)
     keep(b)
-    a.free()
-    b.free()
+    a.unsafe_free()
+    b.unsafe_free()
 
     return report.mean("ns")
+
 
 def bench_dtrsm[current_size: Int]() raises -> Float64:
     var m = current_size
     var n = current_size
     var lda = m
     var ldb = m
-    var a = alloc[Scalar[f64]](lda * m)
-    var b = alloc[Scalar[f64]](ldb * n)
+    var a = unsafe_alloc[Scalar[f64]](lda * m)
+    var b = unsafe_alloc[Scalar[f64]](ldb * n)
     for j in range(m):
         for i in range(m):
             if i > j:
-                a[i + j * lda] = Float64(0.0)
+                a[unsafe_offset=i + j * lda] = Float64(0.0)
             elif i == j:
-                a[i + j * lda] = Float64(1.0) + Float64((i % 9) + 1) * Float64(1e-3)
+                a[unsafe_offset=i + j * lda] = Float64(1.0) + Float64(
+                    (i % 9) + 1
+                ) * Float64(1e-3)
             else:
-                a[i + j * lda] = Float64(((i + j) % 17) + 1) * Float64(1e-4)
+                a[unsafe_offset=i + j * lda] = Float64(
+                    ((i + j) % 17) + 1
+                ) * Float64(1e-4)
     for i in range(ldb * n):
-        b[i] = Float64(1.0) + Float64((i % 23) + 1) * Float64(1e-3)
+        b[unsafe_offset=i] = Float64(1.0) + Float64((i % 23) + 1) * Float64(
+            1e-3
+        )
 
     @parameter
     def dtrsm_only() -> None:
@@ -188,12 +228,14 @@ def bench_dtrsm[current_size: Int]() raises -> Float64:
 
     keep(a)
     keep(b)
-    a.free()
-    b.free()
+    a.unsafe_free()
+    b.unsafe_free()
 
     return report.mean("ns")
 
+
 comptime sizes: List[Int] = [32, 64, 128, 256, 512, 1024, 2048]
+
 
 def benchmark_gemm() raises -> List[Float64]:
     var times: List[Float64] = []
@@ -201,11 +243,13 @@ def benchmark_gemm() raises -> List[Float64]:
         times.append(bench_dgemm[size]())
     return times^
 
+
 def benchmark_syrk() raises -> List[Float64]:
     var times: List[Float64] = []
     comptime for size in materialize[sizes]():
         times.append(bench_dsyrk[size]())
     return times^
+
 
 def benchmark_syr2k() raises -> List[Float64]:
     var times: List[Float64] = []
@@ -213,11 +257,13 @@ def benchmark_syr2k() raises -> List[Float64]:
         times.append(bench_dsyr2k[size]())
     return times^
 
+
 def benchmark_symm() raises -> List[Float64]:
     var times: List[Float64] = []
     comptime for size in materialize[sizes]():
         times.append(bench_dsymm[size]())
     return times^
+
 
 def benchmark_trmm() raises -> List[Float64]:
     var times: List[Float64] = []
@@ -225,11 +271,13 @@ def benchmark_trmm() raises -> List[Float64]:
         times.append(bench_dtrmm[size]())
     return times^
 
+
 def benchmark_trsm() raises -> List[Float64]:
     var times: List[Float64] = []
     comptime for size in materialize[sizes]():
         times.append(bench_dtrsm[size]())
     return times^
+
 
 def main() raises:
     var min_n: Int = 32
@@ -245,13 +293,13 @@ def main() raises:
     var idx = 0
 
     print("{")
-    print("  \"metadata\": {")
-    print("    \"min_n\": ", min_n, ",")
-    print("    \"max_n\": ", max_n, ",")
-    print("    \"step\": ", step, ",")
-    print("    \"sizes\": [32, 64, 128, 256, 512, 1024, 2048]")
+    print('  "metadata": {')
+    print('    "min_n": ', min_n, ",")
+    print('    "max_n": ', max_n, ",")
+    print('    "step": ', step, ",")
+    print('    "sizes": [32, 64, 128, 256, 512, 1024, 2048]')
     print("  },")
-    print("  \"results\": [")
+    print('  "results": [')
 
     comptime for size in materialize[sizes]():
         var gemm_ns_value = gemm_ns[idx]
@@ -270,17 +318,65 @@ def main() raises:
         if not first:
             print(",")
         first = False
-        print("    {\"lib\":\"mojo\",\"op\":\"gemm\",\"n\":", size, ",\"avg_ns\":", gemm_ns_value, ",\"avg_seconds\":", gemm_s, "}")
+        print(
+            '    {"lib":"mojo","op":"gemm","n":',
+            size,
+            ',"avg_ns":',
+            gemm_ns_value,
+            ',"avg_seconds":',
+            gemm_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"syrk\",\"n\":", size, ",\"avg_ns\":", syrk_ns_value, ",\"avg_seconds\":", syrk_s, "}")
+        print(
+            '    {"lib":"mojo","op":"syrk","n":',
+            size,
+            ',"avg_ns":',
+            syrk_ns_value,
+            ',"avg_seconds":',
+            syrk_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"syr2k\",\"n\":", size, ",\"avg_ns\":", syr2k_ns_value, ",\"avg_seconds\":", syr2k_s, "}")
+        print(
+            '    {"lib":"mojo","op":"syr2k","n":',
+            size,
+            ',"avg_ns":',
+            syr2k_ns_value,
+            ',"avg_seconds":',
+            syr2k_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"symm\",\"n\":", size, ",\"avg_ns\":", symm_ns_value, ",\"avg_seconds\":", symm_s, "}")
+        print(
+            '    {"lib":"mojo","op":"symm","n":',
+            size,
+            ',"avg_ns":',
+            symm_ns_value,
+            ',"avg_seconds":',
+            symm_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"trmm\",\"n\":", size, ",\"avg_ns\":", trmm_ns_value, ",\"avg_seconds\":", trmm_s, "}")
+        print(
+            '    {"lib":"mojo","op":"trmm","n":',
+            size,
+            ',"avg_ns":',
+            trmm_ns_value,
+            ',"avg_seconds":',
+            trmm_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"trsm\",\"n\":", size, ",\"avg_ns\":", trsm_ns_value, ",\"avg_seconds\":", trsm_s, "}")
+        print(
+            '    {"lib":"mojo","op":"trsm","n":',
+            size,
+            ',"avg_ns":',
+            trsm_ns_value,
+            ',"avg_seconds":',
+            trsm_s,
+            "}",
+        )
 
         idx += 1
 

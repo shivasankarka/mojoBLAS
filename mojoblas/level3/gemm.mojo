@@ -444,6 +444,29 @@ def gemm_v3[
 ):
     """
     Packed-B register micro-kernel GEMM: C := alpha*A*B + beta*C.
+
+    Parameters:
+        mut_a: Mutability of pointer a.
+        mut_b: Mutability of pointer b.
+        origin_a: Memory origin of a.
+        origin_b: Memory origin of b.
+        origin_c: Memory origin of c (mutable, input/output).
+        dtype: Element data type.
+
+    Args:
+        trans_a: 'N'/'n' for no transpose, 'T'/'t' or 'C'/'c' for transpose.
+        trans_b: 'N'/'n' for no transpose, 'T'/'t' or 'C'/'c' for transpose.
+        m: Rows of C and A.
+        n: Columns of C and B.
+        k: Columns of A / rows of B.
+        alpha: Scalar multiplier for A*B.
+        a: Pointer to A.
+        lda: Leading dimension of A.
+        b: Pointer to B.
+        ldb: Leading dimension of B.
+        beta: Scalar multiplier for C on input.
+        c: Pointer to C (input/output).
+        ldc: Leading dimension of C.
     """
     var info: Int = 0
     if (
@@ -652,6 +675,29 @@ def gemm_v6[
 ):
     """
     Shared-A-pack + MC-blocked GEMM: C := alpha*A*B + beta*C (NN path, generic dtype).
+
+    Parameters:
+        mut_a: Mutability of pointer a.
+        mut_b: Mutability of pointer b.
+        origin_a: Memory origin of a.
+        origin_b: Memory origin of b.
+        origin_c: Memory origin of c (mutable, input/output).
+        dtype: Element data type.
+
+    Args:
+        trans_a: 'N'/'n' for no transpose, 'T'/'t' or 'C'/'c' for transpose.
+        trans_b: 'N'/'n' for no transpose, 'T'/'t' or 'C'/'c' for transpose.
+        m: Rows of C and A.
+        n: Columns of C and B.
+        k: Columns of A / rows of B.
+        alpha: Scalar multiplier for A*B.
+        a: Pointer to A.
+        lda: Leading dimension of A.
+        b: Pointer to B.
+        ldb: Leading dimension of B.
+        beta: Scalar multiplier for C on input.
+        c: Pointer to C (input/output).
+        ldc: Leading dimension of C.
     """
     var info: Int = 0
     if (
@@ -951,6 +997,29 @@ def gemm_v7[
 ):
     """
     Blocked shared-A-pack GEMM: C := alpha*A*B + beta*C.
+
+    Parameters:
+        mut_a: Mutability of pointer a.
+        mut_b: Mutability of pointer b.
+        origin_a: Memory origin of a.
+        origin_b: Memory origin of b.
+        origin_c: Memory origin of c (mutable, input/output).
+        dtype: Element data type.
+
+    Args:
+        trans_a: 'N'/'n' for no transpose, 'T'/'t' or 'C'/'c' for transpose.
+        trans_b: 'N'/'n' for no transpose, 'T'/'t' or 'C'/'c' for transpose.
+        m: Rows of C and A.
+        n: Columns of C and B.
+        k: Columns of A / rows of B.
+        alpha: Scalar multiplier for A*B.
+        a: Pointer to A.
+        lda: Leading dimension of A.
+        b: Pointer to B.
+        ldb: Leading dimension of B.
+        beta: Scalar multiplier for C on input.
+        c: Pointer to C (input/output).
+        ldc: Leading dimension of C.
     """
     var info: Int = 0
     if (
@@ -2812,6 +2881,29 @@ def gemm_v12[
 
     v12 keeps v11's corrected 4-Z, UK=4 micro-kernel and row-block parallelism,
     but packs B in NC-column chunks instead of one full-width B panel.
+
+    Parameters:
+        mut_a: Mutability of pointer a.
+        mut_b: Mutability of pointer b.
+        origin_a: Memory origin of a.
+        origin_b: Memory origin of b.
+        origin_c: Memory origin of c (mutable, input/output).
+        dtype: Element data type (must be float32).
+
+    Args:
+        trans_a: 'N'/'n' for no transpose, 'T'/'t' or 'C'/'c' for transpose.
+        trans_b: 'N'/'n' for no transpose, 'T'/'t' or 'C'/'c' for transpose.
+        m: Rows of C and A.
+        n: Columns of C and B.
+        k: Columns of A / rows of B.
+        alpha: Scalar multiplier for A*B.
+        a: Pointer to A.
+        lda: Leading dimension of A.
+        b: Pointer to B.
+        ldb: Leading dimension of B.
+        beta: Scalar multiplier for C on input.
+        c: Pointer to C (input/output).
+        ldc: Leading dimension of C.
     """
     comptime assert dtype == DType.float32, "gemm_v12 requires float32"
 

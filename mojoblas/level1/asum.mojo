@@ -104,7 +104,7 @@ def asum[
     comptime simd_width: Int = simd_width_of[dtype]()
     if incx == 1:
         if n > par_threshold:
-            # TODO: make partials stack allocated/SIMD since it's always small?
+            # TODO: Make partials stack allocated/SIMD since it's always small?
             var partials = unsafe_alloc[Scalar[dtype]](n_threads)
             for i in range(n_threads):
                 partials[unsafe_offset=i] = 0

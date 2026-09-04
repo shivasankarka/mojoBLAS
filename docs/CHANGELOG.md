@@ -2,6 +2,27 @@
 
 All notable changes to mojoBLAS are documented here.
 
+## [0.2.0] - 2026-09-04
+
+0.1.0 was published to the modular-community prefix.dev channel but never
+tagged/released on GitHub; this release supersedes it there.
+
+### Changed
+
+- Migrated off deprecated pointer APIs (`.load`/`.store`/`.free`/`alloc`/
+  positional `__getitem__`/pointer `__add__`) to their `unsafe_*`
+  equivalents in the test suites and benchmark/tuning scripts, matching
+  the library code already migrated for 0.1.0 — `pixi run test_level1/2/3`
+  builds and runs with zero deprecation warnings.
+- Filled in missing `Args`/`Parameters` docstring sections on `gemm_v3`,
+  `gemm_v6`, `gemm_v7`, `gemm_v12`, `spr`, and `spr2` to match their sibling
+  routines, per `scripts/check_mojo_standards.py`.
+- Fixed stale `from src.*` imports (leftover from the `src/` → `mojoblas/`
+  rename) in `benchmark_gemm_variants.mojo`, `benchmark_gemm_versions.mojo`,
+  `check_gemm_v11_correctness.mojo`, `tune_level1_routine.mojo`, and
+  `tune_level3_gemm.mojo`.
+- Moved `CHANGELOG.md` to `docs/CHANGELOG.md`.
+
 ## [0.1.0] - 2026-08-27
 
 First tagged release.

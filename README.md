@@ -42,7 +42,7 @@ Then, you can install `mojoBLAS` using any of these methods:
 
 2. In the `pixi.toml` file of your project, add the following dependency:
     ```toml
-    mojoblas = "==0.1.0"
+    mojoblas = "==0.2.0"
     ```
 Then run `pixi install` to download and install the package.
 
@@ -155,7 +155,7 @@ pixi run -e bench bench_all
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for release notes.
+See [docs/CHANGELOG.md](docs/CHANGELOG.md) for release notes.
 
 ## Contributing
 

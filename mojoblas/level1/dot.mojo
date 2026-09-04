@@ -141,7 +141,7 @@ def dot[
         The dot product as a scalar value.
     """
     var result: Scalar[dtype] = 0
-    # TODO: not sure if returning 0 is the best way to handle n <= 0 case. Check with BLAS spec.
+    # TODO: Not sure if returning 0 is the best way to handle n <= 0 case. Check with BLAS spec.
     if n <= 0:
         return result
 

@@ -1,25 +1,32 @@
-from std.memory import UnsafePointer, memset_zero
-from std.time import sleep
-import std.benchmark as benchmark
+# ===----------------------------------------------------------------------=== #
+# Stdlib
+# ===----------------------------------------------------------------------=== #
 from std.benchmark import keep
+import std.benchmark as benchmark
+from std.memory.alloc import unsafe_alloc
 
+# ===----------------------------------------------------------------------=== #
+# mojoBLAS
+# ===----------------------------------------------------------------------=== #
 from mojoblas.level2 import *
 
+
 comptime f64 = DType.float64
+
 
 def bench_dgemv[current_size: Int]() raises -> Float64:
     var m = current_size
     var n = current_size
     var lda = m
-    var x = alloc[Scalar[f64]](n)
-    var y = alloc[Scalar[f64]](m)
-    var a = alloc[Scalar[f64]](lda * n)
+    var x = unsafe_alloc[Scalar[f64]](n)
+    var y = unsafe_alloc[Scalar[f64]](m)
+    var a = unsafe_alloc[Scalar[f64]](lda * n)
     for i in range(m * n):
-        a[i] = Float64(i + 1)
+        a[unsafe_offset=i] = Float64(i + 1)
     for i in range(n):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
     for i in range(m):
-        y[i] = Float64(i + 1)
+        y[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dgemv_only() -> None:
@@ -30,25 +37,26 @@ def bench_dgemv[current_size: Int]() raises -> Float64:
     keep(a)
     keep(x)
     keep(y)
-    a.free()
-    x.free()
-    y.free()
+    a.unsafe_free()
+    x.unsafe_free()
+    y.unsafe_free()
 
     return report.mean("ns")
+
 
 def bench_dgemv_trans[current_size: Int]() raises -> Float64:
     var m = current_size
     var n = current_size
     var lda = m
-    var x = alloc[Scalar[f64]](m)
-    var y = alloc[Scalar[f64]](n)
-    var a = alloc[Scalar[f64]](lda * n)
+    var x = unsafe_alloc[Scalar[f64]](m)
+    var y = unsafe_alloc[Scalar[f64]](n)
+    var a = unsafe_alloc[Scalar[f64]](lda * n)
     for i in range(m * n):
-        a[i] = Float64(i + 1)
+        a[unsafe_offset=i] = Float64(i + 1)
     for i in range(m):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
     for i in range(n):
-        y[i] = Float64(i + 1)
+        y[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dgemv_trans_only() -> None:
@@ -59,28 +67,31 @@ def bench_dgemv_trans[current_size: Int]() raises -> Float64:
     keep(a)
     keep(x)
     keep(y)
-    a.free()
-    x.free()
-    y.free()
+    a.unsafe_free()
+    x.unsafe_free()
+    y.unsafe_free()
 
     return report.mean("ns")
+
 
 def bench_dtrmv[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = n
-    var x = alloc[Scalar[f64]](n)
-    var a = alloc[Scalar[f64]](lda * n)
+    var x = unsafe_alloc[Scalar[f64]](n)
+    var a = unsafe_alloc[Scalar[f64]](lda * n)
     # upper triangular: zero lower, well-conditioned diagonal
     for j in range(n):
         for i in range(n):
             if i > j:
-                a[i + j * lda] = Float64(0.0)
+                a[unsafe_offset=i + j * lda] = Float64(0.0)
             elif i == j:
-                a[i + j * lda] = Float64(n + i + 1)
+                a[unsafe_offset=i + j * lda] = Float64(n + i + 1)
             else:
-                a[i + j * lda] = Float64((i + j) % 7 + 1) * Float64(0.1)
+                a[unsafe_offset=i + j * lda] = Float64(
+                    (i + j) % 7 + 1
+                ) * Float64(0.1)
     for i in range(n):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dtrmv_only() -> None:
@@ -90,26 +101,33 @@ def bench_dtrmv[current_size: Int]() raises -> Float64:
 
     keep(a)
     keep(x)
-    a.free()
-    x.free()
+    a.unsafe_free()
+    x.unsafe_free()
 
     return report.mean("ns")
+
 
 def bench_dtrsv[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = n
-    var x = alloc[Scalar[f64]](n)
-    var a = alloc[Scalar[f64]](lda * n)
+    var x = unsafe_alloc[Scalar[f64]](n)
+    var a = unsafe_alloc[Scalar[f64]](lda * n)
     for j in range(n):
         for i in range(n):
             if i > j:
-                a[i + j * lda] = Float64(0.0)
+                a[unsafe_offset=i + j * lda] = Float64(0.0)
             elif i == j:
-                a[i + j * lda] = Float64(1.0) + Float64((i % 7) + 1) * Float64(1e-3)
+                a[unsafe_offset=i + j * lda] = Float64(1.0) + Float64(
+                    (i % 7) + 1
+                ) * Float64(1e-3)
             else:
-                a[i + j * lda] = Float64(((i + j) % 11) + 1) * Float64(1e-4)
+                a[unsafe_offset=i + j * lda] = Float64(
+                    ((i + j) % 11) + 1
+                ) * Float64(1e-4)
     for i in range(n):
-        x[i] = Float64(1.0) + Float64((i % 13) + 1) * Float64(1e-3)
+        x[unsafe_offset=i] = Float64(1.0) + Float64((i % 13) + 1) * Float64(
+            1e-3
+        )
 
     @parameter
     def dtrsv_only() -> None:
@@ -119,28 +137,29 @@ def bench_dtrsv[current_size: Int]() raises -> Float64:
 
     keep(a)
     keep(x)
-    a.free()
-    x.free()
+    a.unsafe_free()
+    x.unsafe_free()
 
     return report.mean("ns")
+
 
 def bench_dsymv[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = n
-    var x = alloc[Scalar[f64]](n)
-    var y = alloc[Scalar[f64]](n)
-    var a = alloc[Scalar[f64]](lda * n)
+    var x = unsafe_alloc[Scalar[f64]](n)
+    var y = unsafe_alloc[Scalar[f64]](n)
+    var a = unsafe_alloc[Scalar[f64]](lda * n)
     # symmetric matrix: fill both triangles symmetrically, dominant diagonal
     for j in range(n):
         for i in range(j + 1):
             var v = Float64((i + j) % 11 + 1)
             if i == j:
                 v = Float64(n + i + 1)
-            a[i + j * lda] = v
-            a[j + i * lda] = v
+            a[unsafe_offset=i + j * lda] = v
+            a[unsafe_offset=j + i * lda] = v
     for i in range(n):
-        x[i] = Float64(i + 1)
-        y[i] = Float64(0.0)
+        x[unsafe_offset=i] = Float64(i + 1)
+        y[unsafe_offset=i] = Float64(0.0)
 
     @parameter
     def dsymv_only() -> None:
@@ -151,27 +170,28 @@ def bench_dsymv[current_size: Int]() raises -> Float64:
     keep(a)
     keep(x)
     keep(y)
-    a.free()
-    x.free()
-    y.free()
+    a.unsafe_free()
+    x.unsafe_free()
+    y.unsafe_free()
 
     return report.mean("ns")
+
 
 def bench_dsyr[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = n
-    var x = alloc[Scalar[f64]](n)
-    var a = alloc[Scalar[f64]](lda * n)
+    var x = unsafe_alloc[Scalar[f64]](n)
+    var a = unsafe_alloc[Scalar[f64]](lda * n)
     # symmetric input (syr updates upper triangle of a symmetric matrix)
     for j in range(n):
         for i in range(j + 1):
             var v = Float64((i + j) % 11 + 1)
             if i == j:
                 v = Float64(n + i + 1)
-            a[i + j * lda] = v
-            a[j + i * lda] = v
+            a[unsafe_offset=i + j * lda] = v
+            a[unsafe_offset=j + i * lda] = v
     for i in range(n):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dsyr_only() -> None:
@@ -181,28 +201,29 @@ def bench_dsyr[current_size: Int]() raises -> Float64:
 
     keep(a)
     keep(x)
-    a.free()
-    x.free()
+    a.unsafe_free()
+    x.unsafe_free()
 
     return report.mean("ns")
+
 
 def bench_dsyr2[current_size: Int]() raises -> Float64:
     var n = current_size
     var lda = n
-    var x = alloc[Scalar[f64]](n)
-    var y = alloc[Scalar[f64]](n)
-    var a = alloc[Scalar[f64]](lda * n)
+    var x = unsafe_alloc[Scalar[f64]](n)
+    var y = unsafe_alloc[Scalar[f64]](n)
+    var a = unsafe_alloc[Scalar[f64]](lda * n)
     # symmetric input
     for j in range(n):
         for i in range(j + 1):
             var v = Float64((i + j) % 11 + 1)
             if i == j:
                 v = Float64(n + i + 1)
-            a[i + j * lda] = v
-            a[j + i * lda] = v
+            a[unsafe_offset=i + j * lda] = v
+            a[unsafe_offset=j + i * lda] = v
     for i in range(n):
-        x[i] = Float64(i + 1)
-        y[i] = Float64(i + 2)
+        x[unsafe_offset=i] = Float64(i + 1)
+        y[unsafe_offset=i] = Float64(i + 2)
 
     @parameter
     def dsyr2_only() -> None:
@@ -213,21 +234,21 @@ def bench_dsyr2[current_size: Int]() raises -> Float64:
     keep(a)
     keep(x)
     keep(y)
-    a.free()
-    x.free()
-    y.free()
+    a.unsafe_free()
+    x.unsafe_free()
+    y.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_dspr[current_size: Int]() raises -> Float64:
     var n = current_size
-    var x = alloc[Scalar[f64]](n)
-    var ap = alloc[Scalar[f64]]((n * (n + 1)) // 2)
+    var x = unsafe_alloc[Scalar[f64]](n)
+    var ap = unsafe_alloc[Scalar[f64]]((n * (n + 1)) // 2)
     for i in range(n):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
     for i in range((n * (n + 1)) // 2):
-        ap[i] = Float64(i + 1)
+        ap[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dspr_only() -> None:
@@ -237,22 +258,22 @@ def bench_dspr[current_size: Int]() raises -> Float64:
 
     keep(x)
     keep(ap)
-    x.free()
-    ap.free()
+    x.unsafe_free()
+    ap.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_dspr2[current_size: Int]() raises -> Float64:
     var n = current_size
-    var x = alloc[Scalar[f64]](n)
-    var y = alloc[Scalar[f64]](n)
-    var ap = alloc[Scalar[f64]]((n * (n + 1)) // 2)
+    var x = unsafe_alloc[Scalar[f64]](n)
+    var y = unsafe_alloc[Scalar[f64]](n)
+    var ap = unsafe_alloc[Scalar[f64]]((n * (n + 1)) // 2)
     for i in range(n):
-        x[i] = Float64(i + 1)
-        y[i] = Float64(i + 2)
+        x[unsafe_offset=i] = Float64(i + 1)
+        y[unsafe_offset=i] = Float64(i + 2)
     for i in range((n * (n + 1)) // 2):
-        ap[i] = Float64(i + 1)
+        ap[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dspr2_only() -> None:
@@ -263,23 +284,23 @@ def bench_dspr2[current_size: Int]() raises -> Float64:
     keep(x)
     keep(y)
     keep(ap)
-    x.free()
-    y.free()
-    ap.free()
+    x.unsafe_free()
+    y.unsafe_free()
+    ap.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_dspmv[current_size: Int]() raises -> Float64:
     var n = current_size
-    var ap = alloc[Scalar[f64]]((n * (n + 1)) // 2)
-    var x = alloc[Scalar[f64]](n)
-    var y = alloc[Scalar[f64]](n)
+    var ap = unsafe_alloc[Scalar[f64]]((n * (n + 1)) // 2)
+    var x = unsafe_alloc[Scalar[f64]](n)
+    var y = unsafe_alloc[Scalar[f64]](n)
     for i in range((n * (n + 1)) // 2):
-        ap[i] = Float64(i + 1)
+        ap[unsafe_offset=i] = Float64(i + 1)
     for i in range(n):
-        x[i] = Float64(i + 1)
-        y[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
+        y[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dspmv_only() -> None:
@@ -290,21 +311,21 @@ def bench_dspmv[current_size: Int]() raises -> Float64:
     keep(ap)
     keep(x)
     keep(y)
-    ap.free()
-    x.free()
-    y.free()
+    ap.unsafe_free()
+    x.unsafe_free()
+    y.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_dtpmv[current_size: Int]() raises -> Float64:
     var n = current_size
-    var ap = alloc[Scalar[f64]]((n * (n + 1)) // 2)
-    var x = alloc[Scalar[f64]](n)
+    var ap = unsafe_alloc[Scalar[f64]]((n * (n + 1)) // 2)
+    var x = unsafe_alloc[Scalar[f64]](n)
     for i in range((n * (n + 1)) // 2):
-        ap[i] = Float64(i + 1)
+        ap[unsafe_offset=i] = Float64(i + 1)
     for i in range(n):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dtpmv_only() -> None:
@@ -314,23 +335,25 @@ def bench_dtpmv[current_size: Int]() raises -> Float64:
 
     keep(ap)
     keep(x)
-    ap.free()
-    x.free()
+    ap.unsafe_free()
+    x.unsafe_free()
 
     return report.mean("ns")
 
 
 def bench_dtpsv[current_size: Int]() raises -> Float64:
     var n = current_size
-    var ap = alloc[Scalar[f64]]((n * (n + 1)) // 2)
-    var x = alloc[Scalar[f64]](n)
+    var ap = unsafe_alloc[Scalar[f64]]((n * (n + 1)) // 2)
+    var x = unsafe_alloc[Scalar[f64]](n)
     var idx = 0
     for j in range(n):
         for i in range(j + 1):
-            ap[idx] = Float64(i + j + 2) if i != j else Float64(j + 2)
+            ap[unsafe_offset=idx] = Float64(i + j + 2) if i != j else Float64(
+                j + 2
+            )
             idx += 1
     for i in range(n):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dtpsv_only() -> None:
@@ -340,8 +363,8 @@ def bench_dtpsv[current_size: Int]() raises -> Float64:
 
     keep(ap)
     keep(x)
-    ap.free()
-    x.free()
+    ap.unsafe_free()
+    x.unsafe_free()
 
     return report.mean("ns")
 
@@ -350,16 +373,16 @@ def bench_dtbmv[current_size: Int]() raises -> Float64:
     var n = current_size
     var k = 1
     var lda = k + 1
-    var a = alloc[Scalar[f64]](lda * n)
-    var x = alloc[Scalar[f64]](n)
+    var a = unsafe_alloc[Scalar[f64]](lda * n)
+    var x = unsafe_alloc[Scalar[f64]](n)
     for i in range(lda * n):
-        a[i] = 0.0
+        a[unsafe_offset=i] = 0.0
     for j in range(n):
-        a[k + j * lda] = Float64(j + 2)
+        a[unsafe_offset=k + j * lda] = Float64(j + 2)
         if j > 0:
-            a[k - 1 + j * lda] = 1.0
+            a[unsafe_offset=k - 1 + j * lda] = 1.0
     for i in range(n):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dtbmv_only() -> None:
@@ -369,8 +392,8 @@ def bench_dtbmv[current_size: Int]() raises -> Float64:
 
     keep(a)
     keep(x)
-    a.free()
-    x.free()
+    a.unsafe_free()
+    x.unsafe_free()
 
     return report.mean("ns")
 
@@ -379,16 +402,16 @@ def bench_dtbsv[current_size: Int]() raises -> Float64:
     var n = current_size
     var k = 1
     var lda = k + 1
-    var a = alloc[Scalar[f64]](lda * n)
-    var x = alloc[Scalar[f64]](n)
+    var a = unsafe_alloc[Scalar[f64]](lda * n)
+    var x = unsafe_alloc[Scalar[f64]](n)
     for i in range(lda * n):
-        a[i] = 0.0
+        a[unsafe_offset=i] = 0.0
     for j in range(n):
-        a[k + j * lda] = Float64(j + 2)
+        a[unsafe_offset=k + j * lda] = Float64(j + 2)
         if j > 0:
-            a[k - 1 + j * lda] = 1.0
+            a[unsafe_offset=k - 1 + j * lda] = 1.0
     for i in range(n):
-        x[i] = Float64(i + 1)
+        x[unsafe_offset=i] = Float64(i + 1)
 
     @parameter
     def dtbsv_only() -> None:
@@ -398,13 +421,14 @@ def bench_dtbsv[current_size: Int]() raises -> Float64:
 
     keep(a)
     keep(x)
-    a.free()
-    x.free()
+    a.unsafe_free()
+    x.unsafe_free()
 
     return report.mean("ns")
 
 
 comptime sizes: List[Int] = [32, 64, 128, 256, 512]
+
 
 def benchmark_gemv() raises -> List[Float64]:
     var times: List[Float64] = []
@@ -412,11 +436,13 @@ def benchmark_gemv() raises -> List[Float64]:
         times.append(bench_dgemv[size]())
     return times^
 
+
 def benchmark_gemv_trans() raises -> List[Float64]:
     var times: List[Float64] = []
     comptime for size in materialize[sizes]():
         times.append(bench_dgemv_trans[size]())
     return times^
+
 
 def benchmark_trmv() raises -> List[Float64]:
     var times: List[Float64] = []
@@ -424,11 +450,13 @@ def benchmark_trmv() raises -> List[Float64]:
         times.append(bench_dtrmv[size]())
     return times^
 
+
 def benchmark_trsv() raises -> List[Float64]:
     var times: List[Float64] = []
     comptime for size in materialize[sizes]():
         times.append(bench_dtrsv[size]())
     return times^
+
 
 def benchmark_symv() raises -> List[Float64]:
     var times: List[Float64] = []
@@ -436,11 +464,13 @@ def benchmark_symv() raises -> List[Float64]:
         times.append(bench_dsymv[size]())
     return times^
 
+
 def benchmark_syr() raises -> List[Float64]:
     var times: List[Float64] = []
     comptime for size in materialize[sizes]():
         times.append(bench_dsyr[size]())
     return times^
+
 
 def benchmark_syr2() raises -> List[Float64]:
     var times: List[Float64] = []
@@ -520,13 +550,13 @@ def main() raises:
     var idx = 0
 
     print("{")
-    print("  \"metadata\": {")
-    print("    \"min_n\": ", min_n, ",")
-    print("    \"max_n\": ", max_n, ",")
-    print("    \"step\": ", step, ",")
-    print("    \"sizes\": [32, 64, 128, 256, 512]")
+    print('  "metadata": {')
+    print('    "min_n": ', min_n, ",")
+    print('    "max_n": ', max_n, ",")
+    print('    "step": ', step, ",")
+    print('    "sizes": [32, 64, 128, 256, 512]')
     print("  },")
-    print("  \"results\": [")
+    print('  "results": [')
 
     comptime for size in materialize[sizes]():
         var gemv_ns_value = gemv_ns[idx]
@@ -561,33 +591,145 @@ def main() raises:
         if not first:
             print(",")
         first = False
-        print("    {\"lib\":\"mojo\",\"op\":\"gemv\",\"n\":", size, ",\"avg_ns\":", gemv_ns_value, ",\"avg_seconds\":", gemv_s, "}")
+        print(
+            '    {"lib":"mojo","op":"gemv","n":',
+            size,
+            ',"avg_ns":',
+            gemv_ns_value,
+            ',"avg_seconds":',
+            gemv_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"gemv_trans\",\"n\":", size, ",\"avg_ns\":", gemv_trans_ns_value, ",\"avg_seconds\":", gemv_trans_s, "}")
+        print(
+            '    {"lib":"mojo","op":"gemv_trans","n":',
+            size,
+            ',"avg_ns":',
+            gemv_trans_ns_value,
+            ',"avg_seconds":',
+            gemv_trans_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"trmv\",\"n\":", size, ",\"avg_ns\":", trmv_ns_value, ",\"avg_seconds\":", trmv_s, "}")
+        print(
+            '    {"lib":"mojo","op":"trmv","n":',
+            size,
+            ',"avg_ns":',
+            trmv_ns_value,
+            ',"avg_seconds":',
+            trmv_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"trsv\",\"n\":", size, ",\"avg_ns\":", trsv_ns_value, ",\"avg_seconds\":", trsv_s, "}")
+        print(
+            '    {"lib":"mojo","op":"trsv","n":',
+            size,
+            ',"avg_ns":',
+            trsv_ns_value,
+            ',"avg_seconds":',
+            trsv_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"symv\",\"n\":", size, ",\"avg_ns\":", symv_ns_value, ",\"avg_seconds\":", symv_s, "}")
+        print(
+            '    {"lib":"mojo","op":"symv","n":',
+            size,
+            ',"avg_ns":',
+            symv_ns_value,
+            ',"avg_seconds":',
+            symv_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"syr\",\"n\":", size, ",\"avg_ns\":", syr_ns_value, ",\"avg_seconds\":", syr_s, "}")
+        print(
+            '    {"lib":"mojo","op":"syr","n":',
+            size,
+            ',"avg_ns":',
+            syr_ns_value,
+            ',"avg_seconds":',
+            syr_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"syr2\",\"n\":", size, ",\"avg_ns\":", syr2_ns_value, ",\"avg_seconds\":", syr2_s, "}")
+        print(
+            '    {"lib":"mojo","op":"syr2","n":',
+            size,
+            ',"avg_ns":',
+            syr2_ns_value,
+            ',"avg_seconds":',
+            syr2_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"spr\",\"n\":", size, ",\"avg_ns\":", spr_ns_value, ",\"avg_seconds\":", spr_s, "}")
+        print(
+            '    {"lib":"mojo","op":"spr","n":',
+            size,
+            ',"avg_ns":',
+            spr_ns_value,
+            ',"avg_seconds":',
+            spr_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"spr2\",\"n\":", size, ",\"avg_ns\":", spr2_ns_value, ",\"avg_seconds\":", spr2_s, "}")
+        print(
+            '    {"lib":"mojo","op":"spr2","n":',
+            size,
+            ',"avg_ns":',
+            spr2_ns_value,
+            ',"avg_seconds":',
+            spr2_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"spmv\",\"n\":", size, ",\"avg_ns\":", spmv_ns_value, ",\"avg_seconds\":", spmv_s, "}")
+        print(
+            '    {"lib":"mojo","op":"spmv","n":',
+            size,
+            ',"avg_ns":',
+            spmv_ns_value,
+            ',"avg_seconds":',
+            spmv_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"tpmv\",\"n\":", size, ",\"avg_ns\":", tpmv_ns_value, ",\"avg_seconds\":", tpmv_s, "}")
+        print(
+            '    {"lib":"mojo","op":"tpmv","n":',
+            size,
+            ',"avg_ns":',
+            tpmv_ns_value,
+            ',"avg_seconds":',
+            tpmv_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"tpsv\",\"n\":", size, ",\"avg_ns\":", tpsv_ns_value, ",\"avg_seconds\":", tpsv_s, "}")
+        print(
+            '    {"lib":"mojo","op":"tpsv","n":',
+            size,
+            ',"avg_ns":',
+            tpsv_ns_value,
+            ',"avg_seconds":',
+            tpsv_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"tbmv\",\"n\":", size, ",\"avg_ns\":", tbmv_ns_value, ",\"avg_seconds\":", tbmv_s, "}")
+        print(
+            '    {"lib":"mojo","op":"tbmv","n":',
+            size,
+            ',"avg_ns":',
+            tbmv_ns_value,
+            ',"avg_seconds":',
+            tbmv_s,
+            "}",
+        )
         print(",")
-        print("    {\"lib\":\"mojo\",\"op\":\"tbsv\",\"n\":", size, ",\"avg_ns\":", tbsv_ns_value, ",\"avg_seconds\":", tbsv_s, "}")
+        print(
+            '    {"lib":"mojo","op":"tbsv","n":',
+            size,
+            ',"avg_ns":',
+            tbsv_ns_value,
+            ',"avg_seconds":',
+            tbsv_s,
+            "}",
+        )
 
         idx += 1
 
