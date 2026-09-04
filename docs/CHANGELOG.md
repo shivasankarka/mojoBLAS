@@ -30,7 +30,12 @@ All notable changes to mojoBLAS are documented here.
   rename) in `benchmark_gemm_variants.mojo`, `benchmark_gemm_versions.mojo`,
   `check_gemm_v11_correctness.mojo`, `tune_level1_routine.mojo`, and
   `tune_level3_gemm.mojo`.
-- Moved `CHANGELOG.md` to `docs/CHANGELOG.md`.
+- Rewrote the README installation section into four methods (git +
+  `pixi-build-mojo`, stable release via prefix.dev, standalone package
+  build, direct source integration), following NuMojo's structure —
+  the previous "Use as a dependency" section omitted the
+  `[package.build]`/`pixi-build-mojo` backend block needed to actually
+  consume a git-sourced `pixi-build` package.
 
 ## [0.1.0] - 2026-05-26
 
